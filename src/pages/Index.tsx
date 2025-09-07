@@ -22,7 +22,7 @@ const Index = () => {
         setLoading(true);
         setError(null);
         
-        const response = await fetch('https://intake-collection-data.web.app/master_cleaned.json');
+        const response = await fetch('/data/products.json');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
