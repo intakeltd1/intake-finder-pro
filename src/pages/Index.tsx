@@ -148,9 +148,30 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="bg-muted mt-12 py-8">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4 text-center space-y-2">
           <p className="text-muted-foreground">
             Showing {filteredAndSortedProducts.length} of {products.length} products
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {(() => {
+              const outOfStockCount = filteredAndSortedProducts.filter(product => {
+                const stockIndicators = [
+                  product.STOCK_STATUS?.toLowerCase(),
+                  product.PRICE?.toLowerCase(), 
+                  product.TITLE?.toLowerCase(),
+                  product.AMOUNT?.toLowerCase()
+                ];
+                return stockIndicators.some(indicator => 
+                  indicator?.includes('out of stock') ||
+                  indicator?.includes('unavailable') ||
+                  indicator?.includes('sold out') ||
+                  indicator === 'out' ||
+                  indicator === '0'
+                );
+              }).length;
+              const inStockCount = filteredAndSortedProducts.length - outOfStockCount;
+              return `${inStockCount} in stock • ${outOfStockCount} out of stock`;
+            })()}
           </p>
         </div>
       </footer>

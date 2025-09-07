@@ -29,6 +29,10 @@ export interface Product {
   PROTEIN_SERVING?: string;
   FLAVOUR?: string;
   LINK?: string;
+  URL?: string;
+  IMAGE_URL?: string;
+  STOCK_STATUS?: string;
+  [key: string]: any; // For any additional fields
 }
 
 export const filterProducts = (
@@ -70,18 +74,63 @@ export const filterProducts = (
   return filtered;
 };
 
-export const sortProducts = (products: Product[], sortBy: string): Product[] => {
-  const sorted = [...products];
+const isOutOfStock = (product: Product): boolean => {
+  // Check various ways products might indicate out of stock
+  const stockIndicators = [
+    product.STOCK_STATUS?.toLowerCase(),
+    product.PRICE?.toLowerCase(),
+    product.TITLE?.toLowerCase(),
+    product.AMOUNT?.toLowerCase()
+  ];
   
+  return stockIndicators.some(indicator => 
+    indicator?.includes('out of stock') ||
+    indicator?.includes('unavailable') ||
+    indicator?.includes('sold out') ||
+    indicator === 'out' ||
+    indicator === '0'
+  ) || false;
+};
+
+export const sortProducts = (products: Product[], sortBy: string): Product[] => {
+  let sorted = [...products];
+  
+  // Always sort by stock status first (in-stock items first)
+  sorted = sorted.sort((a, b) => {
+    const aOutOfStock = isOutOfStock(a);
+    const bOutOfStock = isOutOfStock(b);
+    
+    if (aOutOfStock && !bOutOfStock) return 1;  // a goes after b
+    if (!aOutOfStock && bOutOfStock) return -1; // a goes before b
+    return 0; // same stock status, continue with other sorting
+  });
+  
+  // Then apply secondary sorting while maintaining stock priority
   switch (sortBy) {
     case 'price_low':
-      return sorted.sort((a, b) => numFromPrice(a.PRICE) - numFromPrice(b.PRICE));
+      return sorted.sort((a, b) => {
+        const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
+        if (stockDiff !== 0) return stockDiff;
+        return numFromPrice(a.PRICE) - numFromPrice(b.PRICE);
+      });
     case 'price_high':
-      return sorted.sort((a, b) => numFromPrice(b.PRICE) - numFromPrice(a.PRICE));
+      return sorted.sort((a, b) => {
+        const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
+        if (stockDiff !== 0) return stockDiff;
+        return numFromPrice(b.PRICE) - numFromPrice(a.PRICE);
+      });
     case 'protein':
-      return sorted.sort((a, b) => numFromProtein(b.PROTEIN_SERVING) - numFromProtein(a.PROTEIN_SERVING));
+      return sorted.sort((a, b) => {
+        const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
+        if (stockDiff !== 0) return stockDiff;
+        return numFromProtein(b.PROTEIN_SERVING) - numFromProtein(a.PROTEIN_SERVING);
+      });
     case 'brand':
-      return sorted.sort((a, b) => (a.TITLE || '').localeCompare(b.TITLE || ''));
+      return sorted.sort((a, b) => {
+        const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
+        if (stockDiff !== 0) return stockDiff;
+        return (a.TITLE || '').localeCompare(b.TITLE || '');
+      });
     default:
       return sorted;
   }
