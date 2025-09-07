@@ -11,7 +11,7 @@ const Index = () => {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
-  const [quantityFilter, setQuantityFilter] = useState('');
+  const [quantityFilter, setQuantityFilter] = useState('all');
 
   // Fetch products data
   useEffect(() => {

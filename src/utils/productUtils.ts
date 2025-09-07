@@ -51,7 +51,7 @@ export const filterProducts = (
   }
 
   // Quantity filter
-  if (quantityFilter) {
+  if (quantityFilter && quantityFilter !== 'all') {
     filtered = filtered.filter(item => {
       const grams = parseGrams(item.AMOUNT);
       if (!grams) return false;

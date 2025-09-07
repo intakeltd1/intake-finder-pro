@@ -50,8 +50,8 @@ export function SearchFilters({
               <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[150px]">
                 <SelectValue placeholder="All quantities" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All quantities</SelectItem>
+              <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                <SelectItem value="all">All quantities</SelectItem>
                 <SelectItem value="<1kg">Less than 1kg</SelectItem>
                 <SelectItem value="1-2kg">1-2kg</SelectItem>
                 <SelectItem value="2-3kg">2-3kg</SelectItem>
@@ -67,7 +67,7 @@ export function SearchFilters({
                 <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[180px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
                   <SelectItem value="default">Default Order</SelectItem>
                   <SelectItem value="price_low">Price: Low to High</SelectItem>
                   <SelectItem value="price_high">Price: High to Low</SelectItem>
