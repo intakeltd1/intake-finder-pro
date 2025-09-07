@@ -1,12 +1,159 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useEffect, useState, useMemo } from 'react';
+import { ProductCard } from '@/components/ProductCard';
+import { SearchFilters } from '@/components/SearchFilters';
+import { filterProducts, sortProducts, type Product } from '@/utils/productUtils';
+import { Loader2, Package, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [sortBy, setSortBy] = useState('default');
+  const [quantityFilter, setQuantityFilter] = useState('');
+
+  // Fetch products data
+  useEffect(() => {
+    let cancelled = false;
+    
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const response = await fetch('https://intake-collection-data.web.app/master_cleaned.json');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data: Product[] = await response.json();
+        
+        if (!cancelled) {
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load product data');
+          setProducts([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Filter and sort products
+  const filteredAndSortedProducts = useMemo(() => {
+    const filtered = filterProducts(products, query, quantityFilter);
+    return sortProducts(filtered, sortBy);
+  }, [products, query, quantityFilter, sortBy]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-4">
+            <div className="relative">
+              <Package className="h-16 w-16 text-primary mx-auto animate-pulse" />
+              <Loader2 className="h-6 w-6 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-spin" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground mb-2">Loading Products</h2>
+              <p className="text-muted-foreground">Fetching the latest product data...</p>
+            </div>
+          </div>
+        </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
+        <div className="container mx-auto px-4 py-8">
+          <Alert className="max-w-2xl mx-auto">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="ml-2">
+              <strong>Error loading products:</strong> {error}
+              <br />
+              Please check your internet connection and try again.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
+      {/* Header */}
+      <header className="bg-primary text-primary-foreground py-8">
+        <div className="container mx-auto px-4">
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold tracking-tight">
+              Product Search
+            </h1>
+            <p className="text-xl text-primary-foreground/90">
+              Find and compare products from our extensive database
+            </p>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Search Filters */}
+        <div className="mb-8">
+          <SearchFilters
+            query={query}
+            setQuery={setQuery}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            quantityFilter={quantityFilter}
+            setQuantityFilter={setQuantityFilter}
+            resultCount={filteredAndSortedProducts.length}
+          />
+        </div>
+
+        {/* Products Grid */}
+        {filteredAndSortedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredAndSortedProducts.map((product, index) => (
+              <ProductCard key={index} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
+            <p className="text-muted-foreground">
+              {query || quantityFilter 
+                ? "Try adjusting your search criteria or filters"
+                : "No products available at the moment"
+              }
+            </p>
+          </div>
+        )}
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-muted mt-12 py-8">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">
+            Showing {filteredAndSortedProducts.length} of {products.length} products
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };
