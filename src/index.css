@@ -161,3 +161,10 @@ All colors MUST be HSL.
   border-width: 2px;
   animation: fire-glow 2s ease-in-out infinite;
 }
+
+/* Featured products container with rainbow border */
+.featured-products-container {
+  border: 3px solid;
+  animation: rainbow-border 3s linear infinite;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+}

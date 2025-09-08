@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { SearchFilters } from '@/components/SearchFilters';
-import { Header } from '@/components/Header';
+import { Header, StickyTimer } from '@/components/Header';
 import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, type Product } from '@/utils/productUtils';
 import { Loader2, Package, AlertCircle, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -108,8 +108,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
-      {/* Sticky Header with Disclaimer */}
       <Header />
+      <StickyTimer />
       
       {/* Main Header */}
       <header className="bg-primary text-primary-foreground py-8">
@@ -149,14 +149,16 @@ const Index = () => {
               <Star className="h-6 w-6 text-primary" />
               <h2 className="text-2xl font-bold text-foreground">Featured - Best Value Products</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 bg-gradient-to-r from-primary/10 to-brand-teal-light/20 rounded-lg border-2 border-primary/20">
-              {featuredProducts.map((product, index) => (
-                <ProductCard 
-                  key={`featured-${index}`} 
-                  product={product} 
-                  isFeatured={true}
-                />
-              ))}
+            <div className="featured-products-container p-4 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product, index) => (
+                  <ProductCard 
+                    key={`featured-${index}`} 
+                    product={product} 
+                    isFeatured={true}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}
