@@ -1,7 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Search, Filter, SortAsc } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Search, Filter, SortAsc, Target } from "lucide-react";
 
 interface SearchFiltersProps {
   query: string;
@@ -10,6 +11,8 @@ interface SearchFiltersProps {
   setSortBy: (sort: string) => void;
   quantityFilter: string;
   setQuantityFilter: (filter: string) => void;
+  goalFilter: string;
+  setGoalFilter: (filter: string) => void;
   resultCount: number;
 }
 
@@ -20,6 +23,8 @@ export function SearchFilters({
   setSortBy,
   quantityFilter,
   setQuantityFilter,
+  goalFilter,
+  setGoalFilter,
   resultCount,
 }: SearchFiltersProps) {
   return (
@@ -38,13 +43,28 @@ export function SearchFilters({
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Filter className="h-4 w-4" />
             Filters:
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3 flex-1">
+            {/* Goal Filter */}
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4" />
+              <Select value={goalFilter} onValueChange={setGoalFilter}>
+                <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[140px]">
+                  <SelectValue placeholder="Goal" />
+                </SelectTrigger>
+                <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
+                  <SelectItem value="all">All Goals</SelectItem>
+                  <SelectItem value="weight_loss">🔥 Weight Loss</SelectItem>
+                  <SelectItem value="build_muscle">💪 Build Muscle</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Quantity Filter */}
             <Select value={quantityFilter} onValueChange={setQuantityFilter}>
               <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[150px]">
@@ -64,11 +84,13 @@ export function SearchFilters({
             <div className="flex items-center gap-2">
               <SortAsc className="h-4 w-4" />
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[180px]">
+                <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[200px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
                   <SelectItem value="default">Default Order</SelectItem>
+                  <SelectItem value="value">💪 Best Value (Protein/Price)</SelectItem>
+                  <SelectItem value="popularity">🔥 Most Popular</SelectItem>
                   <SelectItem value="price_low">Price: Low to High</SelectItem>
                   <SelectItem value="price_high">Price: High to Low</SelectItem>
                   <SelectItem value="protein">Protein per Serving</SelectItem>

@@ -21,6 +21,32 @@ export const numFromProtein = (protein?: string): number => {
   return parseFloat(match) || 0;
 };
 
+// Calculate protein value score (protein per serving / price)
+export const calculateValueScore = (product: Product): number => {
+  const price = numFromPrice(product.PRICE);
+  const protein = numFromProtein(product.PROTEIN_SERVING?.toString());
+  if (price === Infinity || protein === 0) return 0;
+  return protein / price;
+};
+
+// Get click count from localStorage
+export const getClickCount = (productUrl: string): number => {
+  if (typeof window === 'undefined') return 0;
+  const clicks = localStorage.getItem('product-clicks');
+  if (!clicks) return 0;
+  const clickData = JSON.parse(clicks);
+  return clickData[productUrl] || 0;
+};
+
+// Increment click count
+export const incrementClickCount = (productUrl: string): void => {
+  if (typeof window === 'undefined') return;
+  const clicks = localStorage.getItem('product-clicks');
+  const clickData = clicks ? JSON.parse(clicks) : {};
+  clickData[productUrl] = (clickData[productUrl] || 0) + 1;
+  localStorage.setItem('product-clicks', JSON.stringify(clickData));
+};
+
 export interface Product {
   TITLE?: string;
   COMPANY?: string;
@@ -38,7 +64,8 @@ export interface Product {
 export const filterProducts = (
   products: Product[],
   query: string,
-  quantityFilter: string
+  quantityFilter: string,
+  goalFilter: string = 'all'
 ): Product[] => {
   let filtered = [...products];
   
@@ -52,6 +79,28 @@ export const filterProducts = (
       (item.TITLE || '').toLowerCase().includes(q) ||
       (item.COMPANY || '').toLowerCase().includes(q)
     );
+  }
+
+  // Goal-based filtering
+  if (goalFilter && goalFilter !== 'all') {
+    filtered = filtered.filter(item => {
+      const title = (item.TITLE || '').toLowerCase();
+      
+      if (goalFilter === 'weight_loss') {
+        return title.includes('diet') || 
+               title.includes('lean') || 
+               title.includes('meal replacement') ||
+               title.includes('fat burn') ||
+               title.includes('weight loss');
+      } else if (goalFilter === 'build_muscle') {
+        return title.includes('mass') || 
+               title.includes('gainer') || 
+               title.includes('beef') ||
+               title.includes('creatine') ||
+               (numFromProtein(item.PROTEIN_SERVING?.toString()) >= 25);
+      }
+      return true;
+    });
   }
 
   // Quantity filter
@@ -107,6 +156,20 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
   
   // Then apply secondary sorting while maintaining stock priority
   switch (sortBy) {
+    case 'value':
+      return sorted.sort((a, b) => {
+        const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
+        if (stockDiff !== 0) return stockDiff;
+        return calculateValueScore(b) - calculateValueScore(a);
+      });
+    case 'popularity':
+      return sorted.sort((a, b) => {
+        const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
+        if (stockDiff !== 0) return stockDiff;
+        const aClicks = getClickCount(a.URL || a.LINK || '');
+        const bClicks = getClickCount(b.URL || b.LINK || '');
+        return bClicks - aClicks;
+      });
     case 'price_low':
       return sorted.sort((a, b) => {
         const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
@@ -134,4 +197,20 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
     default:
       return sorted;
   }
+};
+
+// Get top value products (best protein per price ratio)
+export const getTopValueProducts = (products: Product[], count: number = 15): Product[] => {
+  return products
+    .filter(p => !isOutOfStock(p) && calculateValueScore(p) > 0)
+    .sort((a, b) => calculateValueScore(b) - calculateValueScore(a))
+    .slice(0, count);
+};
+
+// Get most popular products (by click count)
+export const getMostPopularProducts = (products: Product[], count: number = 30): Product[] => {
+  return products
+    .filter(p => !isOutOfStock(p))
+    .sort((a, b) => getClickCount(b.URL || b.LINK || '') - getClickCount(a.URL || a.LINK || ''))
+    .slice(0, count);
 };

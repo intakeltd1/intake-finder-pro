@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { SearchFilters } from '@/components/SearchFilters';
-import { filterProducts, sortProducts, type Product } from '@/utils/productUtils';
-import { Loader2, Package, AlertCircle } from 'lucide-react';
+import { Header } from '@/components/Header';
+import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, type Product } from '@/utils/productUtils';
+import { Loader2, Package, AlertCircle, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
@@ -12,6 +13,7 @@ const Index = () => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [quantityFilter, setQuantityFilter] = useState('all');
+  const [goalFilter, setGoalFilter] = useState('all');
 
   // Fetch products data
   useEffect(() => {
@@ -54,9 +56,19 @@ const Index = () => {
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    const filtered = filterProducts(products, query, quantityFilter);
+    const filtered = filterProducts(products, query, quantityFilter, goalFilter);
     return sortProducts(filtered, sortBy);
-  }, [products, query, quantityFilter, sortBy]);
+  }, [products, query, quantityFilter, goalFilter, sortBy]);
+
+  // Get featured and special products
+  const topValueProducts = useMemo(() => getTopValueProducts(products, 15), [products]);
+  const mostPopularProducts = useMemo(() => getMostPopularProducts(products, 30), [products]);
+  const featuredProducts = useMemo(() => getTopValueProducts(products, 4), [products]);
+
+  // Create sets for quick lookup
+  const topValueUrls = useMemo(() => new Set(topValueProducts.map(p => p.URL || p.LINK)), [topValueProducts]);
+  const popularUrls = useMemo(() => new Set(mostPopularProducts.map(p => p.URL || p.LINK)), [mostPopularProducts]);
+  const featuredUrls = useMemo(() => new Set(featuredProducts.map(p => p.URL || p.LINK)), [featuredProducts]);
 
   if (loading) {
     return (
@@ -96,15 +108,18 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
-      {/* Header */}
+      {/* Sticky Header with Disclaimer */}
+      <Header />
+      
+      {/* Main Header */}
       <header className="bg-primary text-primary-foreground py-8">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-2">
             <h1 className="text-4xl font-bold tracking-tight">
-              Product Search
+              Intake - UK Supplement Search
             </h1>
             <p className="text-xl text-primary-foreground/90">
-              Find and compare products from our extensive database
+              Find the best value protein supplements with our smart comparison tool
             </p>
           </div>
         </div>
@@ -121,23 +136,56 @@ const Index = () => {
             setSortBy={setSortBy}
             quantityFilter={quantityFilter}
             setQuantityFilter={setQuantityFilter}
+            goalFilter={goalFilter}
+            setGoalFilter={setGoalFilter}
             resultCount={filteredAndSortedProducts.length}
           />
         </div>
 
+        {/* Featured Products Section */}
+        {featuredProducts.length > 0 && !query && goalFilter === 'all' && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="h-6 w-6 text-primary" />
+              <h2 className="text-2xl font-bold text-foreground">Featured - Best Value Products</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4 bg-gradient-to-r from-primary/10 to-brand-teal-light/20 rounded-lg border-2 border-primary/20">
+              {featuredProducts.map((product, index) => (
+                <ProductCard 
+                  key={`featured-${index}`} 
+                  product={product} 
+                  isFeatured={true}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Products Grid */}
         {filteredAndSortedProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAndSortedProducts.map((product, index) => (
-              <ProductCard key={index} product={product} />
-            ))}
+            {filteredAndSortedProducts.map((product, index) => {
+              const productUrl = product.URL || product.LINK;
+              const isTopValue = topValueUrls.has(productUrl);
+              const isPopular = popularUrls.has(productUrl);
+              const isFeatured = featuredUrls.has(productUrl);
+              
+              return (
+                <ProductCard 
+                  key={index} 
+                  product={product} 
+                  isTopValue={isTopValue && !isFeatured}
+                  isPopular={isPopular && !isFeatured && !isTopValue}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
             <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
             <p className="text-muted-foreground">
-              {query || quantityFilter 
+              {query || quantityFilter || goalFilter !== 'all'
                 ? "Try adjusting your search criteria or filters"
                 : "No products available at the moment"
               }

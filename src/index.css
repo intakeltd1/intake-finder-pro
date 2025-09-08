@@ -119,3 +119,45 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Rainbow border animation for best value products */
+@keyframes rainbow-border {
+  0% { border-color: #ff0000; }
+  16.66% { border-color: #ff8800; }
+  33.33% { border-color: #ffff00; }
+  50% { border-color: #00ff00; }
+  66.66% { border-color: #0088ff; }
+  83.33% { border-color: #8800ff; }
+  100% { border-color: #ff0000; }
+}
+
+.rainbow-border {
+  border-width: 2px;
+  animation: rainbow-border 3s linear infinite;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+/* Fire border animation for popular products */
+@keyframes fire-glow {
+  0%, 100% { 
+    border-color: #ff4500; 
+    box-shadow: 0 0 20px rgba(255, 69, 0, 0.6);
+  }
+  25% { 
+    border-color: #ff6500; 
+    box-shadow: 0 0 25px rgba(255, 101, 0, 0.7);
+  }
+  50% { 
+    border-color: #ff8500; 
+    box-shadow: 0 0 30px rgba(255, 133, 0, 0.8);
+  }
+  75% { 
+    border-color: #ff6500; 
+    box-shadow: 0 0 25px rgba(255, 101, 0, 0.7);
+  }
+}
+
+.fire-border {
+  border-width: 2px;
+  animation: fire-glow 2s ease-in-out infinite;
+}

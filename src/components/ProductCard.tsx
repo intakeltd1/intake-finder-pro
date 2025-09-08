@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ImageIcon } from "lucide-react";
+import { ExternalLink, Package, ImageIcon, TrendingUp, Star } from "lucide-react";
 import { useState } from "react";
+import { incrementClickCount } from "@/utils/productUtils";
 
 interface Product {
   TITLE?: string;
@@ -20,6 +21,9 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
+  isTopValue?: boolean;
+  isFeatured?: boolean;
+  isPopular?: boolean;
 }
 
 const isOutOfStock = (product: Product): boolean => {
@@ -39,13 +43,14 @@ const isOutOfStock = (product: Product): boolean => {
   ) || false;
 };
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const outOfStock = isOutOfStock(product);
   
   const handleCardClick = () => {
     const url = product.URL || product.LINK;
     if (url) {
+      incrementClickCount(url);
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
@@ -54,13 +59,22 @@ export function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation(); // Prevent card click
     const url = product.URL || product.LINK;
     if (url) {
+      incrementClickCount(url);
       window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
+  const getBorderClass = () => {
+    if (outOfStock) return 'border-brand-grey/20';
+    if (isFeatured) return 'border-2 border-primary animate-pulse shadow-lg shadow-primary/20';
+    if (isTopValue) return 'border-2 rainbow-border animate-pulse';
+    if (isPopular) return 'border-2 fire-border animate-pulse';
+    return 'border-brand-grey/20 hover:border-primary/30';
+  };
+
   return (
     <Card 
-      className={`h-full transition-all duration-300 cursor-pointer group border-brand-grey/20 hover:border-primary/30 hover:shadow-[var(--shadow-card)] ${
+      className={`h-full transition-all duration-300 cursor-pointer group hover:shadow-[var(--shadow-card)] ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'
       }`}
       onClick={handleCardClick}
@@ -83,14 +97,31 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
-        {/* Out of Stock Badge */}
-        {outOfStock && (
-          <div className="absolute top-3 left-3">
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1">
+          {outOfStock && (
             <Badge variant="destructive" className="font-medium">
               Out of Stock
             </Badge>
-          </div>
-        )}
+          )}
+          {isFeatured && !outOfStock && (
+            <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-1">
+              <Star className="h-3 w-3" />
+              Featured
+            </Badge>
+          )}
+          {isTopValue && !outOfStock && !isFeatured && (
+            <Badge className="bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 text-white font-medium">
+              Best Value
+            </Badge>
+          )}
+          {isPopular && !outOfStock && !isFeatured && !isTopValue && (
+            <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              Popular
+            </Badge>
+          )}
+        </div>
         
         {/* External Link Button */}
         {(product.URL || product.LINK) && (
@@ -109,9 +140,6 @@ export function ProductCard({ product }: ProductCardProps) {
         <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
           {product.TITLE || "Product Name Not Available"}
         </CardTitle>
-        <p className="text-sm text-muted-foreground font-medium">
-          {product.COMPANY || "Brand Not Available"}
-        </p>
       </CardHeader>
       
       <CardContent className="pt-0">
