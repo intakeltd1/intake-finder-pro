@@ -274,3 +274,15 @@ export const getMostPopularProducts = (products: Product[], count: number = 10):
     .sort((a, b) => getClickCount(b.URL || b.LINK || '') - getClickCount(a.URL || a.LINK || ''))
     .slice(0, count);
 };
+
+// Randomize in-stock products for variety in default view
+export const randomizeInStockProducts = (products: Product[]): Product[] => {
+  const inStock = products.filter(p => !isOutOfStock(p));
+  const outOfStock = products.filter(p => isOutOfStock(p));
+  
+  // Shuffle in-stock products
+  const shuffled = [...inStock].sort(() => Math.random() - 0.5);
+  
+  // Return shuffled in-stock products followed by out-of-stock
+  return [...shuffled, ...outOfStock];
+};

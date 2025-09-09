@@ -2,8 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { SearchFilters } from '@/components/SearchFilters';
 import { Header, StickyTimer } from '@/components/Header';
-import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, type Product } from '@/utils/productUtils';
-import { Loader2, Package, AlertCircle, Star } from 'lucide-react';
+import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, type Product } from '@/utils/productUtils';
+import { Loader2, Package, AlertCircle, Star, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
@@ -57,7 +57,14 @@ const Index = () => {
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
     const filtered = filterProducts(products, query, quantityFilter, goalFilter);
-    return sortProducts(filtered, sortBy);
+    const sorted = sortProducts(filtered, sortBy);
+    
+    // If no search/filter applied, randomize in-stock products for variety
+    if (!query && quantityFilter === 'all' && goalFilter === 'all' && sortBy === 'default') {
+      return randomizeInStockProducts(sorted);
+    }
+    
+    return sorted;
   }, [products, query, quantityFilter, goalFilter, sortBy]);
 
   // Get featured and special products
@@ -67,7 +74,7 @@ const Index = () => {
 
   // Create sets for quick lookup
   const topValueUrls = useMemo(() => new Set(topValueProducts.map(p => p.URL || p.LINK)), [topValueProducts]);
-  const popularUrls = useMemo(() => new Set(mostPopularProducts.map(p => p.URL || p.LINK)), [mostPopularProducts]);
+  const popularUrls = useMemo(() => new Set(mostPopularProducts.slice(0, 10).map(p => p.URL || p.LINK)), [mostPopularProducts]);
   const featuredUrls = useMemo(() => new Set(featuredProducts.map(p => p.URL || p.LINK)), [featuredProducts]);
 
   if (loading) {
@@ -112,20 +119,23 @@ const Index = () => {
       <StickyTimer />
       
       {/* Main Header */}
-      <header className="bg-primary text-primary-foreground py-8">
+      <header className="bg-primary text-primary-foreground py-6">
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-2">
             <img 
-              src="/lovable-uploads/7e55fb2f-97f7-4fa3-8d87-769e628542ab.png" 
+              src="/lovable-uploads/3a13365b-95f7-4cc2-9952-e5c717dd2424.png" 
               alt="Intake Logo" 
-              className="h-20 mx-auto"
+              className="h-12 mx-auto"
             />
             <p className="text-xl text-primary-foreground/90">
               Find your next favourite supplement at the best possible price - updated daily.
             </p>
-            <p className="text-xs text-primary-foreground/70 max-w-3xl mx-auto">
-              All prices & images owned by originators. Intake may earn commission on purchases.
-            </p>
+            <div className="flex items-center justify-center gap-2">
+              <Info className="h-3 w-3 text-primary-foreground/70" />
+              <p className="text-xs text-primary-foreground/70">
+                All prices & images owned by originators. Intake may earn commission on purchases.
+              </p>
+            </div>
           </div>
         </div>
       </header>
