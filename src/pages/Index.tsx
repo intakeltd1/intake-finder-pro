@@ -115,14 +115,16 @@ const Index = () => {
       <header className="bg-primary text-primary-foreground py-8">
         <div className="container mx-auto px-4">
           <div className="text-center space-y-3">
-            <h1 className="text-4xl font-bold tracking-tight">
-              Intake - UK Supplement Search
-            </h1>
+            <img 
+              src="/lovable-uploads/7e55fb2f-97f7-4fa3-8d87-769e628542ab.png" 
+              alt="Intake Logo" 
+              className="h-20 mx-auto"
+            />
             <p className="text-xl text-primary-foreground/90">
-              Find the best value protein supplements with our smart comparison tool
+              Find your next favourite supplement at the best possible price - updated daily.
             </p>
             <p className="text-xs text-primary-foreground/70 max-w-3xl mx-auto">
-              All prices & images are owned by product originators. Intake may earn commission on purchases.
+              All prices & images owned by originators. Intake may earn commission on purchases.
             </p>
           </div>
         </div>
