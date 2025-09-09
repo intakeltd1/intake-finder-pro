@@ -61,6 +61,72 @@ export interface Product {
   [key: string]: any; // For any additional fields
 }
 
+// Smart search with fuzzy matching and flavor grouping
+const createSmartSearch = (query: string): (item: Product) => boolean => {
+  if (!query.trim()) return () => true;
+  
+  const q = query.trim().toLowerCase();
+  
+  // Flavor groupings
+  const flavorGroups = {
+    chocolate: ['chocolate', 'choc', 'cocoa', 'mocha', 'brownie'],
+    vanilla: ['vanilla', 'cream', 'custard'],
+    strawberry: ['strawberry', 'berry', 'berries'],
+    banana: ['banana', 'tropical'],
+    cookies: ['cookies', 'cookie', 'biscuit', 'oreo'],
+    mint: ['mint', 'peppermint', 'spearmint'],
+    coffee: ['coffee', 'latte', 'cappuccino', 'espresso'],
+    peanut: ['peanut', 'pb', 'nut']
+  };
+  
+  // Simple fuzzy matching for common typos
+  const fuzzyMatches = {
+    'protien': 'protein',
+    'protine': 'protein',
+    'whay': 'whey',
+    'wey': 'whey',
+    'casien': 'casein',
+    'creatien': 'creatine',
+    'chocolat': 'chocolate',
+    'vanila': 'vanilla',
+    'strawbery': 'strawberry'
+  };
+  
+  // Correct common typos
+  let searchTerm = q;
+  Object.entries(fuzzyMatches).forEach(([typo, correct]) => {
+    if (searchTerm.includes(typo)) {
+      searchTerm = searchTerm.replace(typo, correct);
+    }
+  });
+  
+  return (item: Product) => {
+    const searchFields = [
+      item.FLAVOUR || '',
+      item.AMOUNT || '',
+      item.PRICE || '',
+      item.TITLE || '',
+      item.COMPANY || ''
+    ].join(' ').toLowerCase();
+    
+    // Direct match
+    if (searchFields.includes(searchTerm)) return true;
+    
+    // Flavor group matching
+    for (const [group, variations] of Object.entries(flavorGroups)) {
+      if (searchTerm.includes(group)) {
+        return variations.some(variant => searchFields.includes(variant));
+      }
+      if (variations.some(variant => searchTerm.includes(variant))) {
+        return variations.some(variant => searchFields.includes(variant)) || 
+               searchFields.includes(group);
+      }
+    }
+    
+    return false;
+  };
+};
+
 export const filterProducts = (
   products: Product[],
   query: string,
@@ -69,16 +135,10 @@ export const filterProducts = (
 ): Product[] => {
   let filtered = [...products];
   
-  // Text search
+  // Smart text search
   if (query.trim()) {
-    const q = query.trim().toLowerCase();
-    filtered = filtered.filter(item =>
-      (item.FLAVOUR || '').toLowerCase().includes(q) ||
-      (item.AMOUNT || '').toLowerCase().includes(q) ||
-      (item.PRICE || '').toLowerCase().includes(q) ||
-      (item.TITLE || '').toLowerCase().includes(q) ||
-      (item.COMPANY || '').toLowerCase().includes(q)
-    );
+    const smartFilter = createSmartSearch(query);
+    filtered = filtered.filter(smartFilter);
   }
 
   // Goal-based filtering
@@ -186,7 +246,7 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
       return sorted.sort((a, b) => {
         const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
         if (stockDiff !== 0) return stockDiff;
-        return numFromProtein(b.PROTEIN_SERVING) - numFromProtein(a.PROTEIN_SERVING);
+        return numFromProtein(b.PROTEIN_SERVING?.toString()) - numFromProtein(a.PROTEIN_SERVING?.toString());
       });
     case 'brand':
       return sorted.sort((a, b) => {
@@ -208,7 +268,7 @@ export const getTopValueProducts = (products: Product[], count: number = 15): Pr
 };
 
 // Get most popular products (by click count)
-export const getMostPopularProducts = (products: Product[], count: number = 30): Product[] => {
+export const getMostPopularProducts = (products: Product[], count: number = 10): Product[] => {
   return products
     .filter(p => !isOutOfStock(p))
     .sort((a, b) => getClickCount(b.URL || b.LINK || '') - getClickCount(a.URL || a.LINK || ''))

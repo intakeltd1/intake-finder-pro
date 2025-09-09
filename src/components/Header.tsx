@@ -2,38 +2,43 @@ import { useState, useEffect } from 'react';
 import { Clock, Info } from 'lucide-react';
 
 export function Header() {
-  return (
-    <div className="bg-background border-b border-border">
-      <div className="container mx-auto px-4 py-6">
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold text-foreground">Supplement Price Comparison</h1>
-          <p className="text-lg text-muted-foreground">Find the best protein powder deals in the UK</p>
-          
-          <div className="flex items-center justify-center space-x-1 text-muted-foreground text-xs max-w-4xl mx-auto">
-            <Info className="h-3 w-3 flex-shrink-0" />
-            <span>
-              All images, prices and assets are owned by the product originators, linked to each product tile - Intake does not own any of the assets displayed, and all credit goes to the information & image originator. Intake acts as an advertiser for the displayed products. Intake may make a commission on purchases of products referenced here.
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return null; // Removed - content moved to main header in Index.tsx
 }
 
 export function StickyTimer() {
   const [lastUpdated, setLastUpdated] = useState<string>('');
 
   useEffect(() => {
-    // Calculate time since last update (simulated - in real app this would come from your data source)
-    const updateTime = new Date().getTime() - (4 * 60 * 60 * 1000); // 4 hours ago for demo
-    const now = new Date().getTime();
-    const diff = now - updateTime;
+    const checkJsonUpdate = async () => {
+      try {
+        // Try to get last modified from JSON file headers
+        const response = await fetch('/data/products.json', { method: 'HEAD' });
+        const lastModified = response.headers.get('Last-Modified');
+        
+        if (lastModified) {
+          const updateTime = new Date(lastModified).getTime();
+          const now = new Date().getTime();
+          const diff = now - updateTime;
+          
+          const hours = Math.floor(diff / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          
+          setLastUpdated(`${hours}h${minutes}m ago`);
+        } else {
+          // Fallback to simulated time
+          setLastUpdated('4h0m ago');
+        }
+      } catch {
+        // Fallback if fetch fails
+        setLastUpdated('4h0m ago');
+      }
+    };
+
+    checkJsonUpdate();
+    // Update every 5 minutes
+    const interval = setInterval(checkJsonUpdate, 5 * 60 * 1000);
     
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    setLastUpdated(`${hours}h${minutes}m ago`);
+    return () => clearInterval(interval);
   }, []);
 
   return (

@@ -62,7 +62,7 @@ const Index = () => {
 
   // Get featured and special products
   const topValueProducts = useMemo(() => getTopValueProducts(products, 15), [products]);
-  const mostPopularProducts = useMemo(() => getMostPopularProducts(products, 30), [products]);
+  const mostPopularProducts = useMemo(() => getMostPopularProducts(products, 10), [products]);
   const featuredProducts = useMemo(() => getTopValueProducts(products, 4), [products]);
 
   // Create sets for quick lookup
@@ -114,12 +114,15 @@ const Index = () => {
       {/* Main Header */}
       <header className="bg-primary text-primary-foreground py-8">
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-3">
             <h1 className="text-4xl font-bold tracking-tight">
               Intake - UK Supplement Search
             </h1>
             <p className="text-xl text-primary-foreground/90">
               Find the best value protein supplements with our smart comparison tool
+            </p>
+            <p className="text-xs text-primary-foreground/70 max-w-3xl mx-auto">
+              All prices & images are owned by product originators. Intake may earn commission on purchases.
             </p>
           </div>
         </div>
