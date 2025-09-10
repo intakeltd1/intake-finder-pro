@@ -121,20 +121,45 @@ const Index = () => {
       {/* Main Header */}
       <header className="bg-primary text-primary-foreground py-6">
         <div className="container mx-auto px-4">
-          <div className="text-center space-y-2">
-            <img 
-              src="/lovable-uploads/3a13365b-95f7-4cc2-9952-e5c717dd2424.png" 
-              alt="Intake Logo" 
-              className="h-12 mx-auto"
-            />
-            <p className="text-xl text-primary-foreground/90">
-              Find your next favourite supplement at the best possible price - updated daily.
-            </p>
-            <div className="flex items-center justify-center gap-2">
-              <Info className="h-3 w-3 text-primary-foreground/70" />
-              <p className="text-xs text-primary-foreground/70">
-                All prices & images owned by originators. Intake may earn commission on purchases.
+          <div className="flex items-center justify-between">
+            {/* Left side - Logo and main content */}
+            <div className="flex-1 text-center space-y-2">
+              <img 
+                src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
+                alt="Intake Logo" 
+                className="h-10 mx-auto filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+              />
+              <p className="text-xl text-primary-foreground/90">
+                Find your next favourite supplement at the best possible price - updated daily.
               </p>
+              <div className="flex items-center justify-center gap-2">
+                <Info className="h-3 w-3 text-primary-foreground/70" />
+                <p className="text-xs text-primary-foreground/70">
+                  All prices & images owned by originators. Intake may earn commission on purchases.
+                </p>
+              </div>
+            </div>
+            
+            {/* Right side - Supplement Dispenser Link */}
+            <div className="ml-8">
+              <a 
+                href="https://www.intakeltd.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-3 hover:bg-white/20 transition-colors group"
+              >
+                <div className="flex flex-col items-center text-center space-y-2">
+                  <img 
+                    src="/lovable-uploads/23f71f12-f512-4446-b5c7-c2296fd3f232.png" 
+                    alt="Supplement Dispenser" 
+                    className="w-16 h-16 object-cover rounded-md border border-white/30"
+                  />
+                  <p className="text-xs text-primary-foreground/90 font-medium leading-tight">
+                    Get your Supplement<br />Dispenser here<br />
+                    <span className="text-primary-foreground/70">Intake V1.0</span>
+                  </p>
+                </div>
+              </a>
             </div>
           </div>
         </div>
