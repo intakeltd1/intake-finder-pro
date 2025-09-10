@@ -125,7 +125,7 @@ const Index = () => {
             <img 
               src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
               alt="Intake Logo" 
-              className="h-10 mx-auto filter drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+              className="h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
             />
             <p className="text-xl text-primary-foreground/90">
               Find your next favourite supplement at the best possible price - updated daily.
