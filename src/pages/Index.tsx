@@ -119,10 +119,10 @@ const Index = () => {
       <StickyTimer />
       
       {/* Main Header */}
-      <header className="bg-primary text-primary-foreground py-6">
-        <div className="container mx-auto px-4 relative">
-          {/* Main content - centered */}
-          <div className="text-center space-y-2 lg:pr-32">
+      <header className="bg-primary text-primary-foreground py-6 relative">
+        <div className="container mx-auto px-4">
+          {/* Main content - truly centered against full page width */}
+          <div className="text-center space-y-2">
             <img 
               src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
               alt="Intake Logo" 
@@ -139,7 +139,7 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Supplement Dispenser Link - positioned to the right on larger screens, centered below on smaller */}
+          {/* Supplement Dispenser Link - positioned absolutely on larger screens, below content on mobile */}
           <div className="mt-4 flex justify-center lg:absolute lg:top-1/2 lg:right-4 lg:-translate-y-1/2 lg:mt-0">
             <a 
               href="https://www.intakeltd.com" 
