@@ -3,8 +3,9 @@ import { ProductCard } from '@/components/ProductCard';
 import { SearchFilters } from '@/components/SearchFilters';
 import { Header, StickyTimer } from '@/components/Header';
 import { CookiesDisclaimer } from '@/components/CookiesDisclaimer';
+import { NavigationDrawer } from '@/components/NavigationDrawer';
 import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, type Product } from '@/utils/productUtils';
-import { Loader2, Package, AlertCircle, Star, Info } from 'lucide-react';
+import { Loader2, Package, AlertCircle, Star, Info, Instagram, Music } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
@@ -139,6 +140,11 @@ const Index = () => {
       {/* Main Header */}
       <header className="bg-primary text-primary-foreground py-6 relative">
         <div className="container mx-auto px-4">
+          {/* Navigation Drawer - positioned absolutely on left */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            <NavigationDrawer />
+          </div>
+          
           {/* Main content - truly centered against full page width */}
           <div className="text-center space-y-2">
             <img 
@@ -154,6 +160,25 @@ const Index = () => {
               <p className="text-xs text-primary-foreground/70">
                 All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
               </p>
+            </div>
+            {/* Social Media Links */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <a 
+                href="https://instagram.com/use.intake" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary-foreground/60 hover:text-primary-foreground/90 transition-colors"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a 
+                href="https://tiktok.com/@use.intake" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary-foreground/60 hover:text-primary-foreground/90 transition-colors"
+              >
+                <Music className="h-4 w-4" />
+              </a>
             </div>
           </div>
           

@@ -7,39 +7,33 @@ export function Header() {
 
 export function StickyTimer() {
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [startTime] = useState<number>(Date.now());
 
   useEffect(() => {
-    const checkJsonUpdate = async () => {
-      try {
-        // Try to get last modified from JSON file headers
-        const response = await fetch('/data/products.json', { method: 'HEAD' });
-        const lastModified = response.headers.get('Last-Modified');
-        
-        if (lastModified) {
-          const updateTime = new Date(lastModified).getTime();
-          const now = new Date().getTime();
-          const diff = now - updateTime;
-          
-          const hours = Math.floor(diff / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          
-          setLastUpdated(`${hours}h${minutes}m ago`);
-        } else {
-          // Fallback to simulated time
-          setLastUpdated('4h0m ago');
-        }
-      } catch {
-        // Fallback if fetch fails
-        setLastUpdated('4h0m ago');
+    const updateTimer = () => {
+      // Calculate time since page load (simulating data refresh time)
+      const now = Date.now();
+      const diff = now - startTime;
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      if (hours > 0) {
+        setLastUpdated(`${hours}h${minutes}m ago`);
+      } else if (minutes > 0) {
+        setLastUpdated(`${minutes}m${seconds}s ago`);
+      } else {
+        setLastUpdated(`${seconds}s ago`);
       }
     };
 
-    checkJsonUpdate();
-    // Update every 5 minutes
-    const interval = setInterval(checkJsonUpdate, 5 * 60 * 1000);
+    updateTimer();
+    // Update every second for real-time display
+    const interval = setInterval(updateTimer, 1000);
     
     return () => clearInterval(interval);
-  }, []);
+  }, [startTime]);
 
   return (
     <div className="sticky top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-primary-foreground/20">

@@ -35,7 +35,7 @@ export function SearchFilters({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70" />
           <Input
             type="text"
-            placeholder="Search products, flavors..."
+            placeholder="Search products, flavours..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus:bg-white/20 focus:border-white/40"
@@ -48,15 +48,15 @@ export function SearchFilters({
             {/* Product Type Filter */}
             <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
               <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[160px]">
-                <SelectValue placeholder="Product Type" />
+                <SelectValue placeholder="Select Product Type" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
                 <SelectItem value="all">All Products</SelectItem>
-                <SelectItem value="whey">🥛 Whey Protein</SelectItem>
-                <SelectItem value="beef">🥩 Beef Protein</SelectItem>
-                <SelectItem value="clear">💧 Clear Protein</SelectItem>
-                <SelectItem value="diet">🔥 Diet Products</SelectItem>
-                <SelectItem value="mass">💪 Mass Gainers</SelectItem>
+                <SelectItem value="whey">Whey Protein</SelectItem>
+                <SelectItem value="vegan">Vegan Protein</SelectItem>
+                <SelectItem value="clear">Clear Protein</SelectItem>
+                <SelectItem value="diet">Diet Products</SelectItem>
+                <SelectItem value="mass">Mass Gainers</SelectItem>
               </SelectContent>
             </Select>
 
@@ -83,14 +83,14 @@ export function SearchFilters({
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
-                  <SelectItem value="default">Default Order</SelectItem>
-                  <SelectItem value="value">💪 Best Value (Protein/Price)</SelectItem>
-                  <SelectItem value="popularity">🔥 Most Popular</SelectItem>
-                  <SelectItem value="price_low">Price: Low to High</SelectItem>
-                  <SelectItem value="price_high">Price: High to Low</SelectItem>
-                  <SelectItem value="protein">Protein per Serving</SelectItem>
-                  <SelectItem value="brand">Brand Name</SelectItem>
-                </SelectContent>
+                <SelectItem value="default">Default Order</SelectItem>
+                <SelectItem value="value">Best Value (Protein/Price)</SelectItem>
+                <SelectItem value="popularity">Most Popular</SelectItem>
+                <SelectItem value="price_low">Price: Low to High</SelectItem>
+                <SelectItem value="price_high">Price: High to Low</SelectItem>
+                <SelectItem value="protein">Protein per Serving</SelectItem>
+                <SelectItem value="brand">Brand Name</SelectItem>
+              </SelectContent>
               </Select>
             </div>
           </div>

@@ -149,8 +149,8 @@ export const filterProducts = (
       switch (productTypeFilter) {
         case 'whey':
           return title.includes('whey');
-        case 'beef':
-          return title.includes('beef');
+        case 'vegan':
+          return title.includes('vegan') || title.includes('plant') || title.includes('pea protein');
         case 'clear':
           return title.includes('clear') || title.includes('juice') || title.includes('hydro');
         case 'diet':
