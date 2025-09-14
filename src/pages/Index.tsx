@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ProductCard } from '@/components/ProductCard';
 import { SearchFilters } from '@/components/SearchFilters';
 import { Header, StickyTimer } from '@/components/Header';
+import { CookiesDisclaimer } from '@/components/CookiesDisclaimer';
 import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, type Product } from '@/utils/productUtils';
 import { Loader2, Package, AlertCircle, Star, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,7 +14,7 @@ const Index = () => {
   const [query, setQuery] = useState('');
   const [sortBy, setSortBy] = useState('default');
   const [quantityFilter, setQuantityFilter] = useState('all');
-  const [goalFilter, setGoalFilter] = useState('all');
+  const [productTypeFilter, setProductTypeFilter] = useState('all');
 
   // Fetch products data
   useEffect(() => {
@@ -56,16 +57,16 @@ const Index = () => {
 
   // Filter and sort products
   const filteredAndSortedProducts = useMemo(() => {
-    const filtered = filterProducts(products, query, quantityFilter, goalFilter);
+    const filtered = filterProducts(products, query, quantityFilter, productTypeFilter);
     const sorted = sortProducts(filtered, sortBy);
     
     // If no search/filter applied, randomize in-stock products for variety
-    if (!query && quantityFilter === 'all' && goalFilter === 'all' && sortBy === 'default') {
+    if (!query && quantityFilter === 'all' && productTypeFilter === 'all' && sortBy === 'default') {
       return randomizeInStockProducts(sorted);
     }
     
     return sorted;
-  }, [products, query, quantityFilter, goalFilter, sortBy]);
+  }, [products, query, quantityFilter, productTypeFilter, sortBy]);
 
   // Get featured and special products
   const topValueProducts = useMemo(() => getTopValueProducts(products, 15), [products]);
@@ -81,14 +82,31 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-6">
             <div className="relative">
-              <Package className="h-16 w-16 text-primary mx-auto animate-pulse" />
-              <Loader2 className="h-6 w-6 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-spin" />
+              {/* Intake-branded loading animation */}
+              <div className="relative w-20 h-20 mx-auto">
+                {/* Outer rotating ring */}
+                <div className="absolute inset-0 border-4 border-primary/20 rounded-full animate-spin" 
+                     style={{ animationDuration: '2s' }}>
+                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rounded-full"></div>
+                </div>
+                {/* Inner pulsing circle */}
+                <div className="absolute inset-2 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
+                  <Package className="h-8 w-8 text-primary" />
+                </div>
+                {/* Rotating supplement dots */}
+                <div className="absolute inset-1 animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }}>
+                  <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
+                  <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
+                  <div className="absolute top-1/2 -left-0.5 transform -translate-y-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
+                  <div className="absolute top-1/2 -right-0.5 transform -translate-y-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
+                </div>
+              </div>
             </div>
             <div>
               <h2 className="text-2xl font-semibold text-foreground mb-2">Loading Products</h2>
-              <p className="text-muted-foreground">Fetching the latest product data...</p>
+              <p className="text-muted-foreground">Fetching the latest supplement data...</p>
             </div>
           </div>
         </div>
@@ -174,14 +192,14 @@ const Index = () => {
             setSortBy={setSortBy}
             quantityFilter={quantityFilter}
             setQuantityFilter={setQuantityFilter}
-            goalFilter={goalFilter}
-            setGoalFilter={setGoalFilter}
+            productTypeFilter={productTypeFilter}
+            setProductTypeFilter={setProductTypeFilter}
             resultCount={filteredAndSortedProducts.length}
           />
         </div>
 
         {/* Featured Products Section */}
-        {featuredProducts.length > 0 && !query && goalFilter === 'all' && (
+        {featuredProducts.length > 0 && !query && productTypeFilter === 'all' && (
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Star className="h-6 w-6 text-primary" />
@@ -225,7 +243,7 @@ const Index = () => {
             <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
             <p className="text-muted-foreground">
-              {query || quantityFilter || goalFilter !== 'all'
+              {query || quantityFilter || productTypeFilter !== 'all'
                 ? "Try adjusting your search criteria or filters"
                 : "No products available at the moment"
               }
@@ -263,6 +281,8 @@ const Index = () => {
           </p>
         </div>
       </footer>
+      
+      <CookiesDisclaimer />
     </div>
   );
 };

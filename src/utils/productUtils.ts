@@ -131,7 +131,7 @@ export const filterProducts = (
   products: Product[],
   query: string,
   quantityFilter: string,
-  goalFilter: string = 'all'
+  productTypeFilter: string = 'all'
 ): Product[] => {
   let filtered = [...products];
   
@@ -141,25 +141,25 @@ export const filterProducts = (
     filtered = filtered.filter(smartFilter);
   }
 
-  // Goal-based filtering
-  if (goalFilter && goalFilter !== 'all') {
+  // Product type filtering
+  if (productTypeFilter && productTypeFilter !== 'all') {
     filtered = filtered.filter(item => {
       const title = (item.TITLE || '').toLowerCase();
       
-      if (goalFilter === 'weight_loss') {
-        return title.includes('diet') || 
-               title.includes('lean') || 
-               title.includes('meal replacement') ||
-               title.includes('fat burn') ||
-               title.includes('weight loss');
-      } else if (goalFilter === 'build_muscle') {
-        return title.includes('mass') || 
-               title.includes('gainer') || 
-               title.includes('beef') ||
-               title.includes('creatine') ||
-               (numFromProtein(item.PROTEIN_SERVING?.toString()) >= 25);
+      switch (productTypeFilter) {
+        case 'whey':
+          return title.includes('whey');
+        case 'beef':
+          return title.includes('beef');
+        case 'clear':
+          return title.includes('clear') || title.includes('juice') || title.includes('hydro');
+        case 'diet':
+          return title.includes('diet') || title.includes('lean') || title.includes('meal replacement');
+        case 'mass':
+          return title.includes('mass') || title.includes('gainer') || title.includes('weight gain');
+        default:
+          return true;
       }
-      return true;
     });
   }
 

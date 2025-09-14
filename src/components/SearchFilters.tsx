@@ -11,8 +11,8 @@ interface SearchFiltersProps {
   setSortBy: (sort: string) => void;
   quantityFilter: string;
   setQuantityFilter: (filter: string) => void;
-  goalFilter: string;
-  setGoalFilter: (filter: string) => void;
+  productTypeFilter: string;
+  setProductTypeFilter: (filter: string) => void;
   resultCount: number;
 }
 
@@ -23,8 +23,8 @@ export function SearchFilters({
   setSortBy,
   quantityFilter,
   setQuantityFilter,
-  goalFilter,
-  setGoalFilter,
+  productTypeFilter,
+  setProductTypeFilter,
   resultCount,
 }: SearchFiltersProps) {
   return (
@@ -35,7 +35,7 @@ export function SearchFilters({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70" />
           <Input
             type="text"
-            placeholder="Search products, flavors, brands..."
+            placeholder="Search products, flavors..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus:bg-white/20 focus:border-white/40"
@@ -45,15 +45,18 @@ export function SearchFilters({
         {/* Filters Row */}
         <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
-            {/* Goal Filter */}
-            <Select value={goalFilter} onValueChange={setGoalFilter}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[140px]">
-                <SelectValue placeholder="Goal" />
+            {/* Product Type Filter */}
+            <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
+              <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[160px]">
+                <SelectValue placeholder="Product Type" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
-                <SelectItem value="all">All Goals</SelectItem>
-                <SelectItem value="weight_loss">🔥 Weight Loss</SelectItem>
-                <SelectItem value="build_muscle">💪 Build Muscle</SelectItem>
+                <SelectItem value="all">All Products</SelectItem>
+                <SelectItem value="whey">🥛 Whey Protein</SelectItem>
+                <SelectItem value="beef">🥩 Beef Protein</SelectItem>
+                <SelectItem value="clear">💧 Clear Protein</SelectItem>
+                <SelectItem value="diet">🔥 Diet Products</SelectItem>
+                <SelectItem value="mass">💪 Mass Gainers</SelectItem>
               </SelectContent>
             </Select>
 
