@@ -259,12 +259,63 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
   }
 };
 
-// Get top value products (best protein per price ratio)
+// Extract base product name by removing flavour variants
+export const getBaseProductName = (title: string): string => {
+  if (!title) return '';
+  
+  const flavorWords = [
+    'chocolate', 'choc', 'cocoa', 'mocha', 'brownie',
+    'vanilla', 'cream', 'custard',
+    'strawberry', 'berry', 'berries',
+    'banana', 'tropical',
+    'cookies', 'cookie', 'biscuit', 'oreo',
+    'mint', 'peppermint', 'spearmint',
+    'coffee', 'latte', 'cappuccino', 'espresso',
+    'peanut', 'pb', 'nut', 'butter',
+    'salted', 'caramel', 'toffee',
+    'lemon', 'lime', 'orange', 'citrus',
+    'apple', 'grape', 'cherry',
+    'unflavoured', 'unflavored', 'natural',
+    'smooth', 'crunchy', 'original'
+  ];
+  
+  let baseName = title.toLowerCase();
+  
+  // Remove flavour words and common descriptors
+  flavorWords.forEach(flavor => {
+    const regex = new RegExp(`\\b${flavor}\\b`, 'gi');
+    baseName = baseName.replace(regex, '');
+  });
+  
+  // Clean up extra spaces and return normalized name
+  return baseName.replace(/\s+/g, ' ').trim();
+};
+
+// Get top value products with deduplication (best protein per price ratio, one per base product)
 export const getTopValueProducts = (products: Product[], count: number = 15): Product[] => {
   return products
     .filter(p => !isOutOfStock(p) && calculateValueScore(p) > 0)
     .sort((a, b) => calculateValueScore(b) - calculateValueScore(a))
     .slice(0, count);
+};
+
+// Get deduplicated featured products (one variant per base product)
+export const getFeaturedProducts = (products: Product[], count: number = 4): Product[] => {
+  const topProducts = getTopValueProducts(products, 50); // Get larger pool first
+  const seenBaseNames = new Set<string>();
+  const featured: Product[] = [];
+  
+  for (const product of topProducts) {
+    if (featured.length >= count) break;
+    
+    const baseName = getBaseProductName(product.TITLE || '');
+    if (!seenBaseNames.has(baseName) && baseName) {
+      seenBaseNames.add(baseName);
+      featured.push(product);
+    }
+  }
+  
+  return featured;
 };
 
 // Get most popular products (by click count)

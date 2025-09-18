@@ -4,7 +4,7 @@ import { SearchFilters } from '@/components/SearchFilters';
 import { Header, StickyTimer } from '@/components/Header';
 import { CookiesDisclaimer } from '@/components/CookiesDisclaimer';
 import { NavigationDrawer } from '@/components/NavigationDrawer';
-import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, type Product } from '@/utils/productUtils';
+import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, getFeaturedProducts, type Product } from '@/utils/productUtils';
 import { Loader2, Package, AlertCircle, Star, Info, Instagram, Music } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -72,7 +72,7 @@ const Index = () => {
   // Get featured and special products
   const topValueProducts = useMemo(() => getTopValueProducts(products, 15), [products]);
   const mostPopularProducts = useMemo(() => getMostPopularProducts(products, 10), [products]);
-  const featuredProducts = useMemo(() => getTopValueProducts(products, 4), [products]);
+  const featuredProducts = useMemo(() => getFeaturedProducts(products, 4), [products]);
 
   // Create sets for quick lookup
   const topValueUrls = useMemo(() => new Set(topValueProducts.map(p => p.URL || p.LINK)), [topValueProducts]);
