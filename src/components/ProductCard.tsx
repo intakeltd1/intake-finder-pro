@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ImageIcon, TrendingUp, Star } from "lucide-react";
+import { ExternalLink, Package, ImageIcon, TrendingUp, Star, Plus } from "lucide-react";
 import { useState } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
+import { useComparison } from "@/hooks/useComparison";
 
 interface Product {
   TITLE?: string;
@@ -45,7 +46,9 @@ const isOutOfStock = (product: Product): boolean => {
 
 export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [addAnimation, setAddAnimation] = useState(false);
   const outOfStock = isOutOfStock(product);
+  const { addToComparison, isInComparison, comparisonProducts } = useComparison();
   
   const handleCardClick = () => {
     const url = product.URL || product.LINK;
@@ -61,6 +64,15 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     if (url) {
       incrementClickCount(url);
       window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleAddToComparison = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    if (!isInComparison(product) && comparisonProducts.length < 4) {
+      addToComparison(product);
+      setAddAnimation(true);
+      setTimeout(() => setAddAnimation(false), 600);
     }
   };
 
@@ -123,17 +135,35 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           )}
         </div>
         
-        {/* External Link Button */}
-        {(product.URL || product.LINK) && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleExternalLinkClick}
-            className="absolute top-3 right-3 h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </Button>
-        )}
+        {/* Action Buttons */}
+        <div className="absolute top-3 right-3 flex flex-col gap-1">
+          {/* Add to Comparison Button */}
+          {!outOfStock && comparisonProducts.length < 4 && !isInComparison(product) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleAddToComparison}
+              className={`h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+                addAnimation ? 'animate-bounce scale-110' : ''
+              }`}
+              title="Add to comparison"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          )}
+          
+          {/* External Link Button */}
+          {(product.URL || product.LINK) && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleExternalLinkClick}
+              className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       <CardHeader className="pb-3">

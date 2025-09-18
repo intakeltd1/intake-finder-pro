@@ -79,17 +79,43 @@ const createSmartSearch = (query: string): (item: Product) => boolean => {
     peanut: ['peanut', 'pb', 'nut']
   };
   
-  // Simple fuzzy matching for common typos
+  // Enhanced fuzzy matching for common typos and misspellings
   const fuzzyMatches = {
+    // Protein variations
     'protien': 'protein',
     'protine': 'protein',
+    'protean': 'protein',
+    // Whey variations
     'whay': 'whey',
     'wey': 'whey',
+    'way': 'whey',
+    // Casein variations
     'casien': 'casein',
+    'caisen': 'casein',
+    'casine': 'casein',
+    // Creatine variations
     'creatien': 'creatine',
+    'creatin': 'creatine',
+    // Flavour variations
     'chocolat': 'chocolate',
+    'chocalate': 'chocolate',
+    'chocoloate': 'chocolate',
     'vanila': 'vanilla',
-    'strawbery': 'strawberry'
+    'vanilia': 'vanilla',
+    'vanlla': 'vanilla',
+    'strawbery': 'strawberry',
+    'strawberie': 'strawberry',
+    'strawberrie': 'strawberry',
+    'stawberry': 'strawberry',
+    'strwberry': 'strawberry',
+    'strbery': 'strawberry',
+    // Other common variations
+    'bannana': 'banana',
+    'bananana': 'banana',
+    'chery': 'cherry',
+    'aple': 'apple',
+    'lemmon': 'lemon',
+    'oragne': 'orange'
   };
   
   // Correct common typos

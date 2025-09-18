@@ -4,6 +4,9 @@ import { SearchFilters } from '@/components/SearchFilters';
 import { Header, StickyTimer } from '@/components/Header';
 import { CookiesDisclaimer } from '@/components/CookiesDisclaimer';
 import { NavigationDrawer } from '@/components/NavigationDrawer';
+import { ComparisonWidget } from '@/components/ComparisonWidget';
+import { ComparisonModal } from '@/components/ComparisonModal';
+import { ComparisonProvider } from '@/hooks/useComparison';
 import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, getFeaturedProducts, type Product } from '@/utils/productUtils';
 import { Loader2, Package, AlertCircle, Star, Info, Instagram, Music } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -133,9 +136,10 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
-      <Header />
-      <StickyTimer />
+    <ComparisonProvider>
+      <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
+        <Header />
+        <StickyTimer />
       
       {/* Main Header */}
       <header className="bg-primary text-primary-foreground py-6 relative">
@@ -308,7 +312,10 @@ const Index = () => {
       </footer>
       
       <CookiesDisclaimer />
+      <ComparisonWidget />
+      <ComparisonModal />
     </div>
+    </ComparisonProvider>
   );
 };
 
