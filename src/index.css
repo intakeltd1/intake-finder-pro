@@ -170,29 +170,31 @@ All colors MUST be HSL.
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
-/* White circling animation with offset gap for better highlighting */
+/* White circling animation with visible offset gap */
 .white-circle-border {
   position: relative;
+  border-radius: 0.75rem;
 }
 
-.white-circle-border::before {
+.white-circle-border::after {
   content: '';
   position: absolute;
-  top: -6px;
-  left: -6px;
-  right: -6px;
-  bottom: -6px;
-  border: 2px solid white;
-  border-radius: 0.875rem;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 3px solid white;
+  border-radius: 1rem;
   animation: white-circle 2s linear infinite;
   pointer-events: none;
+  z-index: -1;
 }
 
 @keyframes white-circle {
   0% { border-color: rgba(255, 255, 255, 1); }
-  25% { border-color: rgba(100, 100, 100, 1); }
-  50% { border-color: rgba(40, 40, 40, 1); }
-  75% { border-color: rgba(100, 100, 100, 1); }
+  25% { border-color: rgba(120, 120, 120, 1); }
+  50% { border-color: rgba(60, 60, 60, 1); }
+  75% { border-color: rgba(120, 120, 120, 1); }
   100% { border-color: rgba(255, 255, 255, 1); }
 }
 
