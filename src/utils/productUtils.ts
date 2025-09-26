@@ -9,15 +9,17 @@ export const parseGrams = (amount?: string): number | null => {
   return value;
 };
 
-export const numFromPrice = (price?: string): number => {
+export const numFromPrice = (price?: string | number): number => {
   if (!price) return Infinity;
-  const match = price.replace(/[^\d.]/g, '');
+  const priceStr = String(price);
+  const match = priceStr.replace(/[^\d.]/g, '');
   return parseFloat(match) || Infinity;
 };
 
-export const numFromProtein = (protein?: string): number => {
+export const numFromProtein = (protein?: string | number): number => {
   if (!protein) return 0;
-  const match = protein.replace(/[^\d.]/g, '');
+  const proteinStr = String(protein);
+  const match = proteinStr.replace(/[^\d.]/g, '');
   return parseFloat(match) || 0;
 };
 
