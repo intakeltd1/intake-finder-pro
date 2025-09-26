@@ -40,6 +40,8 @@ export default function Index() {
   const [quantityFilter, setQuantityFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
   const [isRandomized, setIsRandomized] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState(28);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
 
   // Fetch products from JSON
@@ -148,6 +150,38 @@ export default function Index() {
 
   // Simplified lookups for performance
   const topValueUrls = useMemo(() => new Set(bestValueProducts.map(p => p.URL || p.LINK)), [bestValueProducts]);
+
+  // Products to display with pagination
+  const displayedProducts = useMemo(() => {
+    return filteredAndSortedProducts.slice(0, displayedCount);
+  }, [filteredAndSortedProducts, displayedCount]);
+
+  // Load more products when scrolling
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isLoadingMore || displayedCount >= filteredAndSortedProducts.length) return;
+      
+      const scrollTop = document.documentElement.scrollTop;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+      
+      if (scrollTop + windowHeight >= docHeight - 1000) {
+        setIsLoadingMore(true);
+        setTimeout(() => {
+          setDisplayedCount(prev => Math.min(prev + 28, filteredAndSortedProducts.length));
+          setIsLoadingMore(false);
+        }, 300);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [displayedCount, filteredAndSortedProducts.length, isLoadingMore]);
+
+  // Reset displayed count when filters change
+  useEffect(() => {
+    setDisplayedCount(28);
+  }, [debouncedQuery, sortBy, quantityFilter, productTypeFilter]);
 
   if (loading) {
     return (
@@ -310,37 +344,57 @@ export default function Index() {
           {/* Products Grid */}
           <div className="container mx-auto px-4 pb-8">
             {filteredAndSortedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
-                  {filteredAndSortedProducts.map((product, index) => (
-                    <div 
-                      key={`${product.URL || product.LINK}-${index}`}
-                      className="staggered-fade-in"
-                      style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
-                    >
-                    <ProductCard
-                      product={product}
-                      isTopValue={top10Products.has(product.URL || product.LINK || '')}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-lg text-foreground/70 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">No products found matching your criteria.</p>
-                <p className="text-sm text-foreground/50 mt-2 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">Try adjusting your search or filters.</p>
-              </div>
-            )}
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
+                  {displayedProducts.map((product, index) => (
+                     <div 
+                       key={`${product.URL || product.LINK}-${index}`}
+                       className="staggered-fade-in"
+                       style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
+                     >
+                     <ProductCard
+                       product={product}
+                       isTopValue={top10Products.has(product.URL || product.LINK || '')}
+                     />
+                   </div>
+                 ))}
+               </div>
 
-            {/* Footer with product count and stock status */}
-            <div className="text-center text-sm text-foreground/60 space-y-1">
-              <p>
-                Showing {filteredAndSortedProducts.length} of {products.length} products
-              </p>
-              <p>
-                Stock levels and prices are updated regularly. Click any product to view current availability.
-              </p>
-            </div>
-          </div>
+               {/* Loading more indicator */}
+               {isLoadingMore && (
+                 <div className="text-center py-8">
+                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                   <p className="text-foreground/70">Loading more products...</p>
+                 </div>
+               )}
+
+               {/* Load more message */}
+               {displayedCount < filteredAndSortedProducts.length && !isLoadingMore && (
+                 <div className="text-center py-8">
+                   <p className="text-foreground/70 mb-2">Scroll down to load more products</p>
+                   <p className="text-sm text-foreground/50">
+                     Showing {displayedCount} of {filteredAndSortedProducts.length} products
+                   </p>
+                 </div>
+               )}
+              </>
+             ) : (
+               <div className="text-center py-12">
+                 <p className="text-lg text-foreground/70 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">No products found matching your criteria.</p>
+                 <p className="text-sm text-foreground/50 mt-2 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">Try adjusting your search or filters.</p>
+               </div>
+             )}
+
+             {/* Footer with product count and stock status */}
+             <div className="text-center text-sm text-foreground/60 space-y-1">
+               <p>
+                 Showing {displayedProducts.length} of {products.length} products total
+               </p>
+               <p>
+                 Stock levels and prices are updated regularly. Click any product to view current availability.
+               </p>
+             </div>
+           </div>
 
           <CookiesDisclaimer />
           <ComparisonWidget />
