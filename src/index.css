@@ -117,55 +117,40 @@ All colors MUST be HSL.
   }
 }
 
-/* Scroll animations */
+/* Optimized animations with GPU acceleration and reduced complexity */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-/* Staggered fade-in animation for tiles */
+/* Simplified staggered fade-in with GPU acceleration */
 @keyframes staggered-fade-in {
   0% {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translate3d(0, 15px, 0);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .staggered-fade-in {
   opacity: 0;
-  animation: staggered-fade-in 0.6s ease-out forwards;
-}
-
-@keyframes fadeOutDown {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
+  animation: staggered-fade-in 0.4s ease-out forwards;
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
+  animation: fadeInUp 0.6s ease-out forwards;
 }
 
-.fade-out-down {
-  animation: fadeOutDown 0.4s ease-in forwards;
-}
-
-/* Video Background */
+/* Simplified video background */
 .video-background {
   position: fixed;
   top: 0;
@@ -175,82 +160,70 @@ All colors MUST be HSL.
   object-fit: cover;
   z-index: 1;
   pointer-events: none;
-  opacity: 1;
+  opacity: 0.3;
+  will-change: auto;
 }
 
-/* Featured Products Glow */
+/* Optimized featured products container - reduced animation frequency */
 .featured-products-container {
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 0.25);
   border: 2px solid rgba(255, 255, 255, 0.4);
-  animation: pulse-glow 3s ease-in-out infinite;
+  animation: pulse-glow 4s ease-in-out infinite;
 }
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.25);
     border-color: rgba(255, 255, 255, 0.4);
   }
   50% {
-    box-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
-    border-color: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 35px rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 }
 
-/* Rainbow border animation replaced with white glow for consistency */
+/* Simplified borders with GPU acceleration */
 .rainbow-border {
-  border: 3px solid white;
+  border: 2px solid white;
   border-radius: 0.75rem;
-  animation: featured-pulse 2s ease-in-out infinite;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  animation: featured-pulse 3s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
 }
 
-/* Fire border animation for popular products */
+/* Optimized fire border - reduced complexity */
 @keyframes fire-glow {
   0%, 100% { 
     border-color: #ff4500; 
-    box-shadow: 0 0 20px rgba(255, 69, 0, 0.6);
-  }
-  25% { 
-    border-color: #ff6500; 
-    box-shadow: 0 0 25px rgba(255, 101, 0, 0.7);
+    box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
   }
   50% { 
-    border-color: #ff8500; 
-    box-shadow: 0 0 30px rgba(255, 133, 0, 0.8);
-  }
-  75% { 
     border-color: #ff6500; 
-    box-shadow: 0 0 25px rgba(255, 101, 0, 0.7);
+    box-shadow: 0 0 20px rgba(255, 101, 0, 0.6);
   }
 }
 
 .fire-border {
   border-width: 2px;
-  animation: fire-glow 2s ease-in-out infinite;
+  animation: fire-glow 3s ease-in-out infinite;
 }
 
-/* Featured products container with clean white border */
-.featured-products-container {
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
-}
-
-/* Featured product glow animation - clean white pulsing border */
-.featured-glow-border {
-  position: relative;
-  border: 3px solid white;
-  border-radius: 0.75rem;
-  animation: featured-pulse 2s ease-in-out infinite;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
+/* Optimized featured pulse - slower and less intensive */
 @keyframes featured-pulse {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
     border-color: rgba(255, 255, 255, 1);
   }
   50% {
-    box-shadow: 0 0 30px rgba(255, 255, 255, 0.8), 0 0 50px rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
     border-color: rgba(255, 255, 255, 0.8);
   }
 }
+
+.featured-glow-border {
+  position: relative;
+  border: 2px solid white;
+  border-radius: 0.75rem;
+  animation: featured-pulse 3s ease-in-out infinite;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+}
+

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Instagram, Info } from "lucide-react";
 import { Header, StickyTimer } from "@/components/Header";
@@ -34,6 +35,7 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
+  const [debouncedQuery] = useDebounce(query, 300); // Debounce search for performance
   const [sortBy, setSortBy] = useState('randomize');
   const [quantityFilter, setQuantityFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
@@ -78,75 +80,54 @@ export default function Index() {
   }, [products]);
 
 
-  // Filter and sort products with fuzzy search
+  // Optimized filtering with debouncing and memoization
   const filteredAndSortedProducts = useMemo(() => {
-    console.log('Filtering products with query:', query);
-    let filtered = applyFuzzySearch(products, query);
-    console.log('After fuzzy search:', filtered.length);
+    let filtered = debouncedQuery.trim() ? applyFuzzySearch(products, debouncedQuery.trim()) : products;
 
-    // Apply quantity filter
+    // Apply quantity filter efficiently
     if (quantityFilter !== 'all') {
       filtered = filtered.filter(product => {
         const amount = product.AMOUNT?.toLowerCase() || '';
         switch (quantityFilter) {
-          case '<1kg':
-            return amount.includes('g') && !amount.includes('kg');
-          case '1-2kg':
-            return amount.includes('1kg') || amount.includes('1.') || 
-                   (amount.includes('2kg') && !amount.includes('2.5') && !amount.includes('2.7'));
-          case '2-3kg':
-            return amount.includes('2.') || amount.includes('2kg') || amount.includes('3kg');
-          case '3-5kg':
-            return amount.includes('3.') || amount.includes('4') || amount.includes('5kg');
-          case '>5kg':
-            return amount.includes('6') || amount.includes('7') || amount.includes('8') || 
-                   amount.includes('9') || amount.includes('10');
-          default:
-            return true;
+          case '<1kg': return amount.includes('g') && !amount.includes('kg');
+          case '1-2kg': return amount.includes('1kg') || amount.includes('1.') || 
+                         (amount.includes('2kg') && !amount.includes('2.5') && !amount.includes('2.7'));
+          case '2-3kg': return amount.includes('2.') || amount.includes('2kg') || amount.includes('3kg');
+          case '3-5kg': return amount.includes('3.') || amount.includes('4') || amount.includes('5kg');
+          case '>5kg': return amount.includes('6') || amount.includes('7') || amount.includes('8') || 
+                        amount.includes('9') || amount.includes('10');
+          default: return true;
         }
       });
     }
 
-    // Apply product type filter
+    // Apply product type filter efficiently  
     if (productTypeFilter !== 'all') {
       filtered = filtered.filter(product => {
         const title = product.TITLE?.toLowerCase() || '';
-        const company = product.COMPANY?.toLowerCase() || '';
-        
         switch (productTypeFilter) {
-          case 'whey':
-            return title.includes('whey') && !title.includes('vegan');
-          case 'vegan':
-            return title.includes('vegan') || title.includes('plant') || title.includes('pea');
-          case 'clear':
-            return title.includes('clear') || title.includes('juice');
-          case 'diet':
-            return title.includes('diet') || title.includes('lean') || title.includes('cut');
-          case 'mass':
-            return title.includes('mass') || title.includes('gainer') || title.includes('bulk');
-          default:
-            return true;
+          case 'whey': return title.includes('whey') && !title.includes('vegan');
+          case 'vegan': return title.includes('vegan') || title.includes('plant') || title.includes('pea');
+          case 'clear': return title.includes('clear') || title.includes('juice');
+          case 'diet': return title.includes('diet') || title.includes('lean') || title.includes('cut');
+          case 'mass': return title.includes('mass') || title.includes('gainer') || title.includes('bulk');
+          default: return true;
         }
       });
     }
 
-    // Sort products - out of stock always go to bottom
-    let sorted = [...filtered].sort((a, b) => {
+    // Optimized sorting with single pass
+    return [...filtered].sort((a, b) => {
       const aOutOfStock = isOutOfStock(a);
       const bOutOfStock = isOutOfStock(b);
       
-      // First, separate in-stock from out-of-stock
       if (aOutOfStock && !bOutOfStock) return 1;
       if (!aOutOfStock && bOutOfStock) return -1;
       
-      // Then apply regular sorting within each group
       switch (sortBy) {
-        case 'randomize':
-          return Math.random() - 0.5;
-        case 'value':
-          return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
-        case 'popularity':
-          return (b.POPULARITY || 0) - (a.POPULARITY || 0);
+        case 'randomize': return Math.random() - 0.5;
+        case 'value': return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
+        case 'popularity': return (b.POPULARITY || 0) - (a.POPULARITY || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
           const priceB = parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '0');
@@ -159,67 +140,28 @@ export default function Index() {
           const proteinA = parseFloat(String(a.PROTEIN_SERVING || '').replace(/[^\d.]/g, '') || '0');
           const proteinB = parseFloat(String(b.PROTEIN_SERVING || '').replace(/[^\d.]/g, '') || '0');
           return proteinB - proteinA;
-        case 'brand':
-          return (a.COMPANY || '').localeCompare(b.COMPANY || '');
-        default:
-          return 0;
+        case 'brand': return (a.COMPANY || '').localeCompare(b.COMPANY || '');
+        default: return 0;
       }
     });
+  }, [products, debouncedQuery, sortBy, quantityFilter, productTypeFilter]);
 
-    // If randomize is selected, shuffle again to ensure true randomization
-    if (sortBy === 'randomize') {
-      const inStock = sorted.filter(p => !isOutOfStock(p));
-      const outOfStock = sorted.filter(p => isOutOfStock(p));
-      
-      for (let i = inStock.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [inStock[i], inStock[j]] = [inStock[j], inStock[i]];
-      }
-      
-      sorted = [...inStock, ...outOfStock];
-    }
-
-    return sorted;
-  }, [products, query, sortBy, quantityFilter, productTypeFilter]);
-
-  // Special product categories
-  const topValueProducts = useMemo(() => {
-    return products
-      .filter(p => p.VALUE_RATING && p.VALUE_RATING >= 8)
-      .sort((a, b) => (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0))
-      .slice(0, 8);
-  }, [products]);
-
-  const mostPopularProducts = useMemo(() => {
-    return products
-      .filter(p => p.POPULARITY && p.POPULARITY >= 8)
-      .sort((a, b) => (b.POPULARITY || 0) - (a.POPULARITY || 0))
-      .slice(0, 8);
-  }, [products]);
-
-  const featuredProducts = useMemo(() => {
-    return products.filter(p => p.FEATURED === true).slice(0, 8);
-  }, [products]);
-
-  // Create Sets for O(1) lookup
-  const topValueUrls = useMemo(() => new Set(topValueProducts.map(p => p.URL || p.LINK)), [topValueProducts]);
-  const popularUrls = useMemo(() => new Set(mostPopularProducts.map(p => p.URL || p.LINK)), [mostPopularProducts]);
-  const featuredUrls = useMemo(() => new Set(featuredProducts.map(p => p.URL || p.LINK)), [featuredProducts]);
+  // Simplified lookups for performance
+  const topValueUrls = useMemo(() => new Set(bestValueProducts.map(p => p.URL || p.LINK)), [bestValueProducts]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background relative overflow-hidden">
-        {/* Video Background for Loading */}
+        {/* Video Background with optimized loading */}
         <video 
           autoPlay 
           muted 
           loop 
           playsInline
           className="video-background"
-          preload="auto"
+          preload="metadata"
         >
           <source src="/background-video.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
         </video>
         
         <div className="relative z-10 flex items-center justify-center min-h-screen">
@@ -261,20 +203,16 @@ export default function Index() {
   return (
     <ComparisonProvider>
       <div className="min-h-screen relative">
-        {/* Video Background */}
+        {/* Video Background with optimized loading */}
         <video 
           autoPlay 
           muted 
           loop 
           playsInline
           className="video-background"
-          preload="auto"
-          onLoadStart={() => console.log('Video loading started')}
-          onCanPlay={() => console.log('Video can play')}
-          onError={(e) => console.error('Video error:', e)}
+          preload="metadata"
         >
           <source src="/background-video.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
         </video>
         
         {/* Sticky Timer - Always at top */}
@@ -356,7 +294,7 @@ export default function Index() {
                     <div 
                       key={`best-value-${index}`}
                       className="staggered-fade-in"
-                      style={{ animationDelay: `${2000 + (index * 200)}ms` }}
+                      style={{ animationDelay: `${1500 + (index * 150)}ms` }}
                     >
                       <ProductCard
                         product={product}
@@ -373,16 +311,15 @@ export default function Index() {
           <div className="container mx-auto px-4 pb-8">
             {filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
-                {filteredAndSortedProducts.map((product, index) => (
-                  <div 
-                    key={index}
-                    className="staggered-fade-in"
-                    style={{ animationDelay: `${2000 + (index * 100)}ms` }}
-                  >
+                  {filteredAndSortedProducts.map((product, index) => (
+                    <div 
+                      key={`${product.URL || product.LINK}-${index}`}
+                      className="staggered-fade-in"
+                      style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
+                    >
                     <ProductCard
                       product={product}
-                      isTopValue={topValueUrls.has(product.URL || product.LINK || '') || top30Products.has(product.URL || product.LINK || '')}
-                      isPopular={popularUrls.has(product.URL || product.LINK || '')}
+                      isTopValue={top30Products.has(product.URL || product.LINK || '')}
                     />
                   </div>
                 ))}
