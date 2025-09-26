@@ -91,6 +91,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
+            loading="lazy"
             onError={() => setImageError(true)}
           />
         ) : (
@@ -143,23 +144,23 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         </div>
       </div>
 
-      <CardContent className="p-4 flex-1 flex flex-col">
+      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
         {/* Company Name */}
         <div className="mb-2">
-          <p className="text-sm text-muted-foreground line-clamp-1">
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
             {product.COMPANY || "Unknown Brand"}
           </p>
         </div>
 
         {/* Product Title */}
-        <CardTitle className="text-base mb-3 line-clamp-2 min-h-[3rem] flex items-start">
+        <CardTitle className="text-sm sm:text-base mb-3 line-clamp-2 min-h-[3rem] flex items-start">
           {product.TITLE || "Product Title Not Available"}
         </CardTitle>
 
         <div className="flex-1 space-y-3">
           {/* Price and Amount */}
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-primary">
+            <span className="text-base sm:text-lg font-bold text-primary">
               {product.PRICE || "Price N/A"}
             </span>
             {product.AMOUNT && (
@@ -172,14 +173,14 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
           {/* Product Details - Fixed structure for alignment */}
           <div className="space-y-2 min-h-[4rem]">
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex justify-between items-center text-xs sm:text-sm">
               <span className="text-muted-foreground">Protein per serving:</span>
               <span className="font-medium text-foreground">
                 {product.PROTEIN_SERVING || "N/A"}
               </span>
             </div>
             
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex justify-between items-center text-xs sm:text-sm">
               <span className="text-muted-foreground">Flavour:</span>
               <span className="font-medium text-foreground">
                 {product.FLAVOUR || "N/A"}
@@ -189,7 +190,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
           {/* Click hint */}
           {(product.URL || product.LINK) && !outOfStock && (
-            <div className="text-xs text-muted-foreground text-center pt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="text-[10px] sm:text-xs text-muted-foreground text-center pt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               Click to view product details
             </div>
           )}

@@ -43,33 +43,55 @@ export default function Index() {
   const [displayedCount, setDisplayedCount] = useState(28);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadingIntervalRef = useRef<number | null>(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   
 
-  // Fetch products from JSON
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/data/products.json');
-        
-        if (!response.ok) {
-          throw new Error(`Failed to load products: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Loaded products:', data?.length);
-        setProducts(data || []);
-        setError(null);
-      } catch (error) {
-        console.error('Error loading products:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
+// Fetch products from JSON
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/data/products.json');
+      if (!response.ok) throw new Error(`Failed to load products: ${response.status}`);
 
-    fetchProducts();
-  }, []);
+      // Try to parse flexible shapes and extract lastUpdated
+      const text = await response.text();
+      let parsed: any;
+      try { parsed = JSON.parse(text); } catch (e) { throw new Error('Invalid JSON format'); }
+
+      let items: Product[] = [];
+      let metaDate: string | undefined;
+
+      const pickDate = (obj: any) => obj?.lastUpdated || obj?.updatedAt || obj?.timestamp || obj?.generatedAt || obj?.date || obj?.updated;
+
+      if (Array.isArray(parsed)) {
+        // If the first element is a meta object with a timestamp, use it and drop it from the list
+        const first = parsed[0];
+        if (first && !first.URL && (pickDate(first))) {
+          metaDate = pickDate(first);
+          items = parsed.slice(1) as Product[];
+        } else {
+          items = parsed as Product[];
+        }
+      } else if (parsed && typeof parsed === 'object') {
+        metaDate = pickDate(parsed);
+        items = (parsed.products || parsed.items || parsed.data || parsed.list || []) as Product[];
+      }
+
+      console.log('Loaded products:', items?.length, metaDate ? `(lastUpdated: ${metaDate})` : '');
+      setProducts(items || []);
+      setLastUpdatedAt(metaDate || response.headers.get('last-modified') || response.headers.get('date'));
+      setError(null);
+    } catch (error) {
+      console.error('Error loading products:', error);
+      setError(error instanceof Error ? error.message : 'Unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, []);
 
   // Get best value products using utility function (already deduplicates and filters out-of-stock)
   const bestValueProducts = useMemo(() => {
@@ -157,54 +179,55 @@ export default function Index() {
     return filteredAndSortedProducts.slice(0, displayedCount);
   }, [filteredAndSortedProducts, displayedCount]);
 
-  // Load more products when scrolling
-  useEffect(() => {
-    const handleScroll = () => {
-      if (isLoadingMore || displayedCount >= filteredAndSortedProducts.length || loadingIntervalRef.current) return;
-      
-      const scrollTop = document.documentElement.scrollTop;
-      const windowHeight = window.innerHeight;
-      const docHeight = document.documentElement.scrollHeight;
-      
-      if (scrollTop + windowHeight >= docHeight - 1000) {
-        setIsLoadingMore(true);
-        const target = Math.min(displayedCount + 28, filteredAndSortedProducts.length);
-        
-        loadingIntervalRef.current = window.setInterval(() => {
-          setDisplayedCount((prev) => {
-            if (prev >= target) {
-              if (loadingIntervalRef.current) {
-                clearInterval(loadingIntervalRef.current);
-                loadingIntervalRef.current = null;
-              }
-              setIsLoadingMore(false);
-              return prev;
-            }
-            return prev + 1;
-          });
-        }, 80); // Add one card every 80ms
-      }
-    };
+// Load more products when scrolling
+useEffect(() => {
+  const handleScroll = () => {
+    if (isLoadingMore || displayedCount >= filteredAndSortedProducts.length || loadingIntervalRef.current) return;
 
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (loadingIntervalRef.current) {
-        clearInterval(loadingIntervalRef.current);
-        loadingIntervalRef.current = null;
-      }
-    };
-  }, [displayedCount, filteredAndSortedProducts.length, isLoadingMore]);
+    const scrollTop = document.documentElement.scrollTop;
+    const windowHeight = window.innerHeight;
+    const docHeight = document.documentElement.scrollHeight;
 
-  // Reset displayed count when filters change
-  useEffect(() => {
-    setDisplayedCount(28);
+    if (scrollTop + windowHeight >= docHeight - 900) {
+      const remaining = filteredAndSortedProducts.length - displayedCount;
+      const itemsToAdd = Math.min(28, Math.max(0, remaining));
+      if (itemsToAdd <= 0) return;
+
+      setIsLoadingMore(true);
+      let added = 0;
+      loadingIntervalRef.current = window.setInterval(() => {
+        added += 1;
+        setDisplayedCount((prev) => prev + 1);
+        if (added >= itemsToAdd) {
+          if (loadingIntervalRef.current) {
+            clearInterval(loadingIntervalRef.current);
+            loadingIntervalRef.current = null;
+          }
+          setIsLoadingMore(false);
+        }
+      }, 80);
+    }
+  };
+
+  window.addEventListener('scroll', handleScroll);
+  return () => {
+    window.removeEventListener('scroll', handleScroll);
     if (loadingIntervalRef.current) {
       clearInterval(loadingIntervalRef.current);
       loadingIntervalRef.current = null;
     }
-    setIsLoadingMore(false);
-  }, [debouncedQuery, sortBy, quantityFilter, productTypeFilter]);
+  };
+}, [displayedCount, filteredAndSortedProducts.length, isLoadingMore]);
+
+// Reset displayed count when filters change
+useEffect(() => {
+  setDisplayedCount(28);
+  if (loadingIntervalRef.current) {
+    clearInterval(loadingIntervalRef.current);
+    loadingIntervalRef.current = null;
+  }
+  setIsLoadingMore(false);
+}, [debouncedQuery, sortBy, quantityFilter, productTypeFilter, filteredAndSortedProducts.length]);
 
   if (loading) {
     return (
@@ -274,14 +297,14 @@ export default function Index() {
         
         {/* Sticky Timer - Always at top */}
         <div className="fixed top-0 left-0 right-0 z-50">
-          <StickyTimer />
+          <StickyTimer lastUpdatedISO={lastUpdatedAt || undefined} />
         </div>
 
         {/* Combined Header and Search - Single Animation */}
-        <div className="relative z-10 transition-all duration-1000 delay-1000 pt-12 fade-in-up">
+        <div className="relative z-10 transition-all duration-1000 delay-1000 pt-10 md:pt-12 fade-in-up">
           <div className="bg-background/20 backdrop-blur-xl shadow-lg">
             {/* Main Header */}
-            <header className="text-foreground py-6 relative border border-white/10 rounded-lg mx-4 bg-background/5">
+            <header className="text-foreground py-4 md:py-6 relative border border-white/10 rounded-lg mx-2 md:mx-4 bg-background/5">
               <div className="container mx-auto px-4">
                 {/* Navigation Drawer - positioned absolutely on left */}
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -289,18 +312,18 @@ export default function Index() {
                 </div>
                 
                 {/* Main content - truly centered against full page width */}
-                <div className="text-center space-y-3">
+                <div className="text-center space-y-2 md:space-y-3">
                   <img 
                     src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
                     alt="Intake Logo" 
-                    className="h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
+                    className="h-8 md:h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
                   />
-                  <p className="text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
+                  <p className="text-base md:text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
                     Find your next favourite supplement at the best possible price - updated daily.
                   </p>
                   <div className="flex items-center justify-center gap-2">
-                    <Info className="h-3 w-3 text-foreground/70" />
-                    <p className="text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">
+                    <Info className="h-3 w-3 text-foreground/70 hidden md:inline" />
+                    <p className="text-[10px] md:text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">
                       All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
                     </p>
                   </div>
@@ -341,12 +364,12 @@ export default function Index() {
 
           {/* Best Value Products - Price/Protein Ratio */}
           {bestValueProducts.length > 0 && (
-            <div className="container mx-auto px-4 pb-6">
-              <div className="featured-products-container rounded-xl p-4 bg-background/5 backdrop-blur-sm">
-                <h2 className="text-xl font-bold text-center mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
+            <div className="container mx-auto px-2 md:px-4 pb-6">
+              <div className="featured-products-container rounded-xl p-3 md:p-4 bg-background/5 backdrop-blur-sm">
+                <h2 className="text-lg md:text-xl font-bold text-center mb-3 md:mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
                   Today's Top Picks
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                   {bestValueProducts.map((product, index) => (
                     <div 
                       key={`best-value-${index}`}
@@ -367,40 +390,40 @@ export default function Index() {
           )}
 
           {/* Products Grid */}
-          <div className="container mx-auto px-4 pb-8">
+          <div className="container mx-auto px-2 md:px-4 pb-8">
             {filteredAndSortedProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4 mb-8">
                   {displayedProducts.map((product, index) => (
-                     <div 
-                       key={`${product.URL || product.LINK}-${index}`}
-                       className="staggered-fade-in"
-                       style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
-                     >
-                       {top10Products.has(product.URL || product.LINK || '') ? (
-                         <div className="white-circle-border">
-                           <ProductCard
-                             product={product}
-                             isTopValue={true}
-                           />
-                         </div>
-                       ) : (
-                         <ProductCard
-                           product={product}
-                           isTopValue={false}
-                         />
-                       )}
-                     </div>
-                   ))}
-                 </div>
+                    <div 
+                      key={`${product.URL || product.LINK}-${index}`}
+                      className="staggered-fade-in"
+                      style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
+                    >
+                      {top10Products.has(product.URL || product.LINK || '') ? (
+                        <div className="white-circle-border">
+                          <ProductCard
+                            product={product}
+                            isTopValue={true}
+                          />
+                        </div>
+                      ) : (
+                        <ProductCard
+                          product={product}
+                          isTopValue={false}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-               {/* Loading more indicator */}
-               {isLoadingMore && (
-                 <div className="text-center py-8">
-                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                   <p className="text-foreground/70">Loading more products...</p>
-                 </div>
-               )}
+            {/* Loading more indicator */}
+            {isLoadingMore && (
+              <div className="text-center py-6 md:py-8">
+                <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-primary mx-auto mb-3 md:mb-4"></div>
+                <p className="text-foreground/70 text-sm">Loading more products...</p>
+              </div>
+            )}
 
                {/* Load more message */}
                {displayedCount < filteredAndSortedProducts.length && !isLoadingMore && (
