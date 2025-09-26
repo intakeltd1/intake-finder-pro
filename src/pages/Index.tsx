@@ -1,17 +1,35 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { ProductCard } from '@/components/ProductCard';
-import { SearchFilters } from '@/components/SearchFilters';
-import { Header, StickyTimer } from '@/components/Header';
-import { CookiesDisclaimer } from '@/components/CookiesDisclaimer';
-import { NavigationDrawer } from '@/components/NavigationDrawer';
-import { ComparisonWidget } from '@/components/ComparisonWidget';
-import { ComparisonModal } from '@/components/ComparisonModal';
-import { ComparisonProvider } from '@/hooks/useComparison';
-import { filterProducts, sortProducts, getTopValueProducts, getMostPopularProducts, randomizeInStockProducts, getFeaturedProducts, type Product } from '@/utils/productUtils';
-import { Loader2, Package, AlertCircle, Star, Info, Instagram, Music } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useEffect, useMemo } from 'react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Instagram, Info } from "lucide-react";
+import { Header, StickyTimer } from "@/components/Header";
+import { SearchFilters } from "@/components/SearchFilters";
+import { ProductCard } from "@/components/ProductCard";
+import { CookiesDisclaimer } from "@/components/CookiesDisclaimer";
+import { NavigationDrawer } from "@/components/NavigationDrawer";
+import { ComparisonWidget } from "@/components/ComparisonWidget";
+import { ComparisonModal } from "@/components/ComparisonModal";
+import { ComparisonProvider } from "@/hooks/useComparison";
+import { applyFuzzySearch } from "@/utils/productUtils";
+import { useScrollAnimations } from "@/components/ScrollAnimations";
 
-const Index = () => {
+interface Product {
+  TITLE?: string;
+  COMPANY?: string;
+  PRICE?: string;
+  VALUE_RATING?: number;
+  POPULARITY?: number;
+  FEATURED?: boolean;
+  AMOUNT?: string;
+  PROTEIN_SERVING?: string;
+  FLAVOUR?: string;
+  LINK?: string;
+  URL?: string;
+  IMAGE_URL?: string;
+  STOCK_STATUS?: string;
+  [key: string]: any;
+}
+
+export default function Index() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,99 +37,154 @@ const Index = () => {
   const [sortBy, setSortBy] = useState('default');
   const [quantityFilter, setQuantityFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
+  const { isScrolled } = useScrollAnimations();
 
-  // Fetch products data
+  // Fetch products from JSON
   useEffect(() => {
-    let cancelled = false;
-    
-    const fetchData = async () => {
+    const fetchProducts = async () => {
       try {
         setLoading(true);
-        setError(null);
-        
         const response = await fetch('/data/products.json');
         
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`Failed to load products: ${response.status}`);
         }
         
-        const data: Product[] = await response.json();
-        
-        if (!cancelled) {
-          setProducts(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load product data');
-          setProducts([]);
-        }
+        const data = await response.json();
+        console.log('Loaded products:', data?.length);
+        setProducts(data || []);
+        setError(null);
+      } catch (error) {
+        console.error('Error loading products:', error);
+        setError(error instanceof Error ? error.message : 'Unknown error occurred');
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    fetchData();
-    
-    return () => {
-      cancelled = true;
-    };
+    fetchProducts();
   }, []);
 
-  // Filter and sort products
+  // Filter and sort products with fuzzy search
   const filteredAndSortedProducts = useMemo(() => {
-    const filtered = filterProducts(products, query, quantityFilter, productTypeFilter);
-    const sorted = sortProducts(filtered, sortBy);
-    
-    // If no search/filter applied, randomize in-stock products for variety
-    if (!query && quantityFilter === 'all' && productTypeFilter === 'all' && sortBy === 'default') {
-      return randomizeInStockProducts(sorted);
+    console.log('Filtering products with query:', query);
+    let filtered = applyFuzzySearch(products, query);
+    console.log('After fuzzy search:', filtered.length);
+
+    // Apply quantity filter
+    if (quantityFilter !== 'all') {
+      filtered = filtered.filter(product => {
+        const amount = product.AMOUNT?.toLowerCase() || '';
+        switch (quantityFilter) {
+          case '<1kg':
+            return amount.includes('g') && !amount.includes('kg');
+          case '1-2kg':
+            return amount.includes('1kg') || amount.includes('1.') || 
+                   (amount.includes('2kg') && !amount.includes('2.5') && !amount.includes('2.7'));
+          case '2-3kg':
+            return amount.includes('2.') || amount.includes('2kg') || amount.includes('3kg');
+          case '3-5kg':
+            return amount.includes('3.') || amount.includes('4') || amount.includes('5kg');
+          case '>5kg':
+            return amount.includes('6') || amount.includes('7') || amount.includes('8') || 
+                   amount.includes('9') || amount.includes('10');
+          default:
+            return true;
+        }
+      });
     }
-    
+
+    // Apply product type filter
+    if (productTypeFilter !== 'all') {
+      filtered = filtered.filter(product => {
+        const title = product.TITLE?.toLowerCase() || '';
+        const company = product.COMPANY?.toLowerCase() || '';
+        
+        switch (productTypeFilter) {
+          case 'whey':
+            return title.includes('whey') && !title.includes('vegan');
+          case 'vegan':
+            return title.includes('vegan') || title.includes('plant') || title.includes('pea');
+          case 'clear':
+            return title.includes('clear') || title.includes('juice');
+          case 'diet':
+            return title.includes('diet') || title.includes('lean') || title.includes('cut');
+          case 'mass':
+            return title.includes('mass') || title.includes('gainer') || title.includes('bulk');
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Sort products
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'value':
+          return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
+        case 'popularity':
+          return (b.POPULARITY || 0) - (a.POPULARITY || 0);
+        case 'price_low':
+          const priceA = parseFloat(a.PRICE?.replace(/[^\d.]/g, '') ? a.PRICE.replace(/[^\d.]/g, '') : '0');
+          const priceB = parseFloat(b.PRICE?.replace(/[^\d.]/g, '') ? b.PRICE.replace(/[^\d.]/g, '') : '0');
+          return priceA - priceB;
+        case 'price_high':
+          const priceA2 = parseFloat(a.PRICE?.replace(/[^\d.]/g, '') ? a.PRICE.replace(/[^\d.]/g, '') : '0');
+          const priceB2 = parseFloat(b.PRICE?.replace(/[^\d.]/g, '') ? b.PRICE.replace(/[^\d.]/g, '') : '0');
+          return priceB2 - priceA2;
+        case 'protein':
+          const proteinA = parseFloat(a.PROTEIN_SERVING?.replace(/[^\d.]/g, '') ? a.PROTEIN_SERVING.replace(/[^\d.]/g, '') : '0');
+          const proteinB = parseFloat(b.PROTEIN_SERVING?.replace(/[^\d.]/g, '') ? b.PROTEIN_SERVING.replace(/[^\d.]/g, '') : '0');
+          return proteinB - proteinA;
+        case 'brand':
+          return (a.COMPANY || '').localeCompare(b.COMPANY || '');
+        default:
+          return 0;
+      }
+    });
+
     return sorted;
-  }, [products, query, quantityFilter, productTypeFilter, sortBy]);
+  }, [products, query, sortBy, quantityFilter, productTypeFilter]);
 
-  // Get featured and special products
-  const topValueProducts = useMemo(() => getTopValueProducts(products, 15), [products]);
-  const mostPopularProducts = useMemo(() => getMostPopularProducts(products, 10), [products]);
-  const featuredProducts = useMemo(() => getFeaturedProducts(products, 4), [products]);
+  // Special product categories
+  const topValueProducts = useMemo(() => {
+    return products
+      .filter(p => p.VALUE_RATING && p.VALUE_RATING >= 8)
+      .sort((a, b) => (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0))
+      .slice(0, 8);
+  }, [products]);
 
-  // Create sets for quick lookup
+  const mostPopularProducts = useMemo(() => {
+    return products
+      .filter(p => p.POPULARITY && p.POPULARITY >= 8)
+      .sort((a, b) => (b.POPULARITY || 0) - (a.POPULARITY || 0))
+      .slice(0, 8);
+  }, [products]);
+
+  const featuredProducts = useMemo(() => {
+    return products.filter(p => p.FEATURED === true).slice(0, 8);
+  }, [products]);
+
+  // Create Sets for O(1) lookup
   const topValueUrls = useMemo(() => new Set(topValueProducts.map(p => p.URL || p.LINK)), [topValueProducts]);
-  const popularUrls = useMemo(() => new Set(mostPopularProducts.slice(0, 10).map(p => p.URL || p.LINK)), [mostPopularProducts]);
+  const popularUrls = useMemo(() => new Set(mostPopularProducts.map(p => p.URL || p.LINK)), [mostPopularProducts]);
   const featuredUrls = useMemo(() => new Set(featuredProducts.map(p => p.URL || p.LINK)), [featuredProducts]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center space-y-6">
-            <div className="relative">
-              {/* Intake-branded loading animation */}
-              <div className="relative w-20 h-20 mx-auto">
-                {/* Outer rotating ring */}
-                <div className="absolute inset-0 border-4 border-primary/20 rounded-full animate-spin" 
-                     style={{ animationDuration: '2s' }}>
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rounded-full"></div>
-                </div>
-                {/* Inner pulsing circle */}
-                <div className="absolute inset-2 bg-primary/10 rounded-full flex items-center justify-center animate-pulse">
-                  <Package className="h-8 w-8 text-primary" />
-                </div>
-                {/* Rotating supplement dots */}
-                <div className="absolute inset-1 animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }}>
-                  <div className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
-                  <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
-                  <div className="absolute top-1/2 -left-0.5 transform -translate-y-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
-                  <div className="absolute top-1/2 -right-0.5 transform -translate-y-1/2 w-1 h-1 bg-primary/60 rounded-full"></div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground mb-2">Loading Products</h2>
-              <p className="text-muted-foreground">Fetching the latest supplement data...</p>
-            </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+          <div className="space-y-2">
+            <p className="text-lg font-medium text-foreground">Loading Products...</p>
+            <p className="text-sm text-muted-foreground">
+              Fetching the latest supplement prices and information
+            </p>
+          </div>
+          <div className="flex justify-center space-x-1">
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
@@ -120,13 +193,12 @@ const Index = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
-        <div className="container mx-auto px-4 py-8">
-          <Alert className="max-w-2xl mx-auto">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="ml-2">
-              <strong>Error loading products:</strong> {error}
-              <br />
+            <AlertDescription className="text-sm">
+              <strong>Failed to load products:</strong> {error}<br/>
               Please check your internet connection and try again.
             </AlertDescription>
           </Alert>
@@ -137,186 +209,134 @@ const Index = () => {
 
   return (
     <ComparisonProvider>
-      <div className="min-h-screen bg-gradient-to-br from-background to-brand-teal-light">
-        <Header />
-        <StickyTimer />
-      
-      {/* Main Header */}
-      <header className="bg-primary text-primary-foreground py-6 relative">
-        <div className="container mx-auto px-4">
-          {/* Navigation Drawer - positioned absolutely on left */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <NavigationDrawer />
-          </div>
-          
-          {/* Main content - truly centered against full page width */}
-          <div className="text-center space-y-2">
-            <img 
-              src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
-              alt="Intake Logo" 
-              className="h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
-            />
-            <p className="text-xl text-primary-foreground/90">
-              Find your next favourite supplement at the best possible price - updated daily.
-            </p>
-            <div className="flex items-center justify-center gap-2">
-              <Info className="h-3 w-3 text-primary-foreground/70" />
-              <p className="text-xs text-primary-foreground/70">
-                All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
-              </p>
-            </div>
-            {/* Social Media Links */}
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <a 
-                href="https://instagram.com/use.intake" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary-foreground/60 hover:text-primary-foreground/90 transition-colors"
-              >
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a 
-                href="https://tiktok.com/@use.intake" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-primary-foreground/60 hover:text-primary-foreground/90 transition-colors"
-              >
-                <Music className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-          
-          {/* Supplement Dispenser Link - positioned absolutely on larger screens, below content on mobile */}
-          <div className="mt-4 flex justify-center lg:absolute lg:top-1/2 lg:right-4 lg:-translate-y-1/2 lg:mt-0">
-            <a 
-              href="https://www.intakeltd.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block bg-white/10 backdrop-blur-sm border-2 border-white/60 rounded-lg p-2 hover:bg-white/20 transition-colors group"
-            >
-              <div className="flex flex-col items-center text-center space-y-1">
-                <img 
-                  src="/lovable-uploads/23f71f12-f512-4446-b5c7-c2296fd3f232.png" 
-                  alt="Supplement Dispenser" 
-                  className="w-8 h-8 object-cover rounded border border-white/40"
-                />
-                <p className="text-[9px] text-primary-foreground/90 font-medium leading-tight">
-                  Get your Supplement<br />Dispenser here<br />
-                  <span className="text-primary-foreground/70">Intake V1.0</span>
-                </p>
+      <div className="min-h-screen bg-background relative">
+        {/* Video Background */}
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          className="video-background"
+          preload="metadata"
+        >
+          <source src="/background-video.mp4" type="video/mp4" />
+        </video>
+        
+        <div className={`relative z-10 transition-all duration-500 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
+          <Header />
+          <StickyTimer />
+        
+          {/* Main Header */}
+          <header className="bg-background/20 backdrop-blur-md border-b border-white/20 text-foreground py-4 relative">
+            <div className="container mx-auto px-4">
+              {/* Navigation Drawer - positioned absolutely on left */}
+              <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                <NavigationDrawer />
               </div>
-            </a>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {/* Search Filters */}
-        <div className="mb-8">
-          <SearchFilters
-            query={query}
-            setQuery={setQuery}
-            sortBy={sortBy}
-            setSortBy={setSortBy}
-            quantityFilter={quantityFilter}
-            setQuantityFilter={setQuantityFilter}
-            productTypeFilter={productTypeFilter}
-            setProductTypeFilter={setProductTypeFilter}
-            resultCount={filteredAndSortedProducts.length}
-          />
-        </div>
-
-        {/* Featured Products Section */}
-        {featuredProducts.length > 0 && !query && productTypeFilter === 'all' && (
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <Star className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl font-bold text-foreground">Featured - Best Value Products</h2>
+              
+              {/* Main content - truly centered against full page width */}
+              <div className="text-center space-y-2">
+                <img 
+                  src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
+                  alt="Intake Logo" 
+                  className="h-8 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
+                />
+                <p className="text-lg text-foreground/90">
+                  Find your next favourite supplement at the best possible price - updated daily.
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <Info className="h-3 w-3 text-foreground/70" />
+                  <p className="text-xs text-foreground/70">
+                    All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
+                  </p>
+                </div>
+                {/* Social Media Links */}
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <a 
+                    href="https://instagram.com/use.intake" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-foreground/60 hover:text-foreground/90 transition-colors"
+                  >
+                    <Instagram className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
             </div>
-            <div className="featured-products-container p-4 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {featuredProducts.map((product, index) => (
-                  <ProductCard 
-                    key={`featured-${index}`} 
-                    product={product} 
-                    isFeatured={true}
+          </header>
+        </div>
+
+        {/* Search and Products Section */}
+        <div className="relative z-10">
+          <div className="container mx-auto px-4 py-6">
+            <SearchFilters
+              query={query}
+              setQuery={setQuery}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              quantityFilter={quantityFilter}
+              setQuantityFilter={setQuantityFilter}
+              productTypeFilter={productTypeFilter}
+              setProductTypeFilter={setProductTypeFilter}
+              resultCount={filteredAndSortedProducts.length}
+            />
+          </div>
+
+          {/* Featured Products */}
+          {featuredProducts.length > 0 && (
+            <div className="container mx-auto px-4 pb-6">
+              <div className="featured-products-container rounded-xl p-4 bg-background/10 backdrop-blur-sm">
+                <h2 className="text-xl font-bold text-center mb-4 text-foreground">
+                  Featured Products
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {featuredProducts.map((product, index) => (
+                    <ProductCard
+                      key={`featured-${index}`}
+                      product={product}
+                      isFeatured={true}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Products Grid */}
+          <div className="container mx-auto px-4 pb-8">
+            {filteredAndSortedProducts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+                {filteredAndSortedProducts.map((product, index) => (
+                  <ProductCard
+                    key={index}
+                    product={product}
+                    isTopValue={topValueUrls.has(product.URL || product.LINK || '')}
+                    isPopular={popularUrls.has(product.URL || product.LINK || '')}
                   />
                 ))}
               </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-lg text-foreground/70">No products found matching your criteria.</p>
+                <p className="text-sm text-foreground/50 mt-2">Try adjusting your search or filters.</p>
+              </div>
+            )}
+
+            {/* Footer with product count and stock status */}
+            <div className="text-center text-sm text-foreground/60 space-y-1">
+              <p>
+                Showing {filteredAndSortedProducts.length} of {products.length} products
+              </p>
+              <p>
+                Stock levels and prices are updated regularly. Click any product to view current availability.
+              </p>
             </div>
           </div>
-        )}
 
-        {/* Products Grid */}
-        {filteredAndSortedProducts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredAndSortedProducts.map((product, index) => {
-              const productUrl = product.URL || product.LINK;
-              const isTopValue = topValueUrls.has(productUrl);
-              const isPopular = popularUrls.has(productUrl);
-              const isFeatured = featuredUrls.has(productUrl);
-              
-              return (
-                <ProductCard 
-                  key={index} 
-                  product={product} 
-                  isTopValue={isTopValue && !isFeatured}
-                  isPopular={isPopular && !isFeatured && !isTopValue}
-                />
-              );
-            })}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No products found</h3>
-            <p className="text-muted-foreground">
-              {query || quantityFilter || productTypeFilter !== 'all'
-                ? "Try adjusting your search criteria or filters"
-                : "No products available at the moment"
-              }
-            </p>
-          </div>
-        )}
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-muted mt-12 py-8">
-        <div className="container mx-auto px-4 text-center space-y-2">
-          <p className="text-muted-foreground">
-            Showing {filteredAndSortedProducts.length} of {products.length} products
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {(() => {
-              const outOfStockCount = filteredAndSortedProducts.filter(product => {
-                const stockIndicators = [
-                  product.STOCK_STATUS?.toLowerCase(),
-                  product.PRICE?.toLowerCase(), 
-                  product.TITLE?.toLowerCase(),
-                  product.AMOUNT?.toLowerCase()
-                ];
-                return stockIndicators.some(indicator => 
-                  indicator?.includes('out of stock') ||
-                  indicator?.includes('unavailable') ||
-                  indicator?.includes('sold out') ||
-                  indicator === 'out' ||
-                  indicator === '0'
-                );
-              }).length;
-              const inStockCount = filteredAndSortedProducts.length - outOfStockCount;
-              return `${inStockCount} in stock • ${outOfStockCount} out of stock`;
-            })()}
-          </p>
+          <CookiesDisclaimer />
+          <ComparisonWidget />
+          <ComparisonModal />
         </div>
-      </footer>
-      
-      <CookiesDisclaimer />
-      <ComparisonWidget />
-      <ComparisonModal />
-    </div>
+      </div>
     </ComparisonProvider>
   );
-};
-
-export default Index;
+}

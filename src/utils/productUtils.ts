@@ -287,8 +287,15 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
   }
 };
 
-// Extract base product name by removing flavour variants
-export const getBaseProductName = (title: string): string => {
+// Export the fuzzy search function
+function applyFuzzySearch(products: Product[], query: string): Product[] {
+  if (!query.trim()) return products;
+  
+  const smartFilter = createSmartSearch(query);
+  return products.filter(smartFilter);
+}
+
+export { applyFuzzySearch };
   if (!title) return '';
   
   const flavorWords = [

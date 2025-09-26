@@ -58,17 +58,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     }
   };
 
-  const handleExternalLinkClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    const url = product.URL || product.LINK;
-    if (url) {
-      incrementClickCount(url);
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  };
-
   const handleAddToComparison = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation();
     if (!isInComparison(product) && comparisonProducts.length < 4) {
       addToComparison(product);
       setAddAnimation(true);
@@ -77,22 +68,22 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   };
 
   const getBorderClass = () => {
-    if (outOfStock) return 'border-brand-grey/20';
+    if (outOfStock) return 'border-border/20';
     if (isFeatured) return 'border-2 border-primary shadow-lg shadow-primary/20';
     if (isTopValue) return 'border-2 rainbow-border animate-pulse';
     if (isPopular) return 'border-2 fire-border animate-pulse';
-    return 'border-brand-grey/20 hover:border-primary/30';
+    return 'border-border hover:border-primary/30';
   };
 
   return (
     <Card 
-      className={`h-full transition-all duration-300 cursor-pointer group hover:shadow-[var(--shadow-card)] ${getBorderClass()} ${
+      className={`h-full transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'
-      } flex flex-col`}
+      } flex flex-col relative`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-brand-grey-light">
+      <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-muted">
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
@@ -101,21 +92,37 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
               outOfStock ? 'grayscale' : ''
             }`}
             onError={() => setImageError(true)}
-            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted">
-            <ImageIcon className="h-12 w-12 text-muted-foreground/50" />
+            <ImageIcon className="h-12 w-12 text-muted-foreground" />
           </div>
         )}
-        
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1">
-          {outOfStock && (
-            <Badge variant="destructive" className="font-medium">
-              Out of Stock
-            </Badge>
-          )}
+
+        {/* Add to comparison button */}
+        <Button
+          onClick={handleAddToComparison}
+          disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
+          size="sm"
+          variant="outline"
+          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary/60 bg-card/90 backdrop-blur-sm hover:bg-primary hover:border-primary transition-all duration-300 ${
+            addAnimation ? 'animate-bounce' : ''
+          } ${
+            isInComparison(product) ? 'bg-primary text-primary-foreground' : 'hover:text-primary-foreground'
+          }`}
+        >
+          <Plus className={`h-4 w-4 ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
+        </Button>
+
+        {/* Stock Status Badge */}
+        {outOfStock && (
+          <Badge variant="destructive" className="absolute bottom-2 left-2">
+            Out of Stock
+          </Badge>
+        )}
+
+        {/* Special Product Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isFeatured && !outOfStock && (
             <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-1">
               <Star className="h-3 w-3" />
@@ -134,53 +141,29 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             </Badge>
           )}
         </div>
-        
-        {/* Action Buttons */}
-        <div className="absolute top-3 right-3 flex flex-col gap-1">
-          {/* Add to Comparison Button */}
-          {!outOfStock && comparisonProducts.length < 4 && !isInComparison(product) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleAddToComparison}
-              className={`h-8 w-8 p-0 bg-primary/90 hover:bg-primary text-primary-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 ${
-                addAnimation ? 'animate-bounce scale-110' : ''
-              }`}
-              title="Add to comparison"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
-          
-          {/* External Link Button */}
-          {(product.URL || product.LINK) && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleExternalLinkClick}
-              className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            >
-              <ExternalLink className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
       </div>
 
-      <CardHeader className="pb-2">
-        <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors min-h-[3.5rem] flex items-start">
-          {product.TITLE || "Product Name Not Available"}
+      <CardContent className="p-4 flex-1 flex flex-col">
+        {/* Company Name */}
+        <div className="mb-2">
+          <p className="text-sm text-muted-foreground line-clamp-1">
+            {product.COMPANY || "Unknown Brand"}
+          </p>
+        </div>
+
+        {/* Product Title */}
+        <CardTitle className="text-base mb-3 line-clamp-2 min-h-[3rem] flex items-start">
+          {product.TITLE || "Product Title Not Available"}
         </CardTitle>
-      </CardHeader>
-      
-      <CardContent className="pt-0 flex-1 flex flex-col">
-        <div className="space-y-3 flex-1">
-          {/* Price - Fixed height for alignment */}
-          <div className="flex items-center justify-between min-h-[2.5rem]">
-            <span className={`text-2xl font-bold ${outOfStock ? 'text-muted-foreground' : 'text-primary'}`}>
+
+        <div className="flex-1 space-y-3">
+          {/* Price and Amount */}
+          <div className="flex items-center justify-between">
+            <span className="text-lg font-bold text-primary">
               {product.PRICE || "Price N/A"}
             </span>
             {product.AMOUNT && (
-              <Badge variant="secondary" className="bg-brand-teal-light text-primary font-medium">
+              <Badge variant="secondary" className="bg-secondary text-secondary-foreground font-medium">
                 <Package className="h-3 w-3 mr-1" />
                 {product.AMOUNT}
               </Badge>

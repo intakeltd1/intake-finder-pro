@@ -36,11 +36,11 @@ export function StickyTimer() {
   }, [startTime]);
 
   return (
-    <div className="sticky top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-primary-foreground/20">
-      <div className="container mx-auto px-4 py-1.5">
-        <div className="flex items-center justify-center space-x-2 text-primary-foreground">
+    <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
+      <div className="container mx-auto px-4 py-1">
+        <div className="flex items-center justify-center space-x-2 text-foreground">
           <Clock className="h-4 w-4" />
-          <span className="font-medium">Prices Updated {lastUpdated}</span>
+          <span className="font-medium text-sm">Prices Updated {lastUpdated}</span>
         </div>
       </div>
     </div>
