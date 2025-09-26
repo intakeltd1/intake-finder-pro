@@ -28,7 +28,7 @@ export function NavigationDrawer() {
         <Button 
           variant="ghost" 
           size="sm" 
-          className="text-primary-foreground hover:bg-white/10 p-2"
+          className="text-foreground hover:bg-white/10 p-2 border border-white/30 rounded-md"
         >
           <Menu className="h-5 w-5" />
         </Button>

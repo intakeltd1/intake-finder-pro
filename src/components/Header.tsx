@@ -6,41 +6,38 @@ export function Header() {
 }
 
 export function StickyTimer() {
-  const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [lastUpdated, setLastUpdated] = useState<string>("");
   const [startTime] = useState<number>(Date.now());
 
   useEffect(() => {
     const updateTimer = () => {
-      // Calculate time since page load (simulating data refresh time)
       const now = Date.now();
       const diff = now - startTime;
-      
+
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
+
       if (hours > 0) {
-        setLastUpdated(`${hours}h${minutes}m ago`);
+        setLastUpdated(`${hours}h ${minutes}m ago`);
       } else if (minutes > 0) {
-        setLastUpdated(`${minutes}m${seconds}s ago`);
+        setLastUpdated(`${minutes}m ago`);
       } else {
-        setLastUpdated(`${seconds}s ago`);
+        setLastUpdated("Just now");
       }
     };
 
     updateTimer();
-    // Update every second for real-time display
-    const interval = setInterval(updateTimer, 1000);
-    
+    // Update every 30s — no seconds shown
+    const interval = setInterval(updateTimer, 30000);
     return () => clearInterval(interval);
   }, [startTime]);
 
   return (
-    <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm border-b border-border/50">
+    <div className="sticky top-0 z-50 bg-background/70 backdrop-blur-md border-b border-white/20">
       <div className="container mx-auto px-4 py-1">
         <div className="flex items-center justify-center space-x-2 text-foreground">
           <Clock className="h-4 w-4" />
-          <span className="font-medium text-sm">Prices Updated {lastUpdated}</span>
+          <span className="font-medium text-sm">Prices updated {lastUpdated}</span>
         </div>
       </div>
     </div>

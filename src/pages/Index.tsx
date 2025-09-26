@@ -250,7 +250,7 @@ export default function Index() {
 
   return (
     <ComparisonProvider>
-      <div className="min-h-screen bg-background relative">
+      <div className="min-h-screen relative">
         {/* Video Background */}
         <video 
           autoPlay 
