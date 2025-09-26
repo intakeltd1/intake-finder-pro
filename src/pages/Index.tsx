@@ -224,7 +224,7 @@ export default function Index() {
         <div className="relative z-10 transition-all duration-1000 delay-1000 pt-12 fade-in-up">
           <div className="bg-background/20 backdrop-blur-xl shadow-lg">
             {/* Main Header */}
-            <header className="text-foreground py-6 relative">
+            <header className="text-foreground py-6 relative border border-white/10 rounded-lg mx-4 bg-background/5">
               <div className="container mx-auto px-4">
                 {/* Navigation Drawer - positioned absolutely on left */}
                 <div className="absolute left-4 top-1/2 -translate-y-1/2">
