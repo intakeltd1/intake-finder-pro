@@ -204,10 +204,12 @@ export default function Index() {
           autoPlay 
           muted 
           loop 
+          playsInline
           className="video-background"
           preload="auto"
         >
           <source src="/background-video.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
         
         <div className="relative z-10 flex items-center justify-center min-h-screen">
@@ -254,10 +256,15 @@ export default function Index() {
           autoPlay 
           muted 
           loop 
+          playsInline
           className="video-background"
-          preload="metadata"
+          preload="auto"
+          onLoadStart={() => console.log('Video loading started')}
+          onCanPlay={() => console.log('Video can play')}
+          onError={(e) => console.error('Video error:', e)}
         >
           <source src="/background-video.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
         </video>
         
         <div className={`relative z-10 transition-all duration-1000 delay-1000 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
@@ -331,7 +338,7 @@ export default function Index() {
                   {featuredProducts.map((product, index) => (
                     <div 
                       key={`featured-${index}`}
-                      className="animate-fade-in"
+                      className="staggered-fade-in"
                       style={{ animationDelay: `${2000 + (index * 200)}ms` }}
                     >
                       <ProductCard
@@ -352,7 +359,7 @@ export default function Index() {
                 {filteredAndSortedProducts.map((product, index) => (
                   <div 
                     key={index}
-                    className="animate-fade-in"
+                    className="staggered-fade-in"
                     style={{ animationDelay: `${2000 + (index * 100)}ms` }}
                   >
                     <ProductCard
