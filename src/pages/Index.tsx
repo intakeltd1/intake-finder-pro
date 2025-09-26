@@ -9,7 +9,7 @@ import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { ComparisonWidget } from "@/components/ComparisonWidget";
 import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
-import { applyFuzzySearch } from "@/utils/productUtils";
+import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
 
 interface Product {
@@ -34,11 +34,11 @@ export default function Index() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [sortBy, setSortBy] = useState('default');
+  const [sortBy, setSortBy] = useState('randomize');
   const [quantityFilter, setQuantityFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
   const [isRandomized, setIsRandomized] = useState(false);
-  const { isScrolled } = useScrollAnimations();
+  
 
   // Fetch products from JSON
   useEffect(() => {
@@ -66,39 +66,17 @@ export default function Index() {
     fetchProducts();
   }, []);
 
-  // Helper function to check if product is out of stock
-  const isOutOfStock = (product: Product): boolean => {
-    const stockIndicators = [
-      product.STOCK_STATUS?.toLowerCase(),
-      product.PRICE?.toLowerCase(),
-      product.TITLE?.toLowerCase(),
-      product.AMOUNT?.toLowerCase()
-    ];
-    
-    return stockIndicators.some(indicator => 
-      indicator?.includes('out of stock') ||
-      indicator?.includes('unavailable') ||
-      indicator?.includes('sold out') ||
-      indicator === 'out' ||
-      indicator === '0'
-    ) || false;
-  };
-
-  // Calculate best value products (price/protein ratio)
+  // Get best value products using utility function (already deduplicates and filters out-of-stock)
   const bestValueProducts = useMemo(() => {
-    return products
-      .filter(p => p.PRICE && p.PROTEIN_SERVING)
-      .map(p => {
-        const priceStr = String(p.PRICE || '');
-        const proteinStr = String(p.PROTEIN_SERVING || '');
-        const price = parseFloat(priceStr.replace(/[^\d.]/g, '') || '0');
-        const protein = parseFloat(proteinStr.replace(/[^\d.]/g, '') || '0');
-        const ratio = protein > 0 ? protein / price : 0;
-        return { ...p, valueRatio: ratio };
-      })
-      .sort((a, b) => b.valueRatio - a.valueRatio)
-      .slice(0, 4);
+    return getTopValueProducts(products, 4);
   }, [products]);
+
+  // Get top 30 best value products for highlighting
+  const top30Products = useMemo(() => {
+    const top30 = getTopValueProducts(products, 30);
+    return new Set(top30.map(p => p.URL || p.LINK));
+  }, [products]);
+
 
   // Filter and sort products with fuzzy search
   const filteredAndSortedProducts = useMemo(() => {
@@ -304,9 +282,9 @@ export default function Index() {
           <StickyTimer />
         </div>
 
-        {/* Combined Header and Search - Animated */}
-        <div className={`relative z-10 transition-all duration-1000 delay-1000 pt-12 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
-          <div className="bg-background/30 backdrop-blur-xl border-b border-white/30 shadow-lg">
+        {/* Combined Header and Search - Single Animation */}
+        <div className="relative z-10 transition-all duration-1000 delay-1000 pt-12 fade-in-up">
+          <div className="bg-background/30 backdrop-blur-xl shadow-lg">
             {/* Main Header */}
             <header className="text-foreground py-6 relative">
               <div className="container mx-auto px-4">
@@ -403,7 +381,7 @@ export default function Index() {
                   >
                     <ProductCard
                       product={product}
-                      isTopValue={topValueUrls.has(product.URL || product.LINK || '')}
+                      isTopValue={topValueUrls.has(product.URL || product.LINK || '') || top30Products.has(product.URL || product.LINK || '')}
                       isPopular={popularUrls.has(product.URL || product.LINK || '')}
                     />
                   </div>

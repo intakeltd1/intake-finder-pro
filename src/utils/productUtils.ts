@@ -211,7 +211,7 @@ export const filterProducts = (
   return filtered;
 };
 
-const isOutOfStock = (product: Product): boolean => {
+export const isOutOfStock = (product: Product): boolean => {
   // Check various ways products might indicate out of stock
   const stockIndicators = [
     product.STOCK_STATUS?.toLowerCase(),
