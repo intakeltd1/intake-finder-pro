@@ -28,8 +28,8 @@ export function SearchFilters({
   resultCount,
 }: SearchFiltersProps) {
   return (
-    <Card className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-6 border-0">
-      <div className="space-y-4">
+    <Card className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground p-4 border-0">
+      <div className="space-y-3">
         {/* Search Input */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70" />
@@ -38,7 +38,7 @@ export function SearchFilters({
             placeholder="Search products, flavours..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus:bg-white/20 focus:border-white/40"
+            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus:bg-white/20 focus:border-white/40 h-9"
           />
         </div>
 
@@ -47,7 +47,7 @@ export function SearchFilters({
           <div className="flex flex-col sm:flex-row gap-4 flex-1">
             {/* Product Type Filter */}
             <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[160px]">
+              <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[160px] h-9">
                 <SelectValue placeholder="Select Product Type" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
@@ -62,7 +62,7 @@ export function SearchFilters({
 
             {/* Quantity Filter */}
             <Select value={quantityFilter} onValueChange={setQuantityFilter}>
-              <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[150px]">
+              <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[150px] h-9">
                 <SelectValue placeholder="All quantities" />
               </SelectTrigger>
               <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">
@@ -79,7 +79,7 @@ export function SearchFilters({
             <div className="flex items-center gap-2">
               <SortDesc className="h-4 w-4 text-white/70" />
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[200px]">
+                <SelectTrigger className="bg-white/10 border-white/20 text-white focus:bg-white/20 focus:border-white/40 min-w-[200px] h-9">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 shadow-lg z-50">

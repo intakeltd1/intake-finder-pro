@@ -88,7 +88,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     <Card 
       className={`h-full transition-all duration-300 cursor-pointer group hover:shadow-[var(--shadow-card)] ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'
-      }`}
+      } flex flex-col`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
@@ -143,7 +143,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
               variant="ghost"
               size="sm"
               onClick={handleAddToComparison}
-              className={`h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+              className={`h-8 w-8 p-0 bg-primary/90 hover:bg-primary text-primary-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-all duration-300 ${
                 addAnimation ? 'animate-bounce scale-110' : ''
               }`}
               title="Add to comparison"
@@ -166,16 +166,16 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         </div>
       </div>
 
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors min-h-[3.5rem] flex items-start">
           {product.TITLE || "Product Name Not Available"}
         </CardTitle>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          {/* Price */}
-          <div className="flex items-center justify-between">
+      <CardContent className="pt-0 flex-1 flex flex-col">
+        <div className="space-y-3 flex-1">
+          {/* Price - Fixed height for alignment */}
+          <div className="flex items-center justify-between min-h-[2.5rem]">
             <span className={`text-2xl font-bold ${outOfStock ? 'text-muted-foreground' : 'text-primary'}`}>
               {product.PRICE || "Price N/A"}
             </span>
@@ -187,25 +187,21 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             )}
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-2">
-            {product.PROTEIN_SERVING && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Protein per serving:</span>
-                <span className="font-medium text-foreground">
-                  {product.PROTEIN_SERVING}
-                </span>
-              </div>
-            )}
+          {/* Product Details - Fixed structure for alignment */}
+          <div className="space-y-2 min-h-[4rem]">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Protein per serving:</span>
+              <span className="font-medium text-foreground">
+                {product.PROTEIN_SERVING || "N/A"}
+              </span>
+            </div>
             
-            {product.FLAVOUR && (
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Flavor:</span>
-                <span className="font-medium text-foreground">
-                  {product.FLAVOUR}
-                </span>
-              </div>
-            )}
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Flavour:</span>
+              <span className="font-medium text-foreground">
+                {product.FLAVOUR || "N/A"}
+              </span>
+            </div>
           </div>
 
           {/* Click hint */}
