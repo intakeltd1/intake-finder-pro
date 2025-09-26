@@ -170,18 +170,29 @@ All colors MUST be HSL.
   box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
-/* White circling animation for featured products - spinning border colors */
+/* White circling animation with offset gap for better highlighting */
+.white-circle-border {
+  position: relative;
+}
+
+.white-circle-border::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  right: -6px;
+  bottom: -6px;
+  border: 2px solid white;
+  border-radius: 0.875rem;
+  animation: white-circle 2s linear infinite;
+  pointer-events: none;
+}
+
 @keyframes white-circle {
   0% { border-color: rgba(255, 255, 255, 1); }
   25% { border-color: rgba(100, 100, 100, 1); }
   50% { border-color: rgba(40, 40, 40, 1); }
   75% { border-color: rgba(100, 100, 100, 1); }
   100% { border-color: rgba(255, 255, 255, 1); }
-}
-
-.white-circle-border {
-  border: 2px solid white;
-  border-radius: 0.75rem;
-  animation: white-circle 2s linear infinite;
 }
 

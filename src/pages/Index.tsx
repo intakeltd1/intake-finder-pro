@@ -287,7 +287,7 @@ export default function Index() {
             <div className="container mx-auto px-4 pb-6">
               <div className="featured-products-container rounded-xl p-4 bg-background/5 backdrop-blur-sm">
                 <h2 className="text-xl font-bold text-center mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
-                  Best Value Products (Protein per £)
+                  Today's Top Picks
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {bestValueProducts.map((product, index) => (

@@ -105,13 +105,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
           size="sm"
           variant="outline"
-          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm hover:bg-primary hover:border-primary transition-all duration-300 rounded-full ${
+          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-transform duration-200 rounded-full hover:scale-110 ${
             addAnimation ? 'animate-bounce' : ''
           } ${
-            isInComparison(product) ? 'bg-primary text-primary-foreground' : 'hover:text-primary-foreground'
+            isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
           }`}
         >
-          <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary group-hover:text-primary-foreground'}`} />
+          <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
         </Button>
 
         {/* Stock Status Badge */}
