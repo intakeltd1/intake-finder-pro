@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Instagram, Info } from "lucide-react";
@@ -42,6 +42,7 @@ export default function Index() {
   const [isRandomized, setIsRandomized] = useState(false);
   const [displayedCount, setDisplayedCount] = useState(28);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadingIntervalRef = useRef<number | null>(null);
   
 
   // Fetch products from JSON
@@ -159,7 +160,7 @@ export default function Index() {
   // Load more products when scrolling
   useEffect(() => {
     const handleScroll = () => {
-      if (isLoadingMore || displayedCount >= filteredAndSortedProducts.length) return;
+      if (isLoadingMore || displayedCount >= filteredAndSortedProducts.length || loadingIntervalRef.current) return;
       
       const scrollTop = document.documentElement.scrollTop;
       const windowHeight = window.innerHeight;
@@ -167,20 +168,42 @@ export default function Index() {
       
       if (scrollTop + windowHeight >= docHeight - 1000) {
         setIsLoadingMore(true);
-        setTimeout(() => {
-          setDisplayedCount(prev => Math.min(prev + 28, filteredAndSortedProducts.length));
-          setIsLoadingMore(false);
-        }, 300);
+        const target = Math.min(displayedCount + 28, filteredAndSortedProducts.length);
+        
+        loadingIntervalRef.current = window.setInterval(() => {
+          setDisplayedCount((prev) => {
+            if (prev >= target) {
+              if (loadingIntervalRef.current) {
+                clearInterval(loadingIntervalRef.current);
+                loadingIntervalRef.current = null;
+              }
+              setIsLoadingMore(false);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 80); // Add one card every 80ms
       }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    };
   }, [displayedCount, filteredAndSortedProducts.length, isLoadingMore]);
 
   // Reset displayed count when filters change
   useEffect(() => {
     setDisplayedCount(28);
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current);
+      loadingIntervalRef.current = null;
+    }
+    setIsLoadingMore(false);
   }, [debouncedQuery, sortBy, quantityFilter, productTypeFilter]);
 
   if (loading) {
@@ -330,10 +353,12 @@ export default function Index() {
                       className="staggered-fade-in"
                       style={{ animationDelay: `${1500 + (index * 150)}ms` }}
                     >
-                      <ProductCard
-                        product={product}
-                        isFeatured={true}
-                      />
+                      <div className="white-circle-border">
+                        <ProductCard
+                          product={product}
+                          isFeatured={true}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -352,13 +377,22 @@ export default function Index() {
                        className="staggered-fade-in"
                        style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
                      >
-                     <ProductCard
-                       product={product}
-                       isTopValue={top10Products.has(product.URL || product.LINK || '')}
-                     />
-                   </div>
-                 ))}
-               </div>
+                       {top10Products.has(product.URL || product.LINK || '') ? (
+                         <div className="white-circle-border">
+                           <ProductCard
+                             product={product}
+                             isTopValue={true}
+                           />
+                         </div>
+                       ) : (
+                         <ProductCard
+                           product={product}
+                           isTopValue={false}
+                         />
+                       )}
+                     </div>
+                   ))}
+                 </div>
 
                {/* Loading more indicator */}
                {isLoadingMore && (
