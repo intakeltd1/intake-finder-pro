@@ -65,6 +65,24 @@ export default function Index() {
     fetchProducts();
   }, []);
 
+  // Helper function to check if product is out of stock
+  const isOutOfStock = (product: Product): boolean => {
+    const stockIndicators = [
+      product.STOCK_STATUS?.toLowerCase(),
+      product.PRICE?.toLowerCase(),
+      product.TITLE?.toLowerCase(),
+      product.AMOUNT?.toLowerCase()
+    ];
+    
+    return stockIndicators.some(indicator => 
+      indicator?.includes('out of stock') ||
+      indicator?.includes('unavailable') ||
+      indicator?.includes('sold out') ||
+      indicator === 'out' ||
+      indicator === '0'
+    ) || false;
+  };
+
   // Filter and sort products with fuzzy search
   const filteredAndSortedProducts = useMemo(() => {
     console.log('Filtering products with query:', query);
@@ -117,8 +135,16 @@ export default function Index() {
       });
     }
 
-    // Sort products
+    // Sort products - out of stock always go to bottom
     const sorted = [...filtered].sort((a, b) => {
+      const aOutOfStock = isOutOfStock(a);
+      const bOutOfStock = isOutOfStock(b);
+      
+      // First, separate in-stock from out-of-stock
+      if (aOutOfStock && !bOutOfStock) return 1;
+      if (!aOutOfStock && bOutOfStock) return -1;
+      
+      // Then apply regular sorting within each group
       switch (sortBy) {
         case 'value':
           return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
@@ -172,19 +198,32 @@ export default function Index() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
-          <div className="space-y-2">
-            <p className="text-lg font-medium text-foreground">Loading Products...</p>
-            <p className="text-sm text-muted-foreground">
-              Fetching the latest supplement prices and information
-            </p>
-          </div>
-          <div className="flex justify-center space-x-1">
-            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-3 h-3 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        {/* Video Background for Loading */}
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          className="video-background"
+          preload="auto"
+        >
+          <source src="/background-video.mp4" type="video/mp4" />
+        </video>
+        
+        <div className="relative z-10 flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-6 animate-fade-in">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto"></div>
+            <div className="space-y-2">
+              <p className="text-xl font-bold text-foreground drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]">Loading Products...</p>
+              <p className="text-sm text-foreground/80 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
+                Fetching the latest supplement prices and information
+              </p>
+            </div>
+            <div className="flex justify-center space-x-2">
+              <div className="w-4 h-4 bg-primary rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-4 h-4 bg-primary rounded-full animate-bounce shadow-lg" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-4 h-4 bg-primary rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
+            </div>
           </div>
         </div>
       </div>
@@ -221,7 +260,7 @@ export default function Index() {
           <source src="/background-video.mp4" type="video/mp4" />
         </video>
         
-        <div className={`relative z-10 transition-all duration-500 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
+        <div className={`relative z-10 transition-all duration-1000 delay-1000 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
           <Header />
           <StickyTimer />
         
@@ -240,12 +279,12 @@ export default function Index() {
                   alt="Intake Logo" 
                   className="h-8 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
                 />
-                <p className="text-lg text-foreground/90">
+                <p className="text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
                   Find your next favourite supplement at the best possible price - updated daily.
                 </p>
                 <div className="flex items-center justify-center gap-2">
                   <Info className="h-3 w-3 text-foreground/70" />
-                  <p className="text-xs text-foreground/70">
+                  <p className="text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">
                     All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
                   </p>
                 </div>
@@ -285,16 +324,21 @@ export default function Index() {
           {featuredProducts.length > 0 && (
             <div className="container mx-auto px-4 pb-6">
               <div className="featured-products-container rounded-xl p-4 bg-background/10 backdrop-blur-sm">
-                <h2 className="text-xl font-bold text-center mb-4 text-foreground">
+                <h2 className="text-xl font-bold text-center mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
                   Featured Products
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {featuredProducts.map((product, index) => (
-                    <ProductCard
+                    <div 
                       key={`featured-${index}`}
-                      product={product}
-                      isFeatured={true}
-                    />
+                      className="animate-fade-in"
+                      style={{ animationDelay: `${2000 + (index * 200)}ms` }}
+                    >
+                      <ProductCard
+                        product={product}
+                        isFeatured={true}
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -306,18 +350,23 @@ export default function Index() {
             {filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
                 {filteredAndSortedProducts.map((product, index) => (
-                  <ProductCard
+                  <div 
                     key={index}
-                    product={product}
-                    isTopValue={topValueUrls.has(product.URL || product.LINK || '')}
-                    isPopular={popularUrls.has(product.URL || product.LINK || '')}
-                  />
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${2000 + (index * 100)}ms` }}
+                  >
+                    <ProductCard
+                      product={product}
+                      isTopValue={topValueUrls.has(product.URL || product.LINK || '')}
+                      isPopular={popularUrls.has(product.URL || product.LINK || '')}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-lg text-foreground/70">No products found matching your criteria.</p>
-                <p className="text-sm text-foreground/50 mt-2">Try adjusting your search or filters.</p>
+                <p className="text-lg text-foreground/70 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">No products found matching your criteria.</p>
+                <p className="text-sm text-foreground/50 mt-2 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">Try adjusting your search or filters.</p>
               </div>
             )}
 

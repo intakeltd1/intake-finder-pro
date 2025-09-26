@@ -69,7 +69,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
   const getBorderClass = () => {
     if (outOfStock) return 'border-border/20';
-    if (isFeatured) return 'border-2 border-primary shadow-lg shadow-primary/20';
+    if (isFeatured) return 'featured-glow-border';
     if (isTopValue) return 'border-2 rainbow-border animate-pulse';
     if (isPopular) return 'border-2 fire-border animate-pulse';
     return 'border-border hover:border-primary/30';
@@ -78,23 +78,23 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   return (
     <Card 
       className={`h-full transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
-        outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02]'
-      } flex flex-col relative`}
+        outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
+      } flex flex-col relative overflow-hidden rounded-lg`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-muted">
+      <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-white">
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
             alt={product.TITLE || "Product image"}
-            className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
+            className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted">
+          <div className="w-full h-full flex items-center justify-center bg-white rounded-t-lg">
             <ImageIcon className="h-12 w-12 text-muted-foreground" />
           </div>
         )}
@@ -105,13 +105,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
           size="sm"
           variant="outline"
-          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary/60 bg-card/90 backdrop-blur-sm hover:bg-primary hover:border-primary transition-all duration-300 ${
+          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm hover:bg-primary hover:border-primary transition-all duration-300 rounded-full ${
             addAnimation ? 'animate-bounce' : ''
           } ${
             isInComparison(product) ? 'bg-primary text-primary-foreground' : 'hover:text-primary-foreground'
           }`}
         >
-          <Plus className={`h-4 w-4 ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
+          <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary group-hover:text-primary-foreground'}`} />
         </Button>
 
         {/* Stock Status Badge */}

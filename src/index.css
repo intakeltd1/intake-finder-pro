@@ -201,9 +201,33 @@ All colors MUST be HSL.
   animation: fire-glow 2s ease-in-out infinite;
 }
 
-/* Featured products container with rainbow border */
+/* Featured products container with clean white border */
 .featured-products-container {
-  border: 3px solid;
-  animation: rainbow-border 3s linear infinite;
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+}
+
+/* Featured product glow border animation */
+@keyframes featured-glow {
+  0%, 100% { 
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+  }
+  25% { 
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+  }
+  50% { 
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
+  }
+  75% { 
+    border-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+  }
+}
+
+.featured-glow-border {
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  animation: featured-glow 3s ease-in-out infinite;
 }
