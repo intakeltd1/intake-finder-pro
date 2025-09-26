@@ -89,8 +89,10 @@ export default function Index() {
     return products
       .filter(p => p.PRICE && p.PROTEIN_SERVING)
       .map(p => {
-        const price = parseFloat(p.PRICE.replace(/[^\d.]/g, '') || '0');
-        const protein = parseFloat(p.PROTEIN_SERVING.replace(/[^\d.]/g, '') || '0');
+        const priceStr = String(p.PRICE || '');
+        const proteinStr = String(p.PROTEIN_SERVING || '');
+        const price = parseFloat(priceStr.replace(/[^\d.]/g, '') || '0');
+        const protein = parseFloat(proteinStr.replace(/[^\d.]/g, '') || '0');
         const ratio = protein > 0 ? protein / price : 0;
         return { ...p, valueRatio: ratio };
       })
@@ -168,16 +170,16 @@ export default function Index() {
         case 'popularity':
           return (b.POPULARITY || 0) - (a.POPULARITY || 0);
         case 'price_low':
-          const priceA = parseFloat(a.PRICE?.replace(/[^\d.]/g, '') ? a.PRICE.replace(/[^\d.]/g, '') : '0');
-          const priceB = parseFloat(b.PRICE?.replace(/[^\d.]/g, '') ? b.PRICE.replace(/[^\d.]/g, '') : '0');
+          const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
+          const priceB = parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '0');
           return priceA - priceB;
         case 'price_high':
-          const priceA2 = parseFloat(a.PRICE?.replace(/[^\d.]/g, '') ? a.PRICE.replace(/[^\d.]/g, '') : '0');
-          const priceB2 = parseFloat(b.PRICE?.replace(/[^\d.]/g, '') ? b.PRICE.replace(/[^\d.]/g, '') : '0');
+          const priceA2 = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
+          const priceB2 = parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '0');
           return priceB2 - priceA2;
         case 'protein':
-          const proteinA = parseFloat(a.PROTEIN_SERVING?.replace(/[^\d.]/g, '') ? a.PROTEIN_SERVING.replace(/[^\d.]/g, '') : '0');
-          const proteinB = parseFloat(b.PROTEIN_SERVING?.replace(/[^\d.]/g, '') ? b.PROTEIN_SERVING.replace(/[^\d.]/g, '') : '0');
+          const proteinA = parseFloat(String(a.PROTEIN_SERVING || '').replace(/[^\d.]/g, '') || '0');
+          const proteinB = parseFloat(String(b.PROTEIN_SERVING || '').replace(/[^\d.]/g, '') || '0');
           return proteinB - proteinA;
         case 'brand':
           return (a.COMPANY || '').localeCompare(b.COMPANY || '');
