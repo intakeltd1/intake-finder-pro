@@ -46,6 +46,7 @@ export default function Index() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const displayedCountRef = useRef<number>(displayedCount);
   
 
 // Fetch products from JSON
@@ -190,9 +191,9 @@ useEffect(() => {
     const entry = entries[0];
     if (!entry?.isIntersecting) return;
     if (isLoadingMore || loadingIntervalRef.current) return;
-    if (displayedCount >= filteredAndSortedProducts.length) return;
+    if (displayedCountRef.current >= filteredAndSortedProducts.length) return;
 
-    const remaining = filteredAndSortedProducts.length - displayedCount;
+    const remaining = filteredAndSortedProducts.length - displayedCountRef.current;
     const itemsToAdd = Math.min(28, Math.max(0, remaining));
     if (itemsToAdd <= 0) return;
 
@@ -222,7 +223,12 @@ useEffect(() => {
       loadingIntervalRef.current = null;
     }
   };
-}, [displayedCount, filteredAndSortedProducts.length, isLoadingMore]);
+}, [filteredAndSortedProducts.length, isLoadingMore]);
+
+// Keep displayedCount in a ref for observer without re-subscribing
+useEffect(() => {
+  displayedCountRef.current = displayedCount;
+}, [displayedCount]);
 
 // Ensure background video autoplays on mount/update
 useEffect(() => {

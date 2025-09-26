@@ -77,7 +77,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
   return (
     <Card 
-      className={`h-full transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
+      className={`h-[340px] sm:h-[360px] md:h-[400px] transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
       } flex flex-col relative overflow-hidden rounded-lg`}
       onClick={handleCardClick}
