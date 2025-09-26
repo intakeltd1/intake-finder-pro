@@ -330,12 +330,25 @@ export const getBaseProductName = (title: string): string => {
 // Export the fuzzy search function
 export { applyFuzzySearch };
 
-// Get top value products with deduplication (best protein per price ratio, one per base product)
+// Get top value products with deduplication by exact title (best protein per price ratio, one per title)
 export const getTopValueProducts = (products: Product[], count: number = 15): Product[] => {
-  return products
+  const seenTitles = new Set<string>();
+  const topProducts: Product[] = [];
+  
+  const sorted = products
     .filter(p => !isOutOfStock(p) && calculateValueScore(p) > 0)
-    .sort((a, b) => calculateValueScore(b) - calculateValueScore(a))
-    .slice(0, count);
+    .sort((a, b) => calculateValueScore(b) - calculateValueScore(a));
+    
+  for (const product of sorted) {
+    const title = product.TITLE?.toLowerCase().trim();
+    if (title && !seenTitles.has(title)) {
+      seenTitles.add(title);
+      topProducts.push(product);
+      if (topProducts.length >= count) break;
+    }
+  }
+  
+  return topProducts;
 };
 
 // Get deduplicated featured products (one variant per base product)
