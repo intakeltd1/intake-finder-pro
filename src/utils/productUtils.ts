@@ -287,7 +287,7 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
   }
 };
 
-// Export the fuzzy search function
+// Fuzzy search implementation
 function applyFuzzySearch(products: Product[], query: string): Product[] {
   if (!query.trim()) return products;
   
@@ -295,7 +295,8 @@ function applyFuzzySearch(products: Product[], query: string): Product[] {
   return products.filter(smartFilter);
 }
 
-export { applyFuzzySearch };
+// Extract base product name by removing flavour variants
+export const getBaseProductName = (title: string): string => {
   if (!title) return '';
   
   const flavorWords = [
@@ -325,6 +326,9 @@ export { applyFuzzySearch };
   // Clean up extra spaces and return normalized name
   return baseName.replace(/\s+/g, ' ').trim();
 };
+
+// Export the fuzzy search function
+export { applyFuzzySearch };
 
 // Get top value products with deduplication (best protein per price ratio, one per base product)
 export const getTopValueProducts = (products: Product[], count: number = 15): Product[] => {
