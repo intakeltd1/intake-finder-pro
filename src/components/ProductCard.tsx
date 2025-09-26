@@ -69,9 +69,9 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
   const getBorderClass = () => {
     if (outOfStock) return 'border-border/20';
-    if (isFeatured) return 'featured-glow-border';
-    if (isTopValue) return 'border-2 rainbow-border animate-pulse';
-    if (isPopular) return 'border-2 fire-border animate-pulse';
+    if (isFeatured) return 'border-2 border-white';
+    if (isTopValue) return 'white-circle-border';
+    if (isPopular) return 'border-2 border-white';
     return 'border-border hover:border-primary/30';
   };
 

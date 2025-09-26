@@ -73,10 +73,10 @@ export default function Index() {
     return getTopValueProducts(products, 4);
   }, [products]);
 
-  // Get top 30 best value products for highlighting
-  const top30Products = useMemo(() => {
-    const top30 = getTopValueProducts(products, 30);
-    return new Set(top30.map(p => p.URL || p.LINK));
+  // Get top 10 best value products for highlighting (reduced from 30 for performance)
+  const top10Products = useMemo(() => {
+    const top10 = getTopValueProducts(products, 10);
+    return new Set(top10.map(p => p.URL || p.LINK));
   }, [products]);
 
 
@@ -222,7 +222,7 @@ export default function Index() {
 
         {/* Combined Header and Search - Single Animation */}
         <div className="relative z-10 transition-all duration-1000 delay-1000 pt-12 fade-in-up">
-          <div className="bg-background/30 backdrop-blur-xl shadow-lg">
+          <div className="bg-background/20 backdrop-blur-xl shadow-lg">
             {/* Main Header */}
             <header className="text-foreground py-6 relative">
               <div className="container mx-auto px-4">
@@ -285,7 +285,7 @@ export default function Index() {
           {/* Best Value Products - Price/Protein Ratio */}
           {bestValueProducts.length > 0 && (
             <div className="container mx-auto px-4 pb-6">
-              <div className="featured-products-container rounded-xl p-4 bg-background/10 backdrop-blur-sm">
+              <div className="featured-products-container rounded-xl p-4 bg-background/5 backdrop-blur-sm">
                 <h2 className="text-xl font-bold text-center mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
                   Best Value Products (Protein per £)
                 </h2>
@@ -319,7 +319,7 @@ export default function Index() {
                     >
                     <ProductCard
                       product={product}
-                      isTopValue={top30Products.has(product.URL || product.LINK || '')}
+                      isTopValue={top10Products.has(product.URL || product.LINK || '')}
                     />
                   </div>
                 ))}

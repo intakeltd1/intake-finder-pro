@@ -150,7 +150,7 @@ All colors MUST be HSL.
   animation: fadeInUp 0.6s ease-out forwards;
 }
 
-/* Simplified video background */
+/* Simplified video background with higher opacity */
 .video-background {
   position: fixed;
   top: 0;
@@ -160,70 +160,57 @@ All colors MUST be HSL.
   object-fit: cover;
   z-index: 1;
   pointer-events: none;
-  opacity: 0.3;
+  opacity: 0.6;
   will-change: auto;
 }
 
-/* Optimized featured products container - reduced animation frequency */
+/* Simplified featured products container - more transparent */
 .featured-products-container {
-  box-shadow: 0 0 25px rgba(255, 255, 255, 0.25);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  animation: pulse-glow 4s ease-in-out infinite;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
 
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
+/* White circling animation for featured products */
+@keyframes white-circle {
+  0% { 
+    border-color: rgba(255, 255, 255, 1);
+    transform: rotate(0deg);
   }
-  50% {
-    box-shadow: 0 0 35px rgba(255, 255, 255, 0.4);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
-}
-
-/* Simplified borders with GPU acceleration */
-.rainbow-border {
-  border: 2px solid white;
-  border-radius: 0.75rem;
-  animation: featured-pulse 3s ease-in-out infinite;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-}
-
-/* Optimized fire border - reduced complexity */
-@keyframes fire-glow {
-  0%, 100% { 
-    border-color: #ff4500; 
-    box-shadow: 0 0 15px rgba(255, 69, 0, 0.5);
+  25% { 
+    border-color: rgba(200, 200, 200, 1);
   }
   50% { 
-    border-color: #ff6500; 
-    box-shadow: 0 0 20px rgba(255, 101, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.7);
+    transform: rotate(180deg);
   }
-}
-
-.fire-border {
-  border-width: 2px;
-  animation: fire-glow 3s ease-in-out infinite;
-}
-
-/* Optimized featured pulse - slower and less intensive */
-@keyframes featured-pulse {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  75% { 
+    border-color: rgba(220, 220, 220, 1);
+  }
+  100% { 
     border-color: rgba(255, 255, 255, 1);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
-    border-color: rgba(255, 255, 255, 0.8);
+    transform: rotate(360deg);
   }
 }
 
-.featured-glow-border {
-  position: relative;
+.white-circle-border {
   border: 2px solid white;
   border-radius: 0.75rem;
-  animation: featured-pulse 3s ease-in-out infinite;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+  animation: white-circle 3s linear infinite;
+  position: relative;
+}
+
+.white-circle-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 0.75rem;
+  border: 2px solid transparent;
+  background: linear-gradient(45deg, white, #e0e0e0, white, #f0f0f0) border-box;
+  mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: white-circle 3s linear infinite;
 }
 
