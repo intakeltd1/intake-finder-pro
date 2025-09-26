@@ -37,6 +37,7 @@ export default function Index() {
   const [sortBy, setSortBy] = useState('default');
   const [quantityFilter, setQuantityFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
+  const [isRandomized, setIsRandomized] = useState(false);
   const { isScrolled } = useScrollAnimations();
 
   // Fetch products from JSON
@@ -82,6 +83,20 @@ export default function Index() {
       indicator === '0'
     ) || false;
   };
+
+  // Calculate best value products (price/protein ratio)
+  const bestValueProducts = useMemo(() => {
+    return products
+      .filter(p => p.PRICE && p.PROTEIN_SERVING)
+      .map(p => {
+        const price = parseFloat(p.PRICE.replace(/[^\d.]/g, '') || '0');
+        const protein = parseFloat(p.PROTEIN_SERVING.replace(/[^\d.]/g, '') || '0');
+        const ratio = protein > 0 ? protein / price : 0;
+        return { ...p, valueRatio: ratio };
+      })
+      .sort((a, b) => b.valueRatio - a.valueRatio)
+      .slice(0, 4);
+  }, [products]);
 
   // Filter and sort products with fuzzy search
   const filteredAndSortedProducts = useMemo(() => {
@@ -136,7 +151,7 @@ export default function Index() {
     }
 
     // Sort products - out of stock always go to bottom
-    const sorted = [...filtered].sort((a, b) => {
+    let sorted = [...filtered].sort((a, b) => {
       const aOutOfStock = isOutOfStock(a);
       const bOutOfStock = isOutOfStock(b);
       
@@ -146,6 +161,8 @@ export default function Index() {
       
       // Then apply regular sorting within each group
       switch (sortBy) {
+        case 'randomize':
+          return Math.random() - 0.5;
         case 'value':
           return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
         case 'popularity':
@@ -168,6 +185,19 @@ export default function Index() {
           return 0;
       }
     });
+
+    // If randomize is selected, shuffle again to ensure true randomization
+    if (sortBy === 'randomize') {
+      const inStock = sorted.filter(p => !isOutOfStock(p));
+      const outOfStock = sorted.filter(p => isOutOfStock(p));
+      
+      for (let i = inStock.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [inStock[i], inStock[j]] = [inStock[j], inStock[i]];
+      }
+      
+      sorted = [...inStock, ...outOfStock];
+    }
 
     return sorted;
   }, [products, query, sortBy, quantityFilter, productTypeFilter]);
@@ -267,77 +297,84 @@ export default function Index() {
           Your browser does not support the video tag.
         </video>
         
-        <div className={`relative z-10 transition-all duration-1000 delay-1000 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
-          <Header />
+        {/* Sticky Timer - Always at top */}
+        <div className="fixed top-0 left-0 right-0 z-50">
           <StickyTimer />
-        
-          {/* Main Header */}
-          <header className="bg-background/20 backdrop-blur-md border-b border-white/20 text-foreground py-4 relative">
-            <div className="container mx-auto px-4">
-              {/* Navigation Drawer - positioned absolutely on left */}
-              <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <NavigationDrawer />
-              </div>
-              
-              {/* Main content - truly centered against full page width */}
-              <div className="text-center space-y-2">
-                <img 
-                  src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
-                  alt="Intake Logo" 
-                  className="h-8 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
-                />
-                <p className="text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
-                  Find your next favourite supplement at the best possible price - updated daily.
-                </p>
-                <div className="flex items-center justify-center gap-2">
-                  <Info className="h-3 w-3 text-foreground/70" />
-                  <p className="text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">
-                    All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
-                  </p>
-                </div>
-                {/* Social Media Links */}
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <a 
-                    href="https://instagram.com/use.intake" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-foreground/60 hover:text-foreground/90 transition-colors"
-                  >
-                    <Instagram className="h-4 w-4" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </header>
         </div>
 
-        {/* Search and Products Section */}
-        <div className="relative z-10">
-          <div className="container mx-auto px-4 py-6">
-            <SearchFilters
-              query={query}
-              setQuery={setQuery}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              quantityFilter={quantityFilter}
-              setQuantityFilter={setQuantityFilter}
-              productTypeFilter={productTypeFilter}
-              setProductTypeFilter={setProductTypeFilter}
-              resultCount={filteredAndSortedProducts.length}
-            />
-          </div>
+        {/* Combined Header and Search - Animated */}
+        <div className={`relative z-10 transition-all duration-1000 delay-1000 pt-12 ${isScrolled ? 'fade-out-down' : 'fade-in-up'}`}>
+          <div className="bg-background/30 backdrop-blur-xl border-b border-white/30 shadow-lg">
+            {/* Main Header */}
+            <header className="text-foreground py-6 relative">
+              <div className="container mx-auto px-4">
+                {/* Navigation Drawer - positioned absolutely on left */}
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <NavigationDrawer />
+                </div>
+                
+                {/* Main content - truly centered against full page width */}
+                <div className="text-center space-y-3">
+                  <img 
+                    src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
+                    alt="Intake Logo" 
+                    className="h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
+                  />
+                  <p className="text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
+                    Find your next favourite supplement at the best possible price - updated daily.
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Info className="h-3 w-3 text-foreground/70" />
+                    <p className="text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">
+                      All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
+                    </p>
+                  </div>
+                  {/* Social Media Links */}
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <a 
+                      href="https://instagram.com/use.intake" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-foreground/60 hover:text-foreground/90 transition-colors"
+                    >
+                      <Instagram className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </header>
 
-          {/* Featured Products */}
-          {featuredProducts.length > 0 && (
+            {/* Search Filters */}
+            <div className="container mx-auto px-4 pb-6">
+              <SearchFilters
+                query={query}
+                setQuery={setQuery}
+                sortBy={sortBy}
+                setSortBy={setSortBy}
+                quantityFilter={quantityFilter}
+                setQuantityFilter={setQuantityFilter}
+                productTypeFilter={productTypeFilter}
+                setProductTypeFilter={setProductTypeFilter}
+                resultCount={filteredAndSortedProducts.length}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Products Section */}
+        <div className="relative z-10">
+
+          {/* Best Value Products - Price/Protein Ratio */}
+          {bestValueProducts.length > 0 && (
             <div className="container mx-auto px-4 pb-6">
               <div className="featured-products-container rounded-xl p-4 bg-background/10 backdrop-blur-sm">
                 <h2 className="text-xl font-bold text-center mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
-                  Featured Products
+                  Best Value Products (Protein per £)
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {featuredProducts.map((product, index) => (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {bestValueProducts.map((product, index) => (
                     <div 
-                      key={`featured-${index}`}
+                      key={`best-value-${index}`}
                       className="staggered-fade-in"
                       style={{ animationDelay: `${2000 + (index * 200)}ms` }}
                     >
@@ -355,7 +392,7 @@ export default function Index() {
           {/* Products Grid */}
           <div className="container mx-auto px-4 pb-8">
             {filteredAndSortedProducts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
                 {filteredAndSortedProducts.map((product, index) => (
                   <div 
                     key={index}

@@ -84,13 +84,14 @@ export function SearchFilters({
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border shadow-lg z-50">
                 <SelectItem value="default">Default Order</SelectItem>
+                <SelectItem value="randomize">Randomize Order</SelectItem>
                 <SelectItem value="value">Best Value (Protein/Price)</SelectItem>
                 <SelectItem value="popularity">Most Popular</SelectItem>
                 <SelectItem value="price_low">Price: Low to High</SelectItem>
                 <SelectItem value="price_high">Price: High to Low</SelectItem>
                 <SelectItem value="protein">Protein per Serving</SelectItem>
                 <SelectItem value="brand">Brand Name</SelectItem>
-              </SelectContent>
+               </SelectContent>
               </Select>
             </div>
           </div>
