@@ -44,6 +44,8 @@ export default function Index() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const loadingIntervalRef = useRef<number | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   
 
 // Fetch products from JSON
@@ -179,51 +181,69 @@ useEffect(() => {
     return filteredAndSortedProducts.slice(0, displayedCount);
   }, [filteredAndSortedProducts, displayedCount]);
 
-// Load more products when scrolling
+// Load more products via IntersectionObserver (sequential)
 useEffect(() => {
-  const handleScroll = () => {
-    if (isLoadingMore || displayedCount >= filteredAndSortedProducts.length || loadingIntervalRef.current) return;
+  const node = sentinelRef.current;
+  if (!node) return;
 
-    const scrollTop = document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const docHeight = document.documentElement.scrollHeight;
+  const observer = new IntersectionObserver((entries) => {
+    const entry = entries[0];
+    if (!entry?.isIntersecting) return;
+    if (isLoadingMore || loadingIntervalRef.current) return;
+    if (displayedCount >= filteredAndSortedProducts.length) return;
 
-    if (scrollTop + windowHeight >= docHeight - 900) {
-      const remaining = filteredAndSortedProducts.length - displayedCount;
-      const itemsToAdd = Math.min(28, Math.max(0, remaining));
-      if (itemsToAdd <= 0) return;
+    const remaining = filteredAndSortedProducts.length - displayedCount;
+    const itemsToAdd = Math.min(28, Math.max(0, remaining));
+    if (itemsToAdd <= 0) return;
 
-      setIsLoadingMore(true);
-      let added = 0;
-      loadingIntervalRef.current = window.setInterval(() => {
-        added += 1;
-        setDisplayedCount((prev) => prev + 1);
-        if (added >= itemsToAdd) {
-          if (loadingIntervalRef.current) {
-            clearInterval(loadingIntervalRef.current);
-            loadingIntervalRef.current = null;
-          }
-          setIsLoadingMore(false);
+    setIsLoadingMore(true);
+    let added = 0;
+    const step = () => {
+      added += 1;
+      setDisplayedCount((prev) => prev + 1);
+      if (added >= itemsToAdd) {
+        setIsLoadingMore(false);
+        if (loadingIntervalRef.current) {
+          window.clearTimeout(loadingIntervalRef.current);
+          loadingIntervalRef.current = null;
         }
-      }, 80);
-    }
-  };
+        return;
+      }
+      loadingIntervalRef.current = window.setTimeout(step, 80);
+    };
+    step();
+  }, { root: null, threshold: 0.1 });
 
-  window.addEventListener('scroll', handleScroll);
+  observer.observe(node);
   return () => {
-    window.removeEventListener('scroll', handleScroll);
+    observer.disconnect();
     if (loadingIntervalRef.current) {
-      clearInterval(loadingIntervalRef.current);
+      window.clearTimeout(loadingIntervalRef.current);
       loadingIntervalRef.current = null;
     }
   };
 }, [displayedCount, filteredAndSortedProducts.length, isLoadingMore]);
 
+// Ensure background video autoplays on mount/update
+useEffect(() => {
+  const v = videoRef.current;
+  if (!v) return;
+  v.muted = true;
+  const p = v.play();
+  if (p && typeof (p as any).catch === 'function') {
+    (p as Promise<void>).catch(() => {
+      v.muted = true;
+      v.setAttribute('muted', 'true');
+      v.play().catch(() => {});
+    });
+  }
+}, [loading]);
+
 // Reset displayed count when filters change
 useEffect(() => {
   setDisplayedCount(28);
   if (loadingIntervalRef.current) {
-    clearInterval(loadingIntervalRef.current);
+    window.clearTimeout(loadingIntervalRef.current);
     loadingIntervalRef.current = null;
   }
   setIsLoadingMore(false);
@@ -234,12 +254,26 @@ useEffect(() => {
       <div className="min-h-screen bg-background relative overflow-hidden">
         {/* Video Background with optimized loading */}
         <video 
-          autoPlay 
-          muted 
-          loop 
+          ref={videoRef}
+          autoPlay
+          muted
           playsInline
-          className="video-background"
+          loop
           preload="metadata"
+          disablePictureInPicture
+          aria-hidden="true"
+          className="video-background"
+          onLoadedMetadata={() => {
+            const v = videoRef.current;
+            if (v) {
+              v.muted = true;
+              v.play().catch(() => {
+                v.muted = true;
+                v.setAttribute('muted', 'true');
+                v.play().catch(() => {});
+              });
+            }
+          }}
         >
           <source src="/background-video.mp4" type="video/mp4" />
         </video>
@@ -299,6 +333,32 @@ useEffect(() => {
         <div className="fixed top-0 left-0 right-0 z-50">
           <StickyTimer lastUpdatedISO={lastUpdatedAt || undefined} />
         </div>
+
+        {/* Background video for main view */}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          loop
+          preload="metadata"
+          disablePictureInPicture
+          aria-hidden="true"
+          className="video-background"
+          onLoadedMetadata={() => {
+            const v = videoRef.current;
+            if (v) {
+              v.muted = true;
+              v.play().catch(() => {
+                v.muted = true;
+                v.setAttribute('muted', 'true');
+                v.play().catch(() => {});
+              });
+            }
+          }}
+        >
+          <source src="/background-video.mp4" type="video/mp4" />
+        </video>
 
         {/* Combined Header and Search - Single Animation */}
         <div className="relative z-10 transition-all duration-1000 delay-1000 pt-10 md:pt-12 fade-in-up">
@@ -417,25 +477,30 @@ useEffect(() => {
                   ))}
                 </div>
 
-            {/* Loading more indicator */}
-            {isLoadingMore && (
-              <div className="text-center py-6 md:py-8">
-                <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-primary mx-auto mb-3 md:mb-4"></div>
-                <p className="text-foreground/70 text-sm">Loading more products...</p>
-              </div>
-            )}
+                {/* IntersectionObserver sentinel */}
+                {displayedCount < filteredAndSortedProducts.length && (
+                  <div ref={sentinelRef} className="h-1" />
+                )}
 
-               {/* Load more message */}
-               {displayedCount < filteredAndSortedProducts.length && !isLoadingMore && (
-                 <div className="text-center py-8">
-                   <p className="text-foreground/70 mb-2">Scroll down to load more products</p>
-                   <p className="text-sm text-foreground/50">
-                     Showing {displayedCount} of {filteredAndSortedProducts.length} products
-                   </p>
-                 </div>
-               )}
+                {/* Loading more indicator */}
+                {isLoadingMore && (
+                  <div className="text-center py-6 md:py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 md:h-8 md:w-8 border-b-2 border-primary mx-auto mb-3 md:mb-4"></div>
+                    <p className="text-foreground/70 text-sm">Loading more products...</p>
+                  </div>
+                )}
+
+                {/* Load more message */}
+                {displayedCount < filteredAndSortedProducts.length && !isLoadingMore && (
+                  <div className="text-center py-8">
+                    <p className="text-foreground/70 mb-2">Scroll down to load more products</p>
+                    <p className="text-sm text-foreground/50">
+                      Showing {displayedCount} of {filteredAndSortedProducts.length} products
+                    </p>
+                  </div>
+                )}
               </>
-             ) : (
+            ) : (
                <div className="text-center py-12">
                  <p className="text-lg text-foreground/70 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">No products found matching your criteria.</p>
                  <p className="text-sm text-foreground/50 mt-2 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">Try adjusting your search or filters.</p>
