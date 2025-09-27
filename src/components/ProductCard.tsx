@@ -69,6 +69,17 @@ const getBrandFromProduct = (product: Product): string => {
   return extractBrandFromUrl(url) || candidate || 'Unknown Brand';
 };
 
+const formatProtein = (value?: string) => {
+  if (!value) return 'N/A';
+  const s = String(value).trim();
+  if (!s) return 'N/A';
+  if (/[0-9]\s*(g|mg)\b/i.test(s)) {
+    return s.replace(/\s*(g|mg)\b/i, ' $1');
+  }
+  const num = s.match(/[\d.]+/);
+  return num ? `${num[0]} g` : s;
+};
+
 export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
@@ -201,7 +212,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             <div className="flex justify-between items-center text-xs sm:text-sm">
               <span className="text-muted-foreground">Protein per serving:</span>
               <span className="font-medium text-foreground">
-                {product.PROTEIN_SERVING || "N/A"}
+                {formatProtein(product.PROTEIN_SERVING)}
               </span>
             </div>
             

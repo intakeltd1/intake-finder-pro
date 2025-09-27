@@ -47,6 +47,7 @@ export default function Index() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isLoadingRef = useRef(false);
+  const batchStartRef = useRef(0);
   
 
 // Fetch products from JSON
@@ -191,15 +192,20 @@ useEffect(() => {
     if (isLoadingRef.current) return;
     isLoadingRef.current = true;
     setIsLoadingMore(true);
-    setDisplayedCount((prev) => {
-      const remaining = filteredAndSortedProducts.length - prev;
-      const toAdd = Math.min(28, Math.max(0, remaining));
-      return prev + toAdd;
-    });
+    const current = displayedCount;
+    batchStartRef.current = current;
+    const remaining = filteredAndSortedProducts.length - current;
+    const toAdd = Math.min(28, Math.max(0, remaining));
+    if (toAdd <= 0) {
+      isLoadingRef.current = false;
+      setIsLoadingMore(false);
+      return;
+    }
+    setDisplayedCount(current + toAdd);
     window.setTimeout(() => {
       isLoadingRef.current = false;
       setIsLoadingMore(false);
-    }, 200);
+    }, 50);
   };
 
   const observer = new IntersectionObserver((entries) => {
@@ -452,7 +458,7 @@ useEffect(() => {
                     <div 
                       key={`${product.URL || product.LINK}-${index}`}
                       className="staggered-fade-in"
-                      style={{ animationDelay: `${Math.min(index * 50, 2000)}ms` }}
+                      style={{ animationDelay: `${Math.max(0, (index - batchStartRef.current)) * 40}ms` }}
                     >
                       {top10Products.has(product.URL || product.LINK || '') ? (
                         <div className="white-circle-border">
