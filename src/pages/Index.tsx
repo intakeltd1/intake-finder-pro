@@ -36,7 +36,7 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [debouncedQuery] = useDebounce(query, 300); // Debounce search for performance
-  const [sortBy, setSortBy] = useState('randomise');
+  const [sortBy, setSortBy] = useState('value');
   const [quantityFilter, setQuantityFilter] = useState('all');
   const [productTypeFilter, setProductTypeFilter] = useState('all');
   const [isRandomized, setIsRandomized] = useState(false);
@@ -109,6 +109,11 @@ useEffect(() => {
   }, [products]);
 
 
+  // Check if any search criteria is active
+  const hasSearchCriteria = useMemo(() => {
+    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all';
+  }, [debouncedQuery, quantityFilter, productTypeFilter]);
+
   // Optimized filtering with debouncing and memoization
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = debouncedQuery.trim() ? applyFuzzySearch(products, debouncedQuery.trim()) : products;
@@ -153,27 +158,24 @@ useEffect(() => {
       if (aOutOfStock && !bOutOfStock) return 1;
       if (!aOutOfStock && bOutOfStock) return -1;
       
-      switch (sortBy) {
+      // Use randomise when no search criteria, otherwise use selected sort
+      const effectiveSort = hasSearchCriteria ? sortBy : 'randomise';
+      
+      switch (effectiveSort) {
         case 'randomise': return Math.random() - 0.5;
         case 'value': return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
-        case 'popularity': return (b.POPULARITY || 0) - (a.POPULARITY || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
           const priceB = parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '0');
           return priceA - priceB;
-        case 'price_high':
-          const priceA2 = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
-          const priceB2 = parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '0');
-          return priceB2 - priceA2;
         case 'protein':
           const proteinA = parseFloat(String(a.PROTEIN_SERVING || '').replace(/[^\d.]/g, '') || '0');
           const proteinB = parseFloat(String(b.PROTEIN_SERVING || '').replace(/[^\d.]/g, '') || '0');
           return proteinB - proteinA;
-        case 'brand': return (a.COMPANY || '').localeCompare(b.COMPANY || '');
         default: return 0;
       }
     });
-  }, [products, debouncedQuery, sortBy, quantityFilter, productTypeFilter]);
+  }, [products, debouncedQuery, sortBy, quantityFilter, productTypeFilter, hasSearchCriteria]);
 
   // Simplified lookups for performance
   const topValueUrls = useMemo(() => new Set(bestValueProducts.map(p => p.URL || p.LINK)), [bestValueProducts]);
@@ -447,9 +449,9 @@ useEffect(() => {
         {/* Products Section */}
         <div className="relative z-10">
 
-          {/* Best Value Products - Price/Protein Ratio */}
-          {bestValueProducts.length > 0 && (
-            <div className="container mx-auto px-2 md:px-4 pb-6">
+          {/* Best Value Products - Price/Protein Ratio - Only show when no search criteria */}
+          {bestValueProducts.length > 0 && !hasSearchCriteria && (
+            <div className="container mx-auto px-2 md:px-4 pb-6 transition-all duration-300 animate-fade-in">
               <div className="featured-products-container rounded-xl p-3 md:p-4 bg-background/5 backdrop-blur-sm">
                 <h2 className="text-lg md:text-xl font-bold text-center mb-3 md:mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
                   Today's Top Picks

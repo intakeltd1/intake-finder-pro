@@ -82,15 +82,10 @@ export function SearchFilters({
                 <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[140px] h-6 text-xs">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-                <SelectContent className="bg-card border-border shadow-lg z-50">
-                <SelectItem value="default">Default Order</SelectItem>
-                <SelectItem value="randomise">Randomise Order</SelectItem>
+              <SelectContent className="bg-card border-border shadow-lg z-50">
                 <SelectItem value="value">Best Value (Protein/Price)</SelectItem>
-                <SelectItem value="popularity">Most Popular</SelectItem>
                 <SelectItem value="price_low">Price: Low to High</SelectItem>
-                <SelectItem value="price_high">Price: High to Low</SelectItem>
                 <SelectItem value="protein">Protein per Serving</SelectItem>
-                <SelectItem value="brand">Brand Name</SelectItem>
                </SelectContent>
               </Select>
             </div>
