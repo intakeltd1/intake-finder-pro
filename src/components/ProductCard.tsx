@@ -118,8 +118,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
       } flex flex-col relative overflow-hidden rounded-lg`}
       onClick={handleCardClick}
     >
-      {/* Product Image - Larger square taking 65% of card height */}
-      <div className="relative w-full overflow-hidden rounded-t-lg bg-white" style={{ height: '65%' }}>
+      {/* Product Image - 50% mobile, 65% desktop */}
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-1/2 md:h-[65%]">
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
@@ -180,8 +180,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         </div>
       </div>
 
-      {/* Product Info - Compressed to 35% of card height */}
-      <CardContent className="p-2 flex flex-col justify-between" style={{ height: '35%' }}>
+      {/* Product Info - 50% mobile, 35% desktop */}
+      <CardContent className="p-2 flex flex-col justify-between h-1/2 md:h-[35%]">
         {/* Company Name */}
         <div className="mb-1">
           <p className="text-xs text-muted-foreground line-clamp-1">
