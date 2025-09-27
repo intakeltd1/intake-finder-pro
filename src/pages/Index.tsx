@@ -111,8 +111,8 @@ useEffect(() => {
 
   // Check if any search criteria is active
   const hasSearchCriteria = useMemo(() => {
-    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all';
-  }, [debouncedQuery, quantityFilter, productTypeFilter]);
+    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all' || sortBy !== 'value';
+  }, [debouncedQuery, quantityFilter, productTypeFilter, sortBy]);
 
   // Optimized filtering with debouncing and memoization
   const filteredAndSortedProducts = useMemo(() => {
@@ -461,7 +461,7 @@ useEffect(() => {
                     <div 
                       key={`best-value-${index}`}
                       className="staggered-fade-in"
-                      style={{ animationDelay: `${1500 + (index * 150)}ms` }}
+                      style={{ animationDelay: `${500 + (index * 100)}ms` }}
                     >
                       <div className="white-circle-border">
                         <ProductCard
