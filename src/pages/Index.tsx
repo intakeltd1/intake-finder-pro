@@ -221,6 +221,32 @@ useEffect(() => {
   };
 }, [displayedCount, filteredAndSortedProducts.length]);
 
+// Fallback: window scroll listener to trigger load when near bottom
+useEffect(() => {
+  const onScroll = () => {
+    if (isLoadingRef.current) return;
+    const doc = document.documentElement;
+    const scrollPos = window.innerHeight + window.scrollY;
+    const threshold = doc.scrollHeight - 600;
+    if (scrollPos >= threshold) {
+      if (displayedCount >= filteredAndSortedProducts.length) return;
+      isLoadingRef.current = true;
+      setIsLoadingMore(true);
+      const current = displayedCount;
+      batchStartRef.current = current;
+      const remaining = filteredAndSortedProducts.length - current;
+      const toAdd = Math.min(28, Math.max(0, remaining));
+      if (toAdd > 0) setDisplayedCount(current + toAdd);
+      window.setTimeout(() => {
+        isLoadingRef.current = false;
+        setIsLoadingMore(false);
+      }, 80);
+    }
+  };
+  window.addEventListener('scroll', onScroll, { passive: true } as any);
+  return () => window.removeEventListener('scroll', onScroll);
+}, [displayedCount, filteredAndSortedProducts.length]);
+
 // removed displayedCountRef - using functional updates instead
 
 // Ensure background video autoplays on mount/update
@@ -478,7 +504,7 @@ useEffect(() => {
 
                 {/* IntersectionObserver sentinel */}
                 {displayedCount < filteredAndSortedProducts.length && (
-                  <div ref={sentinelRef} className="h-1" />
+                  <div ref={sentinelRef} className="h-10 w-full opacity-0 pointer-events-none" aria-hidden="true" />
                 )}
 
                 {/* Loading more indicator */}
