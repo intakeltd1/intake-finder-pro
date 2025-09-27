@@ -183,38 +183,37 @@ useEffect(() => {
     return filteredAndSortedProducts.slice(0, displayedCount);
   }, [filteredAndSortedProducts, displayedCount]);
 
-// Load more products via IntersectionObserver (batched 28)
+// Load more products via IntersectionObserver (batched 28, quick trigger)
 useEffect(() => {
   const node = sentinelRef.current;
   if (!node) return;
 
-  const loadMore = () => {
-    if (isLoadingRef.current) return;
+  let ticking = false;
+  const observer = new IntersectionObserver(([entry]) => {
+    if (!entry?.isIntersecting) return;
+    if (ticking || isLoadingRef.current) return;
+    if (displayedCount >= filteredAndSortedProducts.length) return;
+
+    ticking = true;
     isLoadingRef.current = true;
     setIsLoadingMore(true);
+
     const current = displayedCount;
     batchStartRef.current = current;
     const remaining = filteredAndSortedProducts.length - current;
     const toAdd = Math.min(28, Math.max(0, remaining));
-    if (toAdd <= 0) {
-      isLoadingRef.current = false;
-      setIsLoadingMore(false);
-      return;
+
+    if (toAdd > 0) {
+      setDisplayedCount(current + toAdd);
     }
-    setDisplayedCount(current + toAdd);
+
+    // Reset guards quickly to allow subsequent batches
     window.setTimeout(() => {
       isLoadingRef.current = false;
       setIsLoadingMore(false);
-    }, 50);
-  };
-
-  const observer = new IntersectionObserver((entries) => {
-    const entry = entries[0];
-    if (!entry?.isIntersecting) return;
-    if (isLoadingRef.current) return;
-    if (displayedCount >= filteredAndSortedProducts.length) return;
-    loadMore();
-  }, { root: null, threshold: 0.1 });
+      ticking = false;
+    }, 80);
+  }, { root: null, threshold: 0.01, rootMargin: '200px 0px 200px 0px' });
 
   observer.observe(node);
   return () => {
