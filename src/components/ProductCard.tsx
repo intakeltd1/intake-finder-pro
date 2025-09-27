@@ -209,7 +209,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         {/* Product Details - Compact */}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-muted-foreground">Protein:</span>
+            <span className="text-muted-foreground">Protein per Serving:</span>
             <span className="font-medium text-foreground">
               {formatProtein(product.PROTEIN_SERVING)}
             </span>
@@ -217,7 +217,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           
           <div className="flex justify-between items-center text-xs">
             <span className="text-muted-foreground">Flavour:</span>
-            <span className="font-medium text-foreground line-clamp-1">
+            <span className="font-medium text-foreground">
               {product.FLAVOUR || "N/A"}
             </span>
           </div>

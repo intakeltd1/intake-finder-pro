@@ -28,27 +28,27 @@ export function SearchFilters({
   resultCount,
 }: SearchFiltersProps) {
   return (
-    <Card className="bg-background/20 backdrop-blur-md border-2 border-white/20 text-foreground p-3 shadow-lg">
+    <Card className="bg-background/20 backdrop-blur-md border-2 border-white/20 text-foreground p-2 md:p-3 shadow-lg">
       <div className="space-y-2">
         {/* Search Input */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/70" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3 w-3 text-white/70" />
           <Input
             type="text"
             placeholder="Search products, flavours..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-10 bg-background/20 border-white/30 text-foreground placeholder:text-white/70 focus:bg-background/30 focus:border-white/50 h-8"
+            className="pl-8 bg-background/20 border-white/30 text-foreground placeholder:text-white/70 focus:bg-background/30 focus:border-white/50 h-6 text-xs"
           />
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+        <div className="flex flex-col lg:flex-row gap-2 items-start lg:items-center justify-between">
+          <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
             {/* Product Type Filter */}
             <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
-              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[160px] h-8">
-                <SelectValue placeholder="Select Product Type" />
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[120px] h-6 text-xs">
+                <SelectValue placeholder="Product Type" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border shadow-lg z-50">
                 <SelectItem value="all">All Products</SelectItem>
@@ -62,8 +62,8 @@ export function SearchFilters({
 
             {/* Quantity Filter */}
             <Select value={quantityFilter} onValueChange={setQuantityFilter}>
-              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[150px] h-8">
-                <SelectValue placeholder="All quantities" />
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[110px] h-6 text-xs">
+                <SelectValue placeholder="Quantity" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border shadow-lg z-50">
                 <SelectItem value="all">All quantities</SelectItem>
@@ -76,15 +76,15 @@ export function SearchFilters({
             </Select>
 
             {/* Sort Options */}
-            <div className="flex items-center gap-2">
-              <SortDesc className="h-4 w-4 text-white/70" />
+            <div className="flex items-center gap-1">
+              <SortDesc className="h-3 w-3 text-white/70" />
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[200px] h-8">
+                <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[140px] h-6 text-xs">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-border shadow-lg z-50">
                 <SelectItem value="default">Default Order</SelectItem>
-                <SelectItem value="randomize">Randomize Order</SelectItem>
+                <SelectItem value="randomise">Randomise Order</SelectItem>
                 <SelectItem value="value">Best Value (Protein/Price)</SelectItem>
                 <SelectItem value="popularity">Most Popular</SelectItem>
                 <SelectItem value="price_low">Price: Low to High</SelectItem>
@@ -97,7 +97,7 @@ export function SearchFilters({
           </div>
 
           {/* Results Count */}
-          <div className="text-sm font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-3 py-1.5 rounded-md text-foreground">
+          <div className="text-xs font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-2 py-1 rounded-md text-foreground whitespace-nowrap">
             {resultCount} products
           </div>
         </div>
