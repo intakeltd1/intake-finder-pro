@@ -115,15 +115,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     <Card 
       className={`transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
-      } flex relative overflow-hidden rounded-lg
-      /* Mobile: horizontal row layout */
-      h-32 flex-row md:h-[380px] md:flex-col`}
+      } flex relative overflow-hidden rounded-lg flex-row md:flex-col`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
       <div className={`relative overflow-hidden bg-white flex-shrink-0
-        /* Mobile: fixed width, full height */
-        w-24 h-full md:w-full md:h-48 rounded-l-lg md:rounded-t-lg md:rounded-l-none`}>
+        w-24 h-24 self-start md:w-full md:aspect-square rounded-l-lg md:rounded-t-lg md:rounded-l-none`}
+      >
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
@@ -190,15 +188,15 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
       {/* Product Info */}
       <CardContent className={`flex flex-col justify-between p-3 md:p-4 flex-1`}>
         
-        {/* Mobile Layout - One field per row */}
-        <div className="md:hidden flex flex-col space-y-1 h-full">
+        {/* Mobile Layout - One field per row, auto height */}
+        <div className="md:hidden flex flex-col space-y-1">
           {/* Brand */}
           <p className="text-xs text-muted-foreground">
             {getBrandFromProduct(product)}
           </p>
           
           {/* Title */}
-          <h3 className="text-sm font-semibold line-clamp-2 leading-tight">
+          <h3 className="text-sm font-semibold leading-snug line-clamp-3">
             {product.TITLE || "Product Title Not Available"}
           </h3>
           
@@ -220,13 +218,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           )}
           
           {/* Add button */}
-          <div className="mt-auto pt-1">
+          <div className="pt-1">
             <Button
               onClick={handleAddToComparison}
               disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
               size="sm"
               variant="outline"
-              className={`text-xs h-6 px-3 w-full border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground ${
+              className={`text-xs h-7 px-3 w-full border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground ${
                 addAnimation ? 'animate-bounce' : ''
               } ${
                 isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
