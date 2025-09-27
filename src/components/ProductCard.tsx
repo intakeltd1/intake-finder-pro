@@ -113,165 +113,113 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
   return (
     <Card 
-      className={`transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
+      className={`h-[340px] sm:h-[360px] md:h-[400px] transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
-      } flex relative overflow-hidden rounded-lg
-      /* Mobile: horizontal row layout */
-      h-24 flex-row md:h-[400px] md:flex-col`}
+      } flex flex-col relative overflow-hidden rounded-lg`}
       onClick={handleCardClick}
     >
-      {/* Product Image */}
-      <div className={`relative overflow-hidden bg-white flex-shrink-0
-        /* Mobile: fixed width, full height */
-        w-20 h-full md:w-full md:aspect-square rounded-l-lg md:rounded-t-lg md:rounded-l-none`}>
+      {/* Product Image - Larger square taking 65% of card height */}
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white" style={{ height: '65%' }}>
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
             alt={product.TITLE || "Product image"}
-            className={`w-full h-full object-cover transition-transform duration-300 ${
+            className={`w-full h-full object-cover object-center transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
             loading="lazy"
             onError={() => setImageError(true)}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-white">
-            <ImageIcon className="h-6 w-6 md:h-12 md:w-12 text-muted-foreground" />
+          <div className="w-full h-full flex items-center justify-center bg-white rounded-t-lg">
+            <ImageIcon className="h-12 w-12 text-muted-foreground" />
           </div>
         )}
 
-        {/* Add to comparison button - desktop only */}
+        {/* Add to comparison button */}
         <Button
           onClick={handleAddToComparison}
           disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
           size="sm"
           variant="outline"
-          className={`absolute top-1 right-1 md:top-2 md:right-2 h-6 w-6 md:h-8 md:w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-transform duration-200 rounded-full hover:scale-110 ${
+          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-transform duration-200 rounded-full hover:scale-110 ${
             addAnimation ? 'animate-bounce' : ''
           } ${
             isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
-          } hidden md:flex`}
+          }`}
         >
-          <Plus className={`h-3 w-3 md:h-4 md:w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
+          <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
         </Button>
 
         {/* Stock Status Badge */}
         {outOfStock && (
-          <Badge variant="destructive" className="absolute bottom-1 left-1 md:bottom-2 md:left-2 text-xs px-1 py-0">
+          <Badge variant="destructive" className="absolute bottom-2 left-2">
             Out of Stock
           </Badge>
         )}
 
-        {/* Special Product Badges - mobile: smaller, desktop: normal */}
-        <div className="absolute top-1 left-1 md:top-2 md:left-2 flex flex-col gap-0.5 md:gap-1">
+        {/* Special Product Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
           {isFeatured && !outOfStock && (
-            <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-0.5 md:gap-1 text-xs px-1 py-0 md:px-2 md:py-1">
-              <Star className="h-2 w-2 md:h-3 md:w-3" />
-              <span className="hidden md:inline">Featured</span>
-              <span className="md:hidden">F</span>
+            <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-1">
+              <Star className="h-3 w-3" />
+              Featured
             </Badge>
           )}
           {isTopValue && !outOfStock && !isFeatured && (
-            <Badge className="bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 text-white font-medium text-xs px-1 py-0 md:px-2 md:py-1">
-              <span className="hidden md:inline">Best Value</span>
-              <span className="md:hidden">BV</span>
+            <Badge className="bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 text-white font-medium">
+              Best Value
             </Badge>
           )}
           {isPopular && !outOfStock && !isFeatured && !isTopValue && (
-            <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium flex items-center gap-0.5 md:gap-1 text-xs px-1 py-0 md:px-2 md:py-1">
-              <TrendingUp className="h-2 w-2 md:h-3 md:w-3" />
-              <span className="hidden md:inline">Popular</span>
-              <span className="md:hidden">P</span>
+            <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              Popular
             </Badge>
           )}
         </div>
       </div>
 
-      {/* Product Info */}
-      <CardContent className={`flex flex-col justify-between
-        /* Mobile: flex-1 with minimal padding */
-        flex-1 p-2 md:p-2`}>
-        
-        {/* Mobile Layout */}
-        <div className="md:hidden flex flex-col justify-between h-full">
-          {/* Top row: Brand and Price */}
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-muted-foreground line-clamp-1 mb-0.5">
-                {getBrandFromProduct(product)}
-              </p>
-              <h3 className="text-xs font-semibold line-clamp-1 leading-tight">
-                {product.TITLE || "Product Title Not Available"}
-              </h3>
-            </div>
-            <span className="text-sm font-bold text-primary ml-2 flex-shrink-0">
-              {product.PRICE || "N/A"}
-            </span>
-          </div>
-
-          {/* Bottom row: Details and Add button */}
-          <div className="flex items-center justify-between">
-            <div className="flex-1 text-xs text-muted-foreground">
-              {product.PROTEIN_SERVING ? formatProtein(product.PROTEIN_SERVING) : 'N/A'}
-              {product.AMOUNT && <span className="ml-2">{product.AMOUNT}</span>}
-            </div>
-            <Button
-              onClick={handleAddToComparison}
-              disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
-              size="sm"
-              variant="outline"
-              className={`text-xs h-6 px-2 border border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground ml-2 ${
-                addAnimation ? 'animate-bounce' : ''
-              } ${
-                isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
-              }`}
-            >
-              {isInComparison(product) ? "Added" : "Add"}
-            </Button>
-          </div>
+      {/* Product Info - Compressed to 35% of card height */}
+      <CardContent className="p-2 flex flex-col justify-between" style={{ height: '35%' }}>
+        {/* Company Name */}
+        <div className="mb-1">
+          <p className="text-xs text-muted-foreground line-clamp-1">
+            {getBrandFromProduct(product)}
+          </p>
         </div>
 
-        {/* Desktop Layout - keep original */}
-        <div className="hidden md:block">
-          {/* Company Name */}
-          <div className="mb-1">
-            <p className="text-xs text-muted-foreground line-clamp-1">
-              {getBrandFromProduct(product)}
-            </p>
-          </div>
+        {/* Product Title */}
+        <CardTitle className="text-xs mb-1 line-clamp-2 min-h-[2rem] flex items-start leading-tight">
+          {product.TITLE || "Product Title Not Available"}
+        </CardTitle>
 
-          {/* Product Title */}
-          <CardTitle className="text-xs mb-1 line-clamp-2 min-h-[2rem] flex items-start leading-tight">
-            {product.TITLE || "Product Title Not Available"}
-          </CardTitle>
+        {/* Price and Amount */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-bold text-primary">
+            {product.PRICE || "Price N/A"}
+          </span>
+          {product.AMOUNT && (
+            <Badge variant="secondary" className="text-xs px-1 py-0">
+              {product.AMOUNT}
+            </Badge>
+          )}
+        </div>
 
-          {/* Price and Amount */}
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-bold text-primary">
-              {product.PRICE || "Price N/A"}
+        {/* Product Details - Compact */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground">Protein:</span>
+            <span className="font-medium text-foreground">
+              {formatProtein(product.PROTEIN_SERVING)}
             </span>
-            {product.AMOUNT && (
-              <Badge variant="secondary" className="text-xs px-1 py-0">
-                {product.AMOUNT}
-              </Badge>
-            )}
           </div>
-
-          {/* Product Details - Compact */}
-          <div className="space-y-1">
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-muted-foreground">Protein:</span>
-              <span className="font-medium text-foreground">
-                {formatProtein(product.PROTEIN_SERVING)}
-              </span>
-            </div>
-            
-            <div className="flex justify-between items-center text-xs">
-              <span className="text-muted-foreground">Flavour:</span>
-              <span className="font-medium text-foreground line-clamp-1">
-                {product.FLAVOUR || "N/A"}
-              </span>
-            </div>
+          
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground">Flavour:</span>
+            <span className="font-medium text-foreground line-clamp-1">
+              {product.FLAVOUR || "N/A"}
+            </span>
           </div>
         </div>
       </CardContent>

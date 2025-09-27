@@ -389,42 +389,39 @@ useEffect(() => {
         <div className="relative z-10 transition-all duration-1000 delay-1000 pt-10 md:pt-12 fade-in-up">
           <div className="bg-background/20 backdrop-blur-xl shadow-lg">
             {/* Main Header */}
-            <header className="text-foreground py-3 md:py-6 relative border border-white/10 rounded-lg mx-2 md:mx-4 bg-background/5">
-              <div className="container mx-auto px-2 md:px-4">
-                {/* Mobile: Stack layout, Desktop: Absolute positioning */}
-                <div className="md:relative">
-                  {/* Navigation Drawer */}
-                  <div className="md:absolute md:left-4 md:top-1/2 md:-translate-y-1/2 mb-3 md:mb-0">
-                    <NavigationDrawer />
-                  </div>
-                  
-                  {/* Main content */}
-                  <div className="text-center space-y-2 md:space-y-3">
-                    <img 
-                      src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
-                      alt="Intake Logo" 
-                      className="h-7 md:h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
-                    />
-                    <p className="text-sm md:text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)] px-2">
-                      Find your next favourite supplement at the best possible price - updated daily.
+            <header className="text-foreground py-4 md:py-6 relative border border-white/10 rounded-lg mx-2 md:mx-4 bg-background/5">
+              <div className="container mx-auto px-4">
+                {/* Navigation Drawer - positioned absolutely on left */}
+                <div className="absolute left-4 top-1/2 -translate-y-1/2">
+                  <NavigationDrawer />
+                </div>
+                
+                {/* Main content - truly centered against full page width */}
+                <div className="text-center space-y-2 md:space-y-3">
+                  <img 
+                    src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
+                    alt="Intake Logo" 
+                    className="h-8 md:h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
+                  />
+                  <p className="text-base md:text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
+                    Find your next favourite supplement at the best possible price - updated daily.
+                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <Info className="h-3 w-3 text-foreground/70 hidden md:inline" />
+                    <p className="text-[10px] md:text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)]">
+                      All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
                     </p>
-                    <div className="flex items-center justify-center gap-1 md:gap-2 px-2">
-                      <Info className="h-3 w-3 text-foreground/70 hidden md:inline flex-shrink-0" />
-                      <p className="text-[9px] md:text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)] leading-tight">
-                        All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
-                      </p>
-                    </div>
-                    {/* Social Media Links */}
-                    <div className="flex items-center justify-center gap-3 pt-1 md:pt-2">
-                      <a 
-                        href="https://instagram.com/use.intake" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-foreground/60 hover:text-foreground/90 transition-colors"
-                      >
-                        <Instagram className="h-4 w-4" />
-                      </a>
-                    </div>
+                  </div>
+                  {/* Social Media Links */}
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <a 
+                      href="https://instagram.com/use.intake" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-foreground/60 hover:text-foreground/90 transition-colors"
+                    >
+                      <Instagram className="h-4 w-4" />
+                    </a>
                   </div>
                 </div>
               </div>
@@ -481,7 +478,7 @@ useEffect(() => {
           <div className="container mx-auto px-2 md:px-4 pb-8">
             {filteredAndSortedProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 md:gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4 mb-8">
                   {displayedProducts.map((product, index) => (
                     <div 
                       key={`${product.URL || product.LINK}-${index}`}
