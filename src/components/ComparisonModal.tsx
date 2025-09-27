@@ -117,14 +117,21 @@ export function ComparisonModal() {
                       )}
 
                       {/* Value Score */}
-                      {product.PRICE && product.PROTEIN_SERVING && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Value Score:</span>
-                          <span className="font-medium text-green-600">
-                            {(numFromProtein(product.PROTEIN_SERVING) / numFromPrice(product.PRICE)).toFixed(2)}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          Value Score:
+                        </span>
+                        <span className="font-medium text-green-600">
+                          {product.PRICE && product.PROTEIN_SERVING ? 
+                            (() => {
+                              const protein = numFromProtein(product.PROTEIN_SERVING);
+                              const price = numFromPrice(product.PRICE);
+                              return protein > 0 && price > 0 ? 
+                                (protein / price).toFixed(2) : 'N/A';
+                            })() : 'N/A'
+                          }
+                        </span>
+                      </div>
                     </div>
 
                     {/* View Product Button */}

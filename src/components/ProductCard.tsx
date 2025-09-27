@@ -118,13 +118,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
       } flex flex-col relative overflow-hidden rounded-lg`}
       onClick={handleCardClick}
     >
-      {/* Product Image */}
-      <div className="relative aspect-square w-full overflow-hidden rounded-t-lg bg-white">
+      {/* Product Image - Larger square taking 65% of card height */}
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white" style={{ height: '65%' }}>
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
             alt={product.TITLE || "Product image"}
-            className={`w-full h-full object-contain transition-transform duration-300 rounded-t-lg ${
+            className={`w-full h-full object-cover object-center transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
             loading="lazy"
@@ -180,56 +180,47 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         </div>
       </div>
 
-      <CardContent className="p-2 sm:p-3 flex-1 flex flex-col">
+      {/* Product Info - Compressed to 35% of card height */}
+      <CardContent className="p-2 flex flex-col justify-between" style={{ height: '35%' }}>
         {/* Company Name */}
-        <div className="mb-2">
-          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
+        <div className="mb-1">
+          <p className="text-xs text-muted-foreground line-clamp-1">
             {getBrandFromProduct(product)}
           </p>
         </div>
 
         {/* Product Title */}
-        <CardTitle className="text-xs sm:text-sm mb-2 line-clamp-2 min-h-[2.5rem] flex items-start">
+        <CardTitle className="text-xs mb-1 line-clamp-2 min-h-[2rem] flex items-start leading-tight">
           {product.TITLE || "Product Title Not Available"}
         </CardTitle>
 
-        <div className="flex-1 space-y-2">
-          {/* Price and Amount */}
-          <div className="flex items-center justify-between">
-            <span className="text-base sm:text-lg font-bold text-primary">
-              {product.PRICE || "Price N/A"}
-            </span>
-            {product.AMOUNT && (
-              <Badge variant="secondary" className="bg-secondary text-secondary-foreground font-medium">
-                <Package className="h-3 w-3 mr-1" />
-                {product.AMOUNT}
-              </Badge>
-            )}
-          </div>
-
-          {/* Product Details - Fixed structure for alignment */}
-          <div className="space-y-2 min-h-[3rem]">
-            <div className="flex justify-between items-center text-xs sm:text-sm">
-              <span className="text-muted-foreground">Protein per serving:</span>
-              <span className="font-medium text-foreground">
-                {formatProtein(product.PROTEIN_SERVING)}
-              </span>
-            </div>
-            
-            <div className="flex justify-between items-center text-xs sm:text-sm">
-              <span className="text-muted-foreground">Flavour:</span>
-              <span className="font-medium text-foreground">
-                {product.FLAVOUR || "N/A"}
-              </span>
-            </div>
-          </div>
-
-          {/* Click hint */}
-          {(product.URL || product.LINK) && !outOfStock && (
-            <div className="text-[10px] sm:text-xs text-muted-foreground text-center pt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Click to view product details
-            </div>
+        {/* Price and Amount */}
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-sm font-bold text-primary">
+            {product.PRICE || "Price N/A"}
+          </span>
+          {product.AMOUNT && (
+            <Badge variant="secondary" className="text-xs px-1 py-0">
+              {product.AMOUNT}
+            </Badge>
           )}
+        </div>
+
+        {/* Product Details - Compact */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground">Protein:</span>
+            <span className="font-medium text-foreground">
+              {formatProtein(product.PROTEIN_SERVING)}
+            </span>
+          </div>
+          
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground">Flavour:</span>
+            <span className="font-medium text-foreground line-clamp-1">
+              {product.FLAVOUR || "N/A"}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>
