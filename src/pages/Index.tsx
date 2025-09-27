@@ -46,7 +46,7 @@ export default function Index() {
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const displayedCountRef = useRef<number>(displayedCount);
+  const isLoadingRef = useRef(false);
   
 
 // Fetch products from JSON
@@ -182,48 +182,41 @@ useEffect(() => {
     return filteredAndSortedProducts.slice(0, displayedCount);
   }, [filteredAndSortedProducts, displayedCount]);
 
-// Load more products via IntersectionObserver (sequential)
+// Load more products via IntersectionObserver (batched 28)
 useEffect(() => {
   const node = sentinelRef.current;
   if (!node) return;
 
+  const loadMore = () => {
+    if (isLoadingRef.current) return;
+    isLoadingRef.current = true;
+    setIsLoadingMore(true);
+    setDisplayedCount((prev) => {
+      const remaining = filteredAndSortedProducts.length - prev;
+      const toAdd = Math.min(28, Math.max(0, remaining));
+      return prev + toAdd;
+    });
+    window.setTimeout(() => {
+      isLoadingRef.current = false;
+      setIsLoadingMore(false);
+    }, 200);
+  };
+
   const observer = new IntersectionObserver((entries) => {
     const entry = entries[0];
     if (!entry?.isIntersecting) return;
-    if (isLoadingMore || loadingIntervalRef.current) return;
-    if (displayedCountRef.current >= filteredAndSortedProducts.length) return;
-
-    const remaining = filteredAndSortedProducts.length - displayedCountRef.current;
-    const itemsToAdd = Math.min(28, Math.max(0, remaining));
-    if (itemsToAdd <= 0) return;
-
-    setIsLoadingMore(true);
-    setDisplayedCount((prev) => prev + itemsToAdd);
-    if (loadingIntervalRef.current) {
-      window.clearTimeout(loadingIntervalRef.current);
-      loadingIntervalRef.current = null;
-    }
-    // Brief delay to show spinner and avoid rapid flicker
-    loadingIntervalRef.current = window.setTimeout(() => {
-      setIsLoadingMore(false);
-      loadingIntervalRef.current = null;
-    }, 150);
+    if (isLoadingRef.current) return;
+    if (displayedCount >= filteredAndSortedProducts.length) return;
+    loadMore();
   }, { root: null, threshold: 0.1 });
 
   observer.observe(node);
   return () => {
     observer.disconnect();
-    if (loadingIntervalRef.current) {
-      window.clearTimeout(loadingIntervalRef.current);
-      loadingIntervalRef.current = null;
-    }
   };
-}, [filteredAndSortedProducts.length, isLoadingMore]);
+}, [displayedCount, filteredAndSortedProducts.length]);
 
-// Keep displayedCount in a ref for observer without re-subscribing
-useEffect(() => {
-  displayedCountRef.current = displayedCount;
-}, [displayedCount]);
+// removed displayedCountRef - using functional updates instead
 
 // Ensure background video autoplays on mount/update
 useEffect(() => {
