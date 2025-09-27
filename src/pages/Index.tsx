@@ -198,21 +198,16 @@ useEffect(() => {
     if (itemsToAdd <= 0) return;
 
     setIsLoadingMore(true);
-    let added = 0;
-    const step = () => {
-      added += 1;
-      setDisplayedCount((prev) => prev + 1);
-      if (added >= itemsToAdd) {
-        setIsLoadingMore(false);
-        if (loadingIntervalRef.current) {
-          window.clearTimeout(loadingIntervalRef.current);
-          loadingIntervalRef.current = null;
-        }
-        return;
-      }
-      loadingIntervalRef.current = window.setTimeout(step, 80);
-    };
-    step();
+    setDisplayedCount((prev) => prev + itemsToAdd);
+    if (loadingIntervalRef.current) {
+      window.clearTimeout(loadingIntervalRef.current);
+      loadingIntervalRef.current = null;
+    }
+    // Brief delay to show spinner and avoid rapid flicker
+    loadingIntervalRef.current = window.setTimeout(() => {
+      setIsLoadingMore(false);
+      loadingIntervalRef.current = null;
+    }, 150);
   }, { root: null, threshold: 0.1 });
 
   observer.observe(node);

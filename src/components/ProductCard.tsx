@@ -44,6 +44,31 @@ const isOutOfStock = (product: Product): boolean => {
   ) || false;
 };
 
+// Brand extraction helpers
+const prettifyBrand = (s: string) => s.split(/[-_ ]+/).filter(Boolean).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+const extractBrandFromUrl = (url?: string): string | undefined => {
+  if (!url) return undefined;
+  try {
+    const u = new URL(url);
+    let host = u.hostname.toLowerCase().replace(/^www\./, '');
+    const parts = host.split('.');
+    let base = parts[0];
+    if (parts.length >= 3 && parts[parts.length - 2] === 'co') {
+      base = parts[parts.length - 3];
+    }
+    return prettifyBrand(base.replace(/[-_]/g, ' '));
+  } catch {
+    return undefined;
+  }
+};
+const getBrandFromProduct = (product: Product): string => {
+  const candidate = (product.COMPANY || '').trim();
+  const generic = new Set(['see website','see site','website','visit site','n/a','unknown','see web']);
+  if (candidate && !generic.has(candidate.toLowerCase())) return candidate;
+  const url = product.URL || product.LINK || product.IMAGE_URL;
+  return extractBrandFromUrl(url) || candidate || 'Unknown Brand';
+};
+
 export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
@@ -88,7 +113,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           <img
             src={product.IMAGE_URL}
             alt={product.TITLE || "Product image"}
-            className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 rounded-t-lg ${
+            className={`w-full h-full object-contain transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
             loading="lazy"
@@ -144,20 +169,20 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         </div>
       </div>
 
-      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+      <CardContent className="p-2 sm:p-3 flex-1 flex flex-col">
         {/* Company Name */}
         <div className="mb-2">
           <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">
-            {product.COMPANY || "Unknown Brand"}
+            {getBrandFromProduct(product)}
           </p>
         </div>
 
         {/* Product Title */}
-        <CardTitle className="text-sm sm:text-base mb-3 line-clamp-2 min-h-[3rem] flex items-start">
+        <CardTitle className="text-xs sm:text-sm mb-2 line-clamp-2 min-h-[2.5rem] flex items-start">
           {product.TITLE || "Product Title Not Available"}
         </CardTitle>
 
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-2">
           {/* Price and Amount */}
           <div className="flex items-center justify-between">
             <span className="text-base sm:text-lg font-bold text-primary">
@@ -172,7 +197,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           </div>
 
           {/* Product Details - Fixed structure for alignment */}
-          <div className="space-y-2 min-h-[4rem]">
+          <div className="space-y-2 min-h-[3rem]">
             <div className="flex justify-between items-center text-xs sm:text-sm">
               <span className="text-muted-foreground">Protein per serving:</span>
               <span className="font-medium text-foreground">
