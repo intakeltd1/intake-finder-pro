@@ -115,11 +115,14 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     <Card 
       className={`transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
-      } flex relative overflow-hidden rounded-lg flex-row md:flex-col`}
+      } flex relative overflow-hidden rounded-lg
+      /* Mobile: auto height row layout, Desktop: fixed height column */
+      min-h-[6rem] flex-row md:h-[340px] md:flex-col`}
       onClick={handleCardClick}
     >
       {/* Product Image */}
       <div className={`relative overflow-hidden bg-white flex-shrink-0
+        /* Mobile: fixed width square, Desktop: full width square */
         w-24 h-24 self-start md:w-full md:aspect-square rounded-l-lg md:rounded-t-lg md:rounded-l-none`}
       >
         {product.IMAGE_URL && !imageError ? (
@@ -186,7 +189,9 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
       </div>
 
       {/* Product Info */}
-      <CardContent className={`flex flex-col justify-between p-3 md:p-4 flex-1`}>
+      <CardContent className={`flex flex-col justify-between flex-1
+        /* Mobile: generous padding for readability, Desktop: compact padding */
+        p-3 md:p-3`}>
         
         {/* Mobile Layout - One field per row, auto height */}
         <div className="md:hidden flex flex-col space-y-1">
@@ -235,42 +240,42 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           </div>
         </div>
 
-        {/* Desktop Layout - Restored original good layout */}
+        {/* Desktop Layout - Compact layout */}
         <div className="hidden md:block h-full flex flex-col">
           {/* Company Name */}
-          <div className="mb-2">
-            <p className="text-sm text-muted-foreground line-clamp-1">
+          <div className="mb-1">
+            <p className="text-xs text-muted-foreground line-clamp-1">
               {getBrandFromProduct(product)}
             </p>
           </div>
 
           {/* Product Title */}
-          <CardTitle className="text-base font-semibold mb-3 line-clamp-2 min-h-[3rem] flex items-start leading-tight">
+          <CardTitle className="text-sm font-semibold mb-2 line-clamp-2 min-h-[2.5rem] flex items-start leading-tight">
             {product.TITLE || "Product Title Not Available"}
           </CardTitle>
 
           {/* Price and Amount */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-lg font-bold text-primary">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-base font-bold text-primary">
               {product.PRICE || "Price N/A"}
             </span>
             {product.AMOUNT && (
-              <Badge variant="secondary" className="text-sm px-2 py-1">
+              <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
                 {product.AMOUNT}
               </Badge>
             )}
           </div>
 
-          {/* Product Details */}
-          <div className="space-y-2 flex-1">
-            <div className="flex justify-between items-center text-sm">
+          {/* Product Details - Compact */}
+          <div className="space-y-1.5 flex-1">
+            <div className="flex justify-between items-center text-xs">
               <span className="text-muted-foreground">Protein:</span>
               <span className="font-medium text-foreground">
                 {formatProtein(product.PROTEIN_SERVING)}
               </span>
             </div>
             
-            <div className="flex justify-between items-center text-sm">
+            <div className="flex justify-between items-center text-xs">
               <span className="text-muted-foreground">Flavour:</span>
               <span className="font-medium text-foreground line-clamp-1">
                 {product.FLAVOUR || "N/A"}
