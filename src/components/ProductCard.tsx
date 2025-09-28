@@ -102,16 +102,17 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   const outOfStock = isOutOfStock(product);
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
   
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
     const url = product.URL || product.LINK;
     if (url) {
       incrementClickCount(url);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      // Let the browser handle the navigation via the <a> tag
     }
   };
 
   const handleAddToComparison = (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent the <a> tag from navigating
     if (!isInComparison(product) && comparisonProducts.length < 4) {
       addToComparison(product);
       setAddAnimation(true);
@@ -127,13 +128,10 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     return 'border-border hover:border-primary/30';
   };
 
-  return (
-    <Card 
-      className={`h-[340px] sm:h-[360px] md:h-[400px] transition-all duration-300 cursor-pointer group hover:shadow-card ${getBorderClass()} ${
-        outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
-      } flex flex-col relative overflow-hidden rounded-lg`}
-      onClick={handleCardClick}
-    >
+  const productUrl = product.URL || product.LINK;
+
+  const cardContent = (
+    <>
       {/* Product Image - 50% mobile, 65% desktop */}
       <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-1/2 md:h-[65%]">
         {product.IMAGE_URL && !imageError ? (
@@ -239,6 +237,32 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           </div>
         </div>
       </CardContent>
+    </>
+  );
+
+  return (
+    <Card 
+      className={`h-[340px] sm:h-[360px] md:h-[400px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
+        outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
+      } flex flex-col relative overflow-hidden rounded-lg`}
+    >
+      {productUrl ? (
+        <a
+          href={productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleCardClick}
+          className="block h-full w-full cursor-pointer text-inherit no-underline hover:text-inherit"
+        >
+          <div className="h-full flex flex-col">
+            {cardContent}
+          </div>
+        </a>
+      ) : (
+        <div className="h-full flex flex-col">
+          {cardContent}
+        </div>
+      )}
     </Card>
   );
 }
