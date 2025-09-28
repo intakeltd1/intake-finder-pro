@@ -479,6 +479,19 @@ useEffect(() => {
                         All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
                       </p>
                     </div>
+                    
+                    {/* TEMPORARY AWIN TEST LINK - REMOVE AFTER TESTING */}
+                    <div className="mt-2 p-2 bg-yellow-500/20 border border-yellow-500/50 rounded text-center">
+                      <p className="text-xs text-yellow-100 mb-1">AWIN Test Link (Temporary)</p>
+                      <a 
+                        href="http://convertalinktest.awin.com" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-yellow-300 underline text-xs hover:text-yellow-100"
+                      >
+                        Click to Test Convert-a-Link
+                      </a>
+                    </div>
                   </div>
                 </div>
               </header>
