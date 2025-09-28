@@ -70,14 +70,24 @@ const getBrandFromProduct = (product: Product): string => {
 };
 
 const formatProtein = (value?: string) => {
-  if (!value) return 'N/A';
+  if (!value || value === 'nan' || value === 'undefined' || String(value).toLowerCase() === 'nan') return 'N/A';
   const s = String(value).trim();
-  if (!s) return 'N/A';
+  if (!s || s === 'nan') return 'N/A';
   if (/[0-9]\s*(g|mg)\b/i.test(s)) {
     return s.replace(/\s*(g|mg)\b/i, ' $1');
   }
   const num = s.match(/[\d.]+/);
   return num ? `${num[0]} g` : s;
+};
+
+// Helper function to safely display values and avoid "nan"
+const safeDisplayValue = (value: any, fallback: string = 'N/A'): string => {
+  if (value === undefined || value === null || value === 'nan' || 
+      value === 'undefined' || String(value).toLowerCase() === 'nan' || 
+      String(value).trim() === '') {
+    return fallback;
+  }
+  return String(value);
 };
 
 export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
@@ -191,17 +201,17 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
         {/* Product Title */}
         <CardTitle className="text-xs mb-1 line-clamp-2 min-h-[2rem] flex items-start leading-tight">
-          {product.TITLE || "Product Title Not Available"}
+          {safeDisplayValue(product.TITLE, "Product Title Not Available")}
         </CardTitle>
 
         {/* Price and Amount */}
         <div className="flex items-center justify-between mb-1">
           <span className="text-sm font-bold text-primary">
-            {product.PRICE || "Price N/A"}
+            {safeDisplayValue(product.PRICE, "Price N/A")}
           </span>
-          {product.AMOUNT && (
+          {product.AMOUNT && safeDisplayValue(product.AMOUNT) !== 'N/A' && (
             <Badge variant="secondary" className="text-xs px-1 py-0">
-              {product.AMOUNT}
+              {safeDisplayValue(product.AMOUNT)}
             </Badge>
           )}
         </div>
@@ -218,7 +228,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           <div className="flex justify-between items-center text-xs">
             <span className="text-muted-foreground">Flavour:</span>
             <span className="font-medium text-foreground">
-              {product.FLAVOUR || "N/A"}
+              {safeDisplayValue(product.FLAVOUR)}
             </span>
           </div>
         </div>

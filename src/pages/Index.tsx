@@ -13,6 +13,44 @@ import { ComparisonProvider } from "@/hooks/useComparison";
 import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
 
+// Data transformation function to handle different field naming conventions
+function transformProductData(rawProduct: any): Product {
+  // Handle different possible field names from external data sources
+  const getField = (fieldVariants: string[]) => {
+    for (const variant of fieldVariants) {
+      if (rawProduct[variant] !== undefined && rawProduct[variant] !== null && rawProduct[variant] !== 'nan') {
+        return rawProduct[variant];
+      }
+    }
+    return undefined;
+  };
+
+  const transformed: Product = {
+    TITLE: getField(['TITLE', 'title', 'name', 'product_name', 'Name']) || 'Product Name Not Available',
+    COMPANY: getField(['COMPANY', 'company', 'brand', 'manufacturer', 'Brand']) || 'Unknown Brand',
+    PRICE: getField(['PRICE', 'price', 'cost', 'Price']) || 'Price N/A',
+    AMOUNT: getField(['AMOUNT', 'amount', 'size', 'weight', 'quantity', 'Amount']) || undefined,
+    PROTEIN_SERVING: getField(['PROTEIN_SERVING', 'protein_serving', 'protein', 'protein_per_serving', 'Protein']) || undefined,
+    FLAVOUR: getField(['FLAVOUR', 'flavour', 'flavor', 'Flavor', 'Flavour']) || undefined,
+    LINK: getField(['LINK', 'link', 'url', 'product_url', 'URL']) || undefined,
+    URL: getField(['URL', 'url', 'link', 'product_url', 'LINK']) || undefined,
+    IMAGE_URL: getField(['IMAGE_URL', 'image_url', 'image', 'picture', 'photo', 'img']) || undefined,
+    STOCK_STATUS: getField(['STOCK_STATUS', 'stock_status', 'stock', 'availability', 'in_stock']) || undefined,
+    VALUE_RATING: getField(['VALUE_RATING', 'value_rating', 'value', 'rating']) || 0,
+    POPULARITY: getField(['POPULARITY', 'popularity', 'popular', 'clicks']) || 0,
+    FEATURED: getField(['FEATURED', 'featured', 'is_featured']) || false,
+  };
+
+  // Copy any other fields that might be useful
+  Object.keys(rawProduct).forEach(key => {
+    if (!transformed.hasOwnProperty(key.toUpperCase())) {
+      transformed[key] = rawProduct[key];
+    }
+  });
+
+  return transformed;
+}
+
 interface Product {
   TITLE?: string;
   COMPANY?: string;
@@ -83,7 +121,18 @@ useEffect(() => {
       }
 
       console.log('Loaded products:', items?.length, metaDate ? `(lastUpdated: ${metaDate})` : '');
-      setProducts(items || []);
+      
+      // Debug: Log the structure of the first few products to understand the data format
+      if (items && items.length > 0) {
+        console.log('First product structure:', items[0]);
+        console.log('Sample product fields:', Object.keys(items[0] || {}));
+        console.log('First 3 products:', items.slice(0, 3));
+      }
+      
+      // Transform data to match expected field structure
+      const transformedProducts = items.map(transformProductData);
+      
+      setProducts(transformedProducts || []);
       setLastUpdatedAt(metaDate || response.headers.get('last-modified') || response.headers.get('date'));
       setError(null);
     } catch (error) {
