@@ -55,7 +55,7 @@ useEffect(() => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/data/products.json');
+      const response = await fetch('https://intake-collection-data.web.app/master_cleaned.json');
       if (!response.ok) throw new Error(`Failed to load products: ${response.status}`);
 
       // Try to parse flexible shapes and extract lastUpdated
