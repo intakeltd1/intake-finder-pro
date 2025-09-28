@@ -74,10 +74,11 @@ export function SearchFilters({
                 <SelectItem value=">5kg">More than 5kg</SelectItem>
               </SelectContent>
             </Select>
+          </div>
 
-            {/* Sort Options */}
+          {/* Sort Options - Moved to right side */}
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <SortDesc className="h-3 w-3 text-white/70" />
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[140px] h-6 text-xs">
                   <SelectValue placeholder="Sort by" />
@@ -88,12 +89,13 @@ export function SearchFilters({
                 <SelectItem value="protein">Protein per Serving</SelectItem>
                </SelectContent>
               </Select>
+              <SortDesc className="h-3 w-3 text-white/70" />
             </div>
-          </div>
 
-          {/* Results Count */}
-          <div className="text-xs font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-2 py-1 rounded-md text-foreground whitespace-nowrap">
-            {resultCount} products
+            {/* Results Count */}
+            <div className="text-xs font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-2 py-1 rounded-md text-foreground whitespace-nowrap">
+              {resultCount} products
+            </div>
           </div>
         </div>
       </div>

@@ -454,17 +454,17 @@ useEffect(() => {
         {/* Combined Header and Search - Single Integrated Box */}
         <div className="relative z-10 transition-all duration-1000 delay-1000 pt-8 md:pt-10 fade-in-up">
           <div className="container mx-auto px-2 md:px-4">
-            <div className="bg-background/20 backdrop-blur-xl shadow-lg border border-white/10 rounded-lg">
+            <div className="bg-background/20 backdrop-blur-xl shadow-lg rounded-lg">
               {/* Main Header */}
-              <header className="text-foreground py-2 md:py-4 relative">
-                <div className="px-3 md:px-4">
+              <header className="text-foreground py-3 md:py-5 relative">
+                <div className="px-4 md:px-6">
                   {/* Navigation Drawer - positioned absolutely on left */}
-                  <div className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2">
+                  <div className="absolute left-4 md:left-6 top-1/2 -translate-y-1/2">
                     <NavigationDrawer />
                   </div>
                   
                   {/* Main content - truly centered against full page width */}
-                  <div className="text-center space-y-1 md:space-y-2 px-8 md:px-0">
+                  <div className="text-center space-y-2 md:space-y-3 px-8 md:px-0">
                     <img 
                       src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
                       alt="Intake Logo" 
@@ -484,7 +484,7 @@ useEffect(() => {
               </header>
 
               {/* Search Filters - Integrated */}
-              <div className="px-3 md:px-4 pb-3 md:pb-4 border-t border-white/5">
+              <div className="px-4 md:px-6 pb-4 md:pb-5">
                 <SearchFilters
                   query={query}
                   setQuery={setQuery}
