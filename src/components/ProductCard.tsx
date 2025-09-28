@@ -51,6 +51,12 @@ const extractBrandFromUrl = (url?: string): string | undefined => {
   try {
     const u = new URL(url);
     let host = u.hostname.toLowerCase().replace(/^www\./, '');
+    
+    // Special case for ESN (uk.esn.com should show "ESN")
+    if (host.includes('esn.com')) {
+      return 'ESN';
+    }
+    
     const parts = host.split('.');
     let base = parts[0];
     if (parts.length >= 3 && parts[parts.length - 2] === 'co') {

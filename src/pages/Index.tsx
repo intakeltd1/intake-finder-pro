@@ -51,6 +51,19 @@ function transformProductData(rawProduct: any): Product {
   return transformed;
 }
 
+// Helper function to check if a product has sufficient data to display
+function hasMinimumData(product: Product): boolean {
+  const requiredFields = [
+    product.TITLE && product.TITLE !== 'Product Name Not Available',
+    product.PRICE && product.PRICE !== 'Price N/A',
+    product.IMAGE_URL
+  ];
+  
+  // Count non-null required fields
+  const validFields = requiredFields.filter(Boolean).length;
+  return validFields >= 2; // At least 2 out of 3 essential fields (title, price, image)
+}
+
 interface Product {
   TITLE?: string;
   COMPANY?: string;
@@ -129,8 +142,10 @@ useEffect(() => {
         console.log('First 3 products:', items.slice(0, 3));
       }
       
-      // Transform data to match expected field structure
-      const transformedProducts = items.map(transformProductData);
+      // Transform data to match expected field structure and filter out products with insufficient data
+      const transformedProducts = items.map(transformProductData).filter(hasMinimumData);
+      
+      console.log(`Filtered products: ${transformedProducts.length} out of ${items.length} products have sufficient data`);
       
       setProducts(transformedProducts || []);
       setLastUpdatedAt(metaDate || response.headers.get('last-modified') || response.headers.get('date'));
