@@ -451,61 +451,52 @@ useEffect(() => {
           <source src="/background-video.mp4" type="video/mp4" />
         </video>
 
-        {/* Combined Header and Search - Single Animation */}
-        <div className="relative z-10 transition-all duration-1000 delay-1000 pt-10 md:pt-12 fade-in-up">
-          <div className="bg-background/20 backdrop-blur-xl shadow-lg">
-            {/* Main Header */}
-            <header className="text-foreground py-3 md:py-6 relative border border-white/10 rounded-lg mx-2 md:mx-4 bg-background/5">
-              <div className="container mx-auto px-3 md:px-4">
-                {/* Navigation Drawer - positioned absolutely on left */}
-                <div className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2">
-                  <NavigationDrawer />
-                </div>
-                
-                {/* Main content - truly centered against full page width */}
-                <div className="text-center space-y-1.5 md:space-y-3 px-8 md:px-0">
-                  <img 
-                    src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
-                    alt="Intake Logo" 
-                    className="h-6 md:h-10 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
-                  />
-                  <p className="text-sm md:text-lg text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)] leading-tight">
-                    Find your next favourite supplement at the best possible price - updated daily.
-                  </p>
-                  <div className="flex items-center justify-center gap-1.5 md:gap-2">
-                    <Info className="h-2.5 w-2.5 md:h-3 md:w-3 text-foreground/70 hidden md:inline flex-shrink-0" />
-                    <p className="text-[9px] md:text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)] leading-tight">
-                      All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
+        {/* Combined Header and Search - Single Integrated Box */}
+        <div className="relative z-10 transition-all duration-1000 delay-1000 pt-8 md:pt-10 fade-in-up">
+          <div className="container mx-auto px-2 md:px-4">
+            <div className="bg-background/20 backdrop-blur-xl shadow-lg border border-white/10 rounded-lg">
+              {/* Main Header */}
+              <header className="text-foreground py-2 md:py-4 relative">
+                <div className="px-3 md:px-4">
+                  {/* Navigation Drawer - positioned absolutely on left */}
+                  <div className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2">
+                    <NavigationDrawer />
+                  </div>
+                  
+                  {/* Main content - truly centered against full page width */}
+                  <div className="text-center space-y-1 md:space-y-2 px-8 md:px-0">
+                    <img 
+                      src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png" 
+                      alt="Intake Logo" 
+                      className="h-5 md:h-8 mx-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
+                    />
+                    <p className="text-xs md:text-base text-foreground/90 drop-shadow-[0_0_4px_rgba(0,0,0,0.6)] leading-tight">
+                      Find your next favourite supplement at the best possible price - updated daily.
                     </p>
-                  </div>
-                  {/* Social Media Links */}
-                  <div className="flex items-center justify-center gap-3 pt-2">
-                    <a 
-                      href="https://instagram.com/use.intake" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-foreground/60 hover:text-foreground/90 transition-colors"
-                    >
-                      <Instagram className="h-4 w-4" />
-                    </a>
+                    <div className="flex items-center justify-center gap-1 md:gap-2">
+                      <Info className="h-2 w-2 md:h-3 md:w-3 text-foreground/70 hidden md:inline flex-shrink-0" />
+                      <p className="text-[8px] md:text-xs text-foreground/70 drop-shadow-[0_0_2px_rgba(0,0,0,0.4)] leading-tight">
+                        All prices, information and images owned by the originators, hyperlinked. Intake may earn commission on purchases.
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </header>
+              </header>
 
-            {/* Search Filters */}
-            <div className="container mx-auto px-4 pb-6">
-              <SearchFilters
-                query={query}
-                setQuery={setQuery}
-                sortBy={sortBy}
-                setSortBy={setSortBy}
-                quantityFilter={quantityFilter}
-                setQuantityFilter={setQuantityFilter}
-                productTypeFilter={productTypeFilter}
-                setProductTypeFilter={setProductTypeFilter}
-                resultCount={filteredAndSortedProducts.length}
-              />
+              {/* Search Filters - Integrated */}
+              <div className="px-3 md:px-4 pb-3 md:pb-4 border-t border-white/5">
+                <SearchFilters
+                  query={query}
+                  setQuery={setQuery}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  quantityFilter={quantityFilter}
+                  setQuantityFilter={setQuantityFilter}
+                  productTypeFilter={productTypeFilter}
+                  setProductTypeFilter={setProductTypeFilter}
+                  resultCount={filteredAndSortedProducts.length}
+                />
+              </div>
             </div>
           </div>
         </div>
