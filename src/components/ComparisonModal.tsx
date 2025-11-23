@@ -1,9 +1,10 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, ExternalLink, Package } from "lucide-react";
+import { X, ExternalLink, Package, Trophy } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
 import { numFromPrice, numFromProtein, incrementClickCount } from "@/utils/productUtils";
+import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 
 export function ComparisonModal() {
   const { 
@@ -116,21 +117,43 @@ export function ComparisonModal() {
                         </div>
                       )}
 
-                      {/* Value Score */}
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          Value Score:
-                        </span>
-                        <span className="font-medium text-green-600">
-                          {product.PRICE && product.PROTEIN_SERVING ? 
-                            (() => {
-                              const protein = numFromProtein(product.PROTEIN_SERVING);
-                              const price = numFromPrice(product.PRICE);
-                              return protein > 0 && price > 0 ? 
-                                (protein / price).toFixed(2) : 'N/A';
-                            })() : 'N/A'
+                      {/* Intake Value Rating */}
+                      <div className="pt-2 border-t border-border/30">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs font-medium">
+                            <Trophy className="h-3 w-3" />
+                            Intake Value:
+                          </span>
+                          {(() => {
+                            const rating = calculateIntakeValueRating(product);
+                            return rating ? (
+                              <span className={`font-bold text-sm bg-gradient-to-r ${getValueRatingColor(rating)} bg-clip-text text-transparent`}>
+                                {rating}/10
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">N/A</span>
+                            );
+                          })()}
+                        </div>
+                        {(() => {
+                          const rating = calculateIntakeValueRating(product);
+                          if (rating) {
+                            return (
+                              <>
+                                <div className="relative h-2 bg-muted/20 rounded-full overflow-hidden">
+                                  <div 
+                                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(rating)} rounded-full transition-all duration-500`}
+                                    style={{ width: `${(rating / 10) * 100}%` }}
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground/70 mt-1 text-right">
+                                  {getValueRatingLabel(rating)}
+                                </p>
+                              </>
+                            );
                           }
-                        </span>
+                          return null;
+                        })()}
                       </div>
                     </div>
 

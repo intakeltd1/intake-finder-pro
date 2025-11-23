@@ -12,25 +12,31 @@ export function ComparisonWidget() {
     <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
       <Button
         onClick={() => setShowComparison(true)}
-        className="relative bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 rounded-full p-4 group"
+        className="relative bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full p-4 group hover:scale-105"
         size="lg"
       >
-        <Scale className="h-6 w-6 mr-2" />
+        <Scale className="h-6 w-6 mr-2 transition-transform group-hover:rotate-12" />
         <span className="font-medium">Compare</span>
         <Badge 
           variant="secondary" 
-          className="ml-2 bg-white/20 text-primary-foreground border-0 group-hover:bg-white/30 transition-colors"
+          className="ml-2 bg-white/20 text-primary-foreground border-0 group-hover:bg-white/30 transition-all duration-300 group-hover:scale-110"
         >
           {comparisonProducts.length}
         </Badge>
         
+        {/* Glow effect */}
+        <div className="absolute inset-0 rounded-full bg-primary/20 blur-xl group-hover:bg-primary/30 transition-all duration-300" />
+        
         {/* Preview thumbnails */}
-        <div className="absolute -top-2 -left-2 flex -space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute -top-2 -left-2 flex -space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
           {comparisonProducts.slice(0, 3).map((product, index) => (
             <div
               key={product.URL || product.LINK || index}
-              className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/40 flex items-center justify-center overflow-hidden"
-              style={{ zIndex: 10 - index }}
+              className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/40 flex items-center justify-center overflow-hidden backdrop-blur-sm"
+              style={{ 
+                zIndex: 10 - index,
+                animation: `scale-in 0.3s ease-out ${index * 0.1}s backwards`
+              }}
             >
               {product.IMAGE_URL ? (
                 <img
