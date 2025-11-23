@@ -50,22 +50,25 @@ export function calculateIntakeValueRating(product: Product): number | null {
   const grams = parseGrams(product.AMOUNT);
   const protein = parseProtein(product.PROTEIN_SERVING);
 
-  // Need at least price and protein to calculate
-  if (!price || !protein || price <= 0) return null;
+  // Need at least price to calculate (protein is optional with fallback)
+  if (!price || price <= 0) return null;
+  
+  // Use estimated protein if not available (typical whey protein ~25g per serving)
+  const effectiveProtein = protein || 25;
 
   // Calculate protein per £1 (higher is better)
-  const proteinPerPound = protein / price;
+  const proteinPerPound = effectiveProtein / price;
 
   // Calculate protein density (protein per 100g) - assumes one serving
   let proteinDensity = 0;
   if (grams && grams > 0) {
     // Estimate servings (typical tub is 25-30 servings)
     const estimatedServings = Math.max(1, Math.round(grams / 30));
-    const proteinPer100g = (protein / (grams / estimatedServings)) * 100;
+    const proteinPer100g = (effectiveProtein / (grams / estimatedServings)) * 100;
     proteinDensity = Math.min(100, proteinPer100g); // Cap at 100
   } else {
     // If no amount data, use protein per serving as proxy
-    proteinDensity = Math.min(100, protein * 3);
+    proteinDensity = Math.min(100, effectiveProtein * 3);
   }
 
   // Calculate size value (larger sizes typically better value)
