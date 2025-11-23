@@ -173,14 +173,26 @@ useEffect(() => {
   }, [products]);
 
 
-  // Check if any search criteria is active
+  // Check if any search criteria is active (for showing/hiding "Today's Top Picks")
   const hasSearchCriteria = useMemo(() => {
-    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all' || sortBy !== 'value';
-  }, [debouncedQuery, quantityFilter, productTypeFilter, sortBy]);
+    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all';
+  }, [debouncedQuery, quantityFilter, productTypeFilter]);
 
   // Optimized filtering with debouncing and memoization
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = debouncedQuery.trim() ? applyFuzzySearch(products, debouncedQuery.trim()) : products;
+
+    // Filter out samples (< 100g) unless "samples" is explicitly selected
+    if (productTypeFilter !== 'samples') {
+      filtered = filtered.filter(product => {
+        const amount = product.AMOUNT?.toLowerCase() || '';
+        const match = amount.match(/([\d.]+)\s*(kg|g)/i);
+        if (!match) return true; // Keep products without amount data
+        let grams = parseFloat(match[1]);
+        if (match[2].toLowerCase() === 'kg') grams *= 1000;
+        return grams >= 100; // Only show products >= 100g
+      });
+    }
 
     // Apply quantity filter efficiently
     if (quantityFilter !== 'all') {
@@ -203,7 +215,16 @@ useEffect(() => {
     if (productTypeFilter !== 'all') {
       filtered = filtered.filter(product => {
         const title = product.TITLE?.toLowerCase() || '';
+        const amount = product.AMOUNT?.toLowerCase() || '';
+        
         switch (productTypeFilter) {
+          case 'samples':
+            // Show only products < 100g
+            const match = amount.match(/([\d.]+)\s*(kg|g)/i);
+            if (!match) return false;
+            let grams = parseFloat(match[1]);
+            if (match[2].toLowerCase() === 'kg') grams *= 1000;
+            return grams < 100;
           case 'whey': return title.includes('whey') && !title.includes('vegan');
           case 'vegan': return title.includes('vegan') || title.includes('plant') || title.includes('pea');
           case 'clear': return title.includes('clear') || title.includes('juice');
@@ -214,7 +235,7 @@ useEffect(() => {
       });
     }
 
-    // Optimized sorting with single pass
+    // Optimized sorting with single pass - always use selected sort (no randomization)
     return [...filtered].sort((a, b) => {
       const aOutOfStock = isOutOfStock(a);
       const bOutOfStock = isOutOfStock(b);
@@ -222,11 +243,7 @@ useEffect(() => {
       if (aOutOfStock && !bOutOfStock) return 1;
       if (!aOutOfStock && bOutOfStock) return -1;
       
-      // Use randomise when no search criteria, otherwise use selected sort
-      const effectiveSort = hasSearchCriteria ? sortBy : 'randomise';
-      
-      switch (effectiveSort) {
-        case 'randomise': return Math.random() - 0.5;
+      switch (sortBy) {
         case 'value': return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
@@ -239,7 +256,7 @@ useEffect(() => {
         default: return 0;
       }
     });
-  }, [products, debouncedQuery, sortBy, quantityFilter, productTypeFilter, hasSearchCriteria]);
+  }, [products, debouncedQuery, sortBy, quantityFilter, productTypeFilter]);
 
   // Simplified lookups for performance
   const topValueUrls = useMemo(() => new Set(bestValueProducts.map(p => p.URL || p.LINK)), [bestValueProducts]);

@@ -57,6 +57,7 @@ export function SearchFilters({
                 <SelectItem value="clear">Clear Protein</SelectItem>
                 <SelectItem value="diet">Diet Products</SelectItem>
                 <SelectItem value="mass">Mass Gainers</SelectItem>
+                <SelectItem value="samples">Samples</SelectItem>
               </SelectContent>
             </Select>
 
