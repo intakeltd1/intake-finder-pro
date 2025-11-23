@@ -336,7 +336,15 @@ export const getTopValueProducts = (products: Product[], count: number = 15): Pr
   const topProducts: Product[] = [];
   
   const sorted = products
-    .filter(p => !isOutOfStock(p) && calculateValueScore(p) > 0)
+    .filter(p => {
+      if (isOutOfStock(p) || calculateValueScore(p) <= 0) return false;
+      
+      // Exclude samples (< 100g)
+      const grams = parseGrams(p.AMOUNT);
+      if (grams !== null && grams < 100) return false;
+      
+      return true;
+    })
     .sort((a, b) => calculateValueScore(b) - calculateValueScore(a));
     
   for (const product of sorted) {
