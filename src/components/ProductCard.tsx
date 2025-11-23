@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Package, ImageIcon, TrendingUp, Star, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
+import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 
 interface Product {
   TITLE?: string;
@@ -99,8 +100,10 @@ const safeDisplayValue = (value: any, fallback: string = 'N/A'): string => {
 export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const outOfStock = isOutOfStock(product);
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
+  const valueRating = calculateIntakeValueRating(product);
   
   const handleCardClick = (e: React.MouseEvent) => {
     const url = product.URL || product.LINK;
@@ -113,8 +116,42 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   const handleAddToComparison = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault(); // Prevent the <a> tag from navigating
+    
     if (!isInComparison(product) && comparisonProducts.length < 4) {
-      addToComparison(product);
+      // Get card position for animation
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const clone = cardRef.current.cloneNode(true) as HTMLElement;
+        
+        // Style the clone for animation
+        clone.style.position = 'fixed';
+        clone.style.top = `${rect.top}px`;
+        clone.style.left = `${rect.left}px`;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+        clone.style.zIndex = '9999';
+        clone.style.pointerEvents = 'none';
+        clone.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        
+        document.body.appendChild(clone);
+        
+        // Trigger animation
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            clone.style.transform = 'translate(calc(100vw - 50% - 5rem), calc(100vh - 50% - 5rem)) scale(0.1)';
+            clone.style.opacity = '0.3';
+          });
+        });
+        
+        // Clean up and add to comparison
+        setTimeout(() => {
+          document.body.removeChild(clone);
+          addToComparison(product);
+        }, 600);
+      } else {
+        addToComparison(product);
+      }
+      
       setAddAnimation(true);
       setTimeout(() => setAddAnimation(false), 600);
     }
@@ -150,14 +187,14 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           </div>
         )}
 
-        {/* Add to comparison button */}
+        {/* Add to comparison button - higher z-index to be above the link */}
         <Button
           onClick={handleAddToComparison}
           disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
           size="sm"
           variant="outline"
-          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-transform duration-200 rounded-full hover:scale-110 ${
-            addAnimation ? 'animate-bounce' : ''
+          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-10 ${
+            addAnimation ? 'scale-0' : ''
           } ${
             isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
           }`}
@@ -236,12 +273,36 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             </span>
           </div>
         </div>
+
+        {/* Intake Value Bar - shown when comparison is active */}
+        {comparisonProducts.length > 0 && valueRating && !outOfStock && (
+          <div className="mt-2 pt-2 border-t border-border/30">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                Intake Value
+              </span>
+              <span className={`text-xs font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent`}>
+                {valueRating}/10
+              </span>
+            </div>
+            <div className="relative h-1.5 bg-muted/20 rounded-full overflow-hidden">
+              <div 
+                className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 shadow-sm`}
+                style={{ width: `${(valueRating / 10) * 100}%` }}
+              />
+            </div>
+            <p className="text-[9px] text-muted-foreground/70 mt-0.5 text-right">
+              {getValueRatingLabel(valueRating)}
+            </p>
+          </div>
+        )}
       </CardContent>
     </>
   );
 
   return (
     <Card 
+      ref={cardRef}
       className={`h-[340px] sm:h-[360px] md:h-[400px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
       } flex flex-col relative overflow-hidden rounded-lg`}
