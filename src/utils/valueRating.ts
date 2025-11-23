@@ -104,24 +104,21 @@ export function calculateIntakeValueRating(product: Product): number | null {
 
 /**
  * Get color class for value rating
- * Logical progression: Gray → Amber → Lime → Gold (Premium!)
+ * Logical progression: Gray → Amber → Green → Purple (Legendary!)
  */
 export function getValueRatingColor(rating: number): string {
-  if (rating >= 8) return 'from-amber-400 via-yellow-400 to-amber-500'; // Excellent - Premium Gold
-  if (rating >= 6) return 'from-lime-400 to-green-400'; // Great value (lime/yellow-green)
+  if (rating >= 8) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent - Legendary Purple
+  if (rating >= 6) return 'from-lime-400 to-green-400'; // Great (green)
   if (rating >= 4) return 'from-amber-300 to-yellow-400'; // Good (amber/yellow)
-  return 'from-gray-300 to-slate-300'; // Standard (neutral gray)
+  return 'from-gray-300 to-slate-300'; // Average (neutral gray)
 }
 
 /**
  * Get label for value rating
  */
 export function getValueRatingLabel(rating: number): string {
-  if (rating >= 9) return 'Exceptional';
   if (rating >= 8) return 'Excellent';
-  if (rating >= 7) return 'Great';
-  if (rating >= 6) return 'Good';
-  if (rating >= 5) return 'Fair';
-  if (rating >= 4) return 'Below Average';
-  return 'Poor';
+  if (rating >= 6) return 'Great';
+  if (rating >= 4) return 'Good';
+  return 'Average';
 }
