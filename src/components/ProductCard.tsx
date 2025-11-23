@@ -131,29 +131,43 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         clone.style.height = `${rect.height}px`;
         clone.style.zIndex = '9999';
         clone.style.pointerEvents = 'none';
-        clone.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        clone.style.transition = 'none';
         
         document.body.appendChild(clone);
         
-        // Trigger animation
+        // Calculate target position (bottom right corner)
+        const targetX = window.innerWidth - rect.left - rect.width / 2 - 80;
+        const targetY = window.innerHeight - rect.top - rect.height / 2 - 80;
+        
+        // Create arc trajectory with upward motion first
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            clone.style.transform = 'translate(calc(100vw - 50% - 5rem), calc(100vh - 50% - 5rem)) scale(0.1)';
-            clone.style.opacity = '0.3';
+            // Phase 1: Slight lift and scale up (200ms)
+            clone.style.transition = 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            clone.style.transform = 'translateY(-30px) scale(1.05)';
+            
+            // Phase 2: Arc to destination (800ms)
+            setTimeout(() => {
+              clone.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+              clone.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.15) rotate(5deg)`;
+              clone.style.opacity = '0.4';
+            }, 250);
           });
         });
         
         // Clean up and add to comparison
         setTimeout(() => {
-          document.body.removeChild(clone);
+          if (document.body.contains(clone)) {
+            document.body.removeChild(clone);
+          }
           addToComparison(product);
-        }, 600);
+        }, 1050);
       } else {
         addToComparison(product);
       }
       
       setAddAnimation(true);
-      setTimeout(() => setAddAnimation(false), 600);
+      setTimeout(() => setAddAnimation(false), 1050);
     }
   };
 
