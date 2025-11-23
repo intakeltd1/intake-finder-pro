@@ -552,7 +552,7 @@ useEffect(() => {
           <div className="container mx-auto px-2 md:px-4 pb-8">
             {filteredAndSortedProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4 mb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-5 gap-3 md:gap-4 mb-8">
                   {displayedProducts.map((product, index) => (
                     <div 
                       key={`${product.URL || product.LINK}-${index}`}

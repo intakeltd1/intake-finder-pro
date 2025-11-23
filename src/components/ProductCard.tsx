@@ -180,7 +180,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   const cardContent = (
     <>
       {/* Product Image - 50% mobile, 65% desktop */}
-      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-1/2 md:h-[65%]">
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-[55%] md:h-[55%]">
         {product.IMAGE_URL && !imageError ? (
           <img
             src={product.IMAGE_URL}
@@ -227,7 +227,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
       </div>
 
       {/* Product Info - 50% mobile, 35% desktop */}
-      <CardContent className="p-2 flex flex-col justify-between h-1/2 md:h-[35%]">
+      <CardContent className="p-2 flex flex-col justify-between h-[45%] md:h-[45%]">
         {/* Company Name */}
         <div className="mb-1">
           <p className="text-xs text-muted-foreground line-clamp-1">
@@ -298,7 +298,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   return (
     <Card 
       ref={cardRef}
-      className={`h-[340px] sm:h-[360px] md:h-[400px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
+      className={`h-[320px] sm:h-[340px] md:h-[360px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
       } flex flex-col relative overflow-hidden rounded-lg`}
     >
