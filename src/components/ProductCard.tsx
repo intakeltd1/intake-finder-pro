@@ -282,14 +282,20 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             </div>
             <div className="relative h-1.5 bg-muted/20 rounded-full overflow-hidden">
               <div 
-                className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 shadow-sm ${
-                  valueRating >= 8 ? 'animate-pulse shadow-emerald-500/50' : ''
+                className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 ${
+                  valueRating >= 8 ? 'shadow-lg animate-[shimmer_2s_ease-in-out_infinite]' : 'shadow-sm'
                 }`}
                 style={{ 
                   width: `${(valueRating / 10) * 100}%`,
-                  boxShadow: valueRating >= 8 ? '0 0 12px rgba(16, 185, 129, 0.6)' : undefined
+                  boxShadow: valueRating >= 8 ? '0 0 8px rgba(251, 191, 36, 0.5)' : undefined
                 }}
               />
+              {valueRating >= 8 && (
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[slide_3s_ease-in-out_infinite]"
+                  style={{ width: '30%' }}
+                />
+              )}
             </div>
             <p className="text-[9px] text-muted-foreground/70 mt-0.5 text-right">
               {getValueRatingLabel(valueRating)}
