@@ -105,6 +105,9 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
   const valueRating = calculateIntakeValueRating(product);
   
+  // Toggle to show value bar on all tiles (set to false to only show in comparison mode)
+  const SHOW_VALUE_BAR_ALWAYS = true;
+  
   const handleCardClick = (e: React.MouseEvent) => {
     const url = product.URL || product.LINK;
     if (url) {
@@ -266,8 +269,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           </div>
         </div>
 
-        {/* Intake Value Bar - shown when comparison is active */}
-        {comparisonProducts.length > 0 && valueRating && !outOfStock && (
+        {/* Intake Value Bar - toggle SHOW_VALUE_BAR_ALWAYS to control visibility */}
+        {(SHOW_VALUE_BAR_ALWAYS || comparisonProducts.length > 0) && valueRating && !outOfStock && (
           <div className="mt-2 pt-2 border-t border-border/30">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
