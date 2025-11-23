@@ -287,7 +287,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
                 }`}
                 style={{ 
                   width: `${(valueRating / 10) * 100}%`,
-                  boxShadow: valueRating >= 8 ? '0 0 8px rgba(251, 191, 36, 0.5)' : undefined
+                  boxShadow: valueRating >= 8 ? '0 0 8px rgba(168, 85, 247, 0.5)' : undefined
                 }}
               />
               {valueRating >= 8 && (
