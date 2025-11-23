@@ -187,21 +187,6 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           </div>
         )}
 
-        {/* Add to comparison button - higher z-index to be above the link */}
-        <Button
-          onClick={handleAddToComparison}
-          disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
-          size="sm"
-          variant="outline"
-          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-10 ${
-            addAnimation ? 'scale-0' : ''
-          } ${
-            isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
-          }`}
-        >
-          <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
-        </Button>
-
         {/* Stock Status Badge */}
         {outOfStock && (
           <Badge variant="destructive" className="absolute bottom-2 left-2">
@@ -307,6 +292,21 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
       } flex flex-col relative overflow-hidden rounded-lg`}
     >
+      {/* Add to comparison button - OUTSIDE the link wrapper */}
+      <Button
+        onClick={handleAddToComparison}
+        disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
+        size="sm"
+        variant="outline"
+        className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] ${
+          addAnimation ? 'scale-0' : ''
+        } ${
+          isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
+        }`}
+      >
+        <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
+      </Button>
+
       {productUrl ? (
         <a
           href={productUrl}
