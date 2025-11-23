@@ -104,12 +104,12 @@ export function calculateIntakeValueRating(product: Product): number | null {
 
 /**
  * Get color class for value rating
- * Logical progression: Gray → Amber → Light Green → Rich Green (GO!)
+ * Logical progression: Gray → Amber → Lime Green → Rich Emerald (GO!)
  */
 export function getValueRatingColor(rating: number): string {
-  if (rating >= 8) return 'from-green-500 to-emerald-500'; // Excellent - GO BUY! (rich green)
-  if (rating >= 6) return 'from-green-300 to-green-400'; // Great value (light green)
-  if (rating >= 4) return 'from-amber-300 to-yellow-400'; // Good (amber/yellow - caution/okay)
+  if (rating >= 8) return 'from-emerald-500 to-green-600'; // Excellent - GO BUY! (rich emerald green)
+  if (rating >= 6) return 'from-lime-400 to-green-400'; // Great value (lime/yellow-green)
+  if (rating >= 4) return 'from-amber-300 to-yellow-400'; // Good (amber/yellow)
   return 'from-gray-300 to-slate-300'; // Standard (neutral gray)
 }
 
