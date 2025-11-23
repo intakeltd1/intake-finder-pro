@@ -277,7 +277,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
                 Intake Value
               </span>
               <span className={`text-xs font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent`}>
-                {valueRating}/10
+                {valueRating}
               </span>
             </div>
             <div className="relative h-1.5 bg-muted/20 rounded-full overflow-hidden">
