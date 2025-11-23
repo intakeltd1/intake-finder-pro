@@ -139,19 +139,12 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         const targetX = window.innerWidth - rect.left - rect.width / 2 - 80;
         const targetY = window.innerHeight - rect.top - rect.height / 2 - 80;
         
-        // Create arc trajectory with upward motion first
+        // Single smooth arc animation with slight upward curve
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            // Phase 1: Slight lift and scale up (200ms)
-            clone.style.transition = 'all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            clone.style.transform = 'translateY(-30px) scale(1.05)';
-            
-            // Phase 2: Arc to destination (800ms)
-            setTimeout(() => {
-              clone.style.transition = 'all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-              clone.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.15) rotate(5deg)`;
-              clone.style.opacity = '0.4';
-            }, 250);
+            clone.style.transition = 'all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            clone.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.2) rotate(3deg)`;
+            clone.style.opacity = '0';
           });
         });
         
@@ -161,13 +154,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             document.body.removeChild(clone);
           }
           addToComparison(product);
-        }, 1050);
+        }, 500);
       } else {
         addToComparison(product);
       }
       
       setAddAnimation(true);
-      setTimeout(() => setAddAnimation(false), 1050);
+      setTimeout(() => setAddAnimation(false), 500);
     }
   };
 
