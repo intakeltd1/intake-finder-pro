@@ -12,6 +12,7 @@ import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
 import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
+import { calculateIntakeValueRating } from "@/utils/valueRating";
 
 // Data transformation function to handle different field naming conventions
 function transformProductData(rawProduct: any): Product {
@@ -244,7 +245,10 @@ useEffect(() => {
       if (!aOutOfStock && bOutOfStock) return -1;
       
       switch (sortBy) {
-        case 'value': return (b.VALUE_RATING || 0) - (a.VALUE_RATING || 0);
+        case 'value':
+          const valueA = calculateIntakeValueRating(a);
+          const valueB = calculateIntakeValueRating(b);
+          return (valueB || 0) - (valueA || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
           const priceB = parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '0');
