@@ -213,7 +213,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
             </Badge>
           )}
           {isTopValue && !outOfStock && !isFeatured && (
-            <Badge className="bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 text-white font-medium">
+            <Badge className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white font-semibold shadow-lg">
               Best Value
             </Badge>
           )}
