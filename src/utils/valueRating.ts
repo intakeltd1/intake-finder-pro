@@ -142,15 +142,15 @@ export function calculateIntakeValueRating(
   // If no benchmarks provided, return null (needs dataset context)
   if (!benchmarks) return null;
   
-  // Normalize protein per £1 (or neutral 0.5 if missing)
+  // Normalize protein per £1 (penalize missing data with 0.15 instead of neutral)
   const normalizedProtein = metrics.proteinPerPound !== null
     ? normalize(metrics.proteinPerPound, benchmarks.minProteinPerPound, benchmarks.maxProteinPerPound)
-    : 0.5;
+    : 0.15;
   
-  // Normalize servings per £1 (or neutral 0.5 if missing)
+  // Normalize servings per £1 (penalize missing data with 0.15 instead of neutral)
   const normalizedServings = metrics.servingsPerPound !== null
     ? normalize(metrics.servingsPerPound, benchmarks.minServingsPerPound, benchmarks.maxServingsPerPound)
-    : 0.5;
+    : 0.15;
   
   // Normalize discount % (0 if no RRP)
   const normalizedDiscount = benchmarks.maxDiscountPercent > 0
