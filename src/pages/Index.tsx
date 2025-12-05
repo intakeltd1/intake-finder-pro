@@ -12,7 +12,7 @@ import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
 import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName, groupProductsByTitle, GroupedProduct } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
-import { calculateIntakeValueRating, calculateDatasetBenchmarks, DatasetBenchmarks } from "@/utils/valueRating";
+import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, DatasetBenchmarks, ScoreRange } from "@/utils/valueRating";
 import { ValueBenchmarksProvider } from "@/hooks/useValueBenchmarks";
 
 // Data transformation function to handle different field naming conventions
@@ -171,6 +171,12 @@ useEffect(() => {
     return calculateDatasetBenchmarks(products);
   }, [products]);
 
+  // Calculate score range for 0.1-10 scaling (best=10, worst=0.1)
+  const scoreRange = useMemo(() => {
+    if (products.length === 0 || !benchmarks) return null;
+    return calculateScoreRange(products, benchmarks);
+  }, [products, benchmarks]);
+
   // Get best value products using utility function (already deduplicates and filters out-of-stock)
   const bestValueProducts = useMemo(() => {
     return getTopValueProducts(products, 4);
@@ -255,8 +261,8 @@ useEffect(() => {
       
       switch (sortBy) {
         case 'value':
-          const valueA = calculateIntakeValueRating(a, benchmarks || undefined);
-          const valueB = calculateIntakeValueRating(b, benchmarks || undefined);
+          const valueA = calculateIntakeValueRating(a, benchmarks || undefined, scoreRange || undefined);
+          const valueB = calculateIntakeValueRating(b, benchmarks || undefined, scoreRange || undefined);
           return (valueB || 0) - (valueA || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
@@ -276,8 +282,8 @@ useEffect(() => {
 
   // Group products by title to consolidate flavour variants
   const groupedProducts = useMemo(() => {
-    return groupProductsByTitle(filteredAndSortedProducts, benchmarks);
-  }, [filteredAndSortedProducts, benchmarks]);
+    return groupProductsByTitle(filteredAndSortedProducts, benchmarks, scoreRange);
+  }, [filteredAndSortedProducts, benchmarks, scoreRange]);
 
   // Products to display with pagination (using grouped products)
   const displayedProducts = useMemo(() => {
@@ -442,7 +448,7 @@ useEffect(() => {
 
   return (
     <ComparisonProvider>
-      <ValueBenchmarksProvider benchmarks={benchmarks}>
+      <ValueBenchmarksProvider benchmarks={benchmarks} scoreRange={scoreRange}>
       <div className="min-h-screen relative">
         {/* Video Background with optimized loading */}
         <video 

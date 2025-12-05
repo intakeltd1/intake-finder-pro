@@ -15,7 +15,7 @@ export function ComparisonModal() {
     showComparison, 
     setShowComparison 
   } = useComparison();
-  const { benchmarks } = useValueBenchmarks();
+  const { benchmarks, scoreRange } = useValueBenchmarks();
 
   const handleProductClick = (product: any) => {
     const url = product.URL || product.LINK;
@@ -127,7 +127,7 @@ export function ComparisonModal() {
                             Intake Value:
                           </span>
                           {(() => {
-                            const rating = calculateIntakeValueRating(product, benchmarks || undefined);
+                            const rating = calculateIntakeValueRating(product, benchmarks || undefined, scoreRange || undefined);
                             return rating ? (
                               <span className={`font-bold text-sm bg-gradient-to-r ${getValueRatingColor(rating)} bg-clip-text text-transparent`}>
                                 {rating}/10
@@ -138,7 +138,7 @@ export function ComparisonModal() {
                           })()}
                         </div>
                         {(() => {
-                          const rating = calculateIntakeValueRating(product, benchmarks || undefined);
+                          const rating = calculateIntakeValueRating(product, benchmarks || undefined, scoreRange || undefined);
                           if (rating) {
                             return (
                               <>

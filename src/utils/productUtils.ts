@@ -1,5 +1,5 @@
 // Utility functions for product data processing
-import { calculateIntakeValueRating, calculateDatasetBenchmarks, DatasetBenchmarks } from './valueRating';
+import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, DatasetBenchmarks, ScoreRange } from './valueRating';
 
 export interface Product {
   TITLE?: string;
@@ -23,7 +23,7 @@ export interface GroupedProduct extends Product {
 }
 
 // Group products by exact title, selecting best value as default
-export const groupProductsByTitle = (products: Product[], benchmarks?: DatasetBenchmarks | null): GroupedProduct[] => {
+export const groupProductsByTitle = (products: Product[], benchmarks?: DatasetBenchmarks | null, scoreRange?: ScoreRange | null): GroupedProduct[] => {
   const groupedMap = new Map<string, Product[]>();
   
   // Group by exact title (case-insensitive, trimmed)
@@ -43,8 +43,8 @@ export const groupProductsByTitle = (products: Product[], benchmarks?: DatasetBe
   groupedMap.forEach((variants) => {
     // Sort variants by Intake Value rating (best first)
     const sortedVariants = [...variants].sort((a, b) => {
-      const ratingA = calculateIntakeValueRating(a, benchmarks || undefined) || 0;
-      const ratingB = calculateIntakeValueRating(b, benchmarks || undefined) || 0;
+      const ratingA = calculateIntakeValueRating(a, benchmarks || undefined, scoreRange || undefined) || 0;
+      const ratingB = calculateIntakeValueRating(b, benchmarks || undefined, scoreRange || undefined) || 0;
       return ratingB - ratingA;
     });
     
@@ -383,8 +383,9 @@ export { applyFuzzySearch };
 
 // Get top value products using the new Intake Value algorithm (protein/£, servings/£, discount)
 export const getTopValueProducts = (products: Product[], count: number = 15): Product[] => {
-  // Calculate benchmarks from the full dataset for accurate scoring
+  // Calculate benchmarks and score range from the full dataset for accurate scoring
   const benchmarks = calculateDatasetBenchmarks(products);
+  const scoreRange = calculateScoreRange(products, benchmarks);
   
   const seenTitles = new Set<string>();
   const topProducts: Product[] = [];
@@ -398,12 +399,12 @@ export const getTopValueProducts = (products: Product[], count: number = 15): Pr
       if (grams !== null && grams < 100) return false;
       
       // Must have a valid rating
-      const rating = calculateIntakeValueRating(p, benchmarks);
+      const rating = calculateIntakeValueRating(p, benchmarks, scoreRange);
       return rating !== null && rating > 0;
     })
     .sort((a, b) => {
-      const ratingA = calculateIntakeValueRating(a, benchmarks) || 0;
-      const ratingB = calculateIntakeValueRating(b, benchmarks) || 0;
+      const ratingA = calculateIntakeValueRating(a, benchmarks, scoreRange) || 0;
+      const ratingB = calculateIntakeValueRating(b, benchmarks, scoreRange) || 0;
       return ratingB - ratingA;
     });
     
