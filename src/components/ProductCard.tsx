@@ -244,9 +244,16 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
         {/* Price and Amount */}
         <div className="flex items-center justify-between mb-1">
-          <span className="text-sm font-bold text-primary">
-            {safeDisplayValue(product.PRICE, "Price N/A")}
-          </span>
+          <div className="flex flex-col">
+            {product.RRP && product.RRP !== product.PRICE && (
+              <span className="text-[10px] text-muted-foreground line-through">
+                was {safeDisplayValue(product.RRP)}
+              </span>
+            )}
+            <span className="text-sm font-bold text-primary">
+              {safeDisplayValue(product.PRICE, "Price N/A")}
+            </span>
+          </div>
           {product.AMOUNT && safeDisplayValue(product.AMOUNT) !== 'N/A' && (
             <Badge variant="secondary" className="text-xs px-1 py-0">
               {safeDisplayValue(product.AMOUNT)}
