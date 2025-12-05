@@ -117,54 +117,97 @@ const normalize = (value: number, min: number, max: number): number => {
 };
 
 /**
- * Calculate Intake Value Rating (1-10 scale) using dynamic benchmarks
- * 
- * Weights:
- * - Protein per £1 (40%)
- * - Servings per £1 (40%)
- * - Discount % (20%)
- * 
- * @param product - Product to evaluate
- * @param benchmarks - Dataset benchmarks for normalization
- * @returns Value rating from 1-10
+ * Calculate raw weighted score for a product (internal use)
  */
-export function calculateIntakeValueRating(
-  product: Product, 
-  benchmarks?: DatasetBenchmarks
+function calculateRawWeightedScore(
+  product: Product,
+  benchmarks: DatasetBenchmarks
 ): number | null {
   const price = parsePrice(product.PRICE);
-  
-  // Need at least price to calculate
   if (!price) return null;
   
   const metrics = calculateRawMetrics(product);
   
-  // If no benchmarks provided, return null (needs dataset context)
-  if (!benchmarks) return null;
-  
-  // Normalize protein per £1 (penalize missing data with 0.15 instead of neutral)
+  // Normalize protein per £1 (penalize missing data with 0.15)
   const normalizedProtein = metrics.proteinPerPound !== null
     ? normalize(metrics.proteinPerPound, benchmarks.minProteinPerPound, benchmarks.maxProteinPerPound)
     : 0.15;
   
-  // Normalize servings per £1 (penalize missing data with 0.15 instead of neutral)
+  // Normalize servings per £1 (penalize missing data with 0.15)
   const normalizedServings = metrics.servingsPerPound !== null
     ? normalize(metrics.servingsPerPound, benchmarks.minServingsPerPound, benchmarks.maxServingsPerPound)
     : 0.15;
   
-  // Normalize discount % (0 if no RRP)
+  // Normalize discount %
   const normalizedDiscount = benchmarks.maxDiscountPercent > 0
     ? normalize(metrics.discountPercent, benchmarks.minDiscountPercent, benchmarks.maxDiscountPercent)
     : 0;
   
   // Weighted average (40% protein, 40% servings, 20% discount)
-  const weightedScore = 
-    (normalizedProtein * 0.4) +
-    (normalizedServings * 0.4) +
-    (normalizedDiscount * 0.2);
+  return (normalizedProtein * 0.4) + (normalizedServings * 0.4) + (normalizedDiscount * 0.2);
+}
+
+export interface ScoreRange {
+  minScore: number;
+  maxScore: number;
+}
+
+/**
+ * Calculate score range from entire dataset
+ * Call this once when data loads alongside benchmarks
+ */
+export function calculateScoreRange(
+  products: Product[],
+  benchmarks: DatasetBenchmarks
+): ScoreRange {
+  let minScore = Infinity;
+  let maxScore = -Infinity;
   
-  // Scale to 1-10 range
-  const finalScore = 1 + (weightedScore * 9);
+  for (const product of products) {
+    const score = calculateRawWeightedScore(product, benchmarks);
+    if (score !== null) {
+      minScore = Math.min(minScore, score);
+      maxScore = Math.max(maxScore, score);
+    }
+  }
+  
+  // Handle edge cases
+  if (minScore === Infinity) minScore = 0;
+  if (maxScore === -Infinity) maxScore = 1;
+  if (minScore === maxScore) maxScore = minScore + 0.01;
+  
+  return { minScore, maxScore };
+}
+
+/**
+ * Calculate Intake Value Rating (0.1-10 scale) using dynamic benchmarks
+ * Best product = 10, Worst product = 0.1, everything else scaled in between
+ * 
+ * @param product - Product to evaluate
+ * @param benchmarks - Dataset benchmarks for normalization
+ * @param scoreRange - Min/max scores from dataset for final scaling
+ * @returns Value rating from 0.1-10
+ */
+export function calculateIntakeValueRating(
+  product: Product, 
+  benchmarks?: DatasetBenchmarks,
+  scoreRange?: ScoreRange
+): number | null {
+  if (!benchmarks) return null;
+  
+  const rawScore = calculateRawWeightedScore(product, benchmarks);
+  if (rawScore === null) return null;
+  
+  // If no score range, use raw score scaled to 1-10
+  if (!scoreRange) {
+    return Math.round((1 + rawScore * 9) * 10) / 10;
+  }
+  
+  // Normalize to 0-1 based on actual dataset range
+  const normalizedScore = normalize(rawScore, scoreRange.minScore, scoreRange.maxScore);
+  
+  // Scale to 0.1-10 range (best = 10, worst = 0.1)
+  const finalScore = 0.1 + (normalizedScore * 9.9);
   
   return Math.round(finalScore * 10) / 10;
 }
