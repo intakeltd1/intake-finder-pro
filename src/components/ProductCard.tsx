@@ -1,7 +1,7 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, TrendingUp, Star, Plus, ChevronDown } from "lucide-react";
+import { ImageIcon, TrendingUp, Star, Plus, ChevronDown, Crown } from "lucide-react";
 import { useState, useRef } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
@@ -35,6 +35,7 @@ interface ProductCardProps {
   isTopValue?: boolean;
   isFeatured?: boolean;
   isPopular?: boolean;
+  isTopValueOfDay?: boolean;
 }
 
 const isOutOfStock = (product: Product): boolean => {
@@ -106,7 +107,7 @@ const safeDisplayValue = (value: any, fallback: string = 'N/A'): string => {
   return String(value);
 };
 
-export function ProductCard({ product, isTopValue, isFeatured, isPopular }: ProductCardProps) {
+export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopValueOfDay }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -225,18 +226,24 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
 
         {/* Special Product Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {isFeatured && !outOfStock && (
+          {isTopValueOfDay && !outOfStock && (
+            <Badge className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-amber-900 font-bold shadow-xl animate-pulse flex items-center gap-1 border border-amber-300">
+              <Crown className="h-3 w-3" />
+              Top Value of the Day
+            </Badge>
+          )}
+          {isFeatured && !outOfStock && !isTopValueOfDay && (
             <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-1">
               <Star className="h-3 w-3" />
               Featured
             </Badge>
           )}
-          {isTopValue && !outOfStock && !isFeatured && (
+          {isTopValue && !outOfStock && !isFeatured && !isTopValueOfDay && (
             <Badge className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white font-semibold shadow-lg">
               Best Value
             </Badge>
           )}
-          {isPopular && !outOfStock && !isFeatured && !isTopValue && (
+          {isPopular && !outOfStock && !isFeatured && !isTopValue && !isTopValueOfDay && (
             <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
               Popular
