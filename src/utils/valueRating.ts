@@ -1,29 +1,38 @@
 // Intake Value Rating Algorithm
-// Calculates a 1-10 value score based on protein per serving, price, and amount
+// Dynamic benchmarking: best product = 10, worst = 1
+// Weights: 40% Protein/£, 40% Servings/£, 20% Discount %
 
 interface Product {
   PRICE?: string;
-  AMOUNT?: string;
+  RRP?: string;
+  SERVINGS?: string;
   PROTEIN_SERVING?: string;
   [key: string]: any;
 }
 
-// Parse grams from amount string
-const parseGrams = (amount?: string): number | null => {
-  if (!amount) return null;
-  const match = amount.match(/([\d.]+)\s*(kg|g)/i);
-  if (!match) return null;
-  let value = parseFloat(match[1]);
-  if (match[2].toLowerCase() === 'kg') value *= 1000;
-  return value;
-};
+export interface DatasetBenchmarks {
+  minProteinPerPound: number;
+  maxProteinPerPound: number;
+  minServingsPerPound: number;
+  maxServingsPerPound: number;
+  minDiscountPercent: number;
+  maxDiscountPercent: number;
+}
 
 // Parse price from string
 const parsePrice = (price?: string): number | null => {
   if (!price) return null;
   const match = String(price).replace(/[^\d.]/g, '');
   const value = parseFloat(match);
-  return isNaN(value) ? null : value;
+  return isNaN(value) || value <= 0 ? null : value;
+};
+
+// Parse servings from string
+const parseServings = (servings?: string): number | null => {
+  if (!servings) return null;
+  const match = String(servings).replace(/[^\d.]/g, '');
+  const value = parseFloat(match);
+  return isNaN(value) || value <= 0 ? null : value;
 };
 
 // Parse protein from string
@@ -34,83 +43,141 @@ const parseProtein = (protein?: string): number | null => {
   return isNaN(value) ? null : value;
 };
 
+// Calculate percentage discount
+const calculateDiscountPercent = (price?: string, rrp?: string): number => {
+  const priceVal = parsePrice(price);
+  const rrpVal = parsePrice(rrp);
+  
+  if (!priceVal || !rrpVal || rrpVal <= priceVal) return 0;
+  
+  return ((rrpVal - priceVal) / rrpVal) * 100;
+};
+
+// Calculate raw metrics for a product
+const calculateRawMetrics = (product: Product) => {
+  const price = parsePrice(product.PRICE);
+  const servings = parseServings(product.SERVINGS);
+  const protein = parseProtein(product.PROTEIN_SERVING);
+  const discountPercent = calculateDiscountPercent(product.PRICE, product.RRP);
+  
+  return {
+    proteinPerPound: price && protein ? protein / price : null,
+    servingsPerPound: price && servings ? servings / price : null,
+    discountPercent,
+    hasServings: servings !== null
+  };
+};
+
 /**
- * Calculate Intake Value Rating (1-10 scale)
+ * Calculate benchmarks from entire dataset
+ * Call this once when data loads, then use for all ratings
+ */
+export function calculateDatasetBenchmarks(products: Product[]): DatasetBenchmarks {
+  let minProteinPerPound = Infinity;
+  let maxProteinPerPound = 0;
+  let minServingsPerPound = Infinity;
+  let maxServingsPerPound = 0;
+  let minDiscountPercent = 0;
+  let maxDiscountPercent = 0;
+
+  for (const product of products) {
+    const metrics = calculateRawMetrics(product);
+    
+    if (metrics.proteinPerPound !== null) {
+      minProteinPerPound = Math.min(minProteinPerPound, metrics.proteinPerPound);
+      maxProteinPerPound = Math.max(maxProteinPerPound, metrics.proteinPerPound);
+    }
+    
+    if (metrics.servingsPerPound !== null) {
+      minServingsPerPound = Math.min(minServingsPerPound, metrics.servingsPerPound);
+      maxServingsPerPound = Math.max(maxServingsPerPound, metrics.servingsPerPound);
+    }
+    
+    maxDiscountPercent = Math.max(maxDiscountPercent, metrics.discountPercent);
+  }
+
+  // Handle edge cases where no valid data exists
+  if (minProteinPerPound === Infinity) minProteinPerPound = 0;
+  if (minServingsPerPound === Infinity) minServingsPerPound = 0;
+
+  return {
+    minProteinPerPound,
+    maxProteinPerPound,
+    minServingsPerPound,
+    maxServingsPerPound,
+    minDiscountPercent,
+    maxDiscountPercent
+  };
+}
+
+// Normalize a value to 0-1 range
+const normalize = (value: number, min: number, max: number): number => {
+  if (max === min) return 0.5;
+  return (value - min) / (max - min);
+};
+
+/**
+ * Calculate Intake Value Rating (1-10 scale) using dynamic benchmarks
  * 
- * Factors:
- * - Protein per £1 (40% weight)
- * - Protein per 100g (30% weight)
- * - Size/value ratio (30% weight)
+ * Weights:
+ * - Protein per £1 (40%)
+ * - Servings per £1 (40%)
+ * - Discount % (20%)
  * 
  * @param product - Product to evaluate
- * @returns Value rating from 1-10, or null if insufficient data
+ * @param benchmarks - Dataset benchmarks for normalization
+ * @returns Value rating from 1-10
  */
-export function calculateIntakeValueRating(product: Product): number | null {
+export function calculateIntakeValueRating(
+  product: Product, 
+  benchmarks?: DatasetBenchmarks
+): number | null {
   const price = parsePrice(product.PRICE);
-  const grams = parseGrams(product.AMOUNT);
-  const protein = parseProtein(product.PROTEIN_SERVING);
-
-  // Need at least price to calculate (protein is optional with fallback)
-  if (!price || price <= 0) return null;
   
-  // Use estimated protein if not available (typical whey protein ~25g per serving)
-  const effectiveProtein = protein || 25;
-
-  // Calculate protein per £1 (higher is better)
-  const proteinPerPound = effectiveProtein / price;
-
-  // Calculate protein density (protein per 100g) - assumes one serving
-  let proteinDensity = 0;
-  if (grams && grams > 0) {
-    // Estimate servings (typical tub is 25-30 servings)
-    const estimatedServings = Math.max(1, Math.round(grams / 30));
-    const proteinPer100g = (effectiveProtein / (grams / estimatedServings)) * 100;
-    proteinDensity = Math.min(100, proteinPer100g); // Cap at 100
-  } else {
-    // If no amount data, use protein per serving as proxy
-    proteinDensity = Math.min(100, effectiveProtein * 3);
-  }
-
-  // Calculate size value (larger sizes typically better value)
-  let sizeScore = 0;
-  if (grams) {
-    if (grams >= 2500) sizeScore = 10; // 2.5kg+
-    else if (grams >= 2000) sizeScore = 9; // 2kg
-    else if (grams >= 1500) sizeScore = 7; // 1.5kg
-    else if (grams >= 1000) sizeScore = 5; // 1kg
-    else if (grams >= 500) sizeScore = 3; // 500g
-    else sizeScore = 1; // Small samples
-  } else {
-    sizeScore = 5; // Neutral if unknown
-  }
-
-  // Normalize protein per pound (typical range: 0.5 to 4)
-  const normalizedProteinPerPound = Math.min(10, (proteinPerPound / 4) * 10);
-
-  // Normalize protein density (typical range: 20% to 90%)
-  const normalizedProteinDensity = Math.min(10, (proteinDensity / 90) * 10);
-
-  // Weighted average
+  // Need at least price to calculate
+  if (!price) return null;
+  
+  const metrics = calculateRawMetrics(product);
+  
+  // If no benchmarks provided, return null (needs dataset context)
+  if (!benchmarks) return null;
+  
+  // Normalize protein per £1 (or neutral 0.5 if missing)
+  const normalizedProtein = metrics.proteinPerPound !== null
+    ? normalize(metrics.proteinPerPound, benchmarks.minProteinPerPound, benchmarks.maxProteinPerPound)
+    : 0.5;
+  
+  // Normalize servings per £1 (or neutral 0.5 if missing)
+  const normalizedServings = metrics.servingsPerPound !== null
+    ? normalize(metrics.servingsPerPound, benchmarks.minServingsPerPound, benchmarks.maxServingsPerPound)
+    : 0.5;
+  
+  // Normalize discount % (0 if no RRP)
+  const normalizedDiscount = benchmarks.maxDiscountPercent > 0
+    ? normalize(metrics.discountPercent, benchmarks.minDiscountPercent, benchmarks.maxDiscountPercent)
+    : 0;
+  
+  // Weighted average (40% protein, 40% servings, 20% discount)
   const weightedScore = 
-    (normalizedProteinPerPound * 0.4) +
-    (normalizedProteinDensity * 0.3) +
-    (sizeScore * 0.3);
-
-  // Scale to 1-10 and round to 1 decimal
-  const finalScore = Math.max(1, Math.min(10, weightedScore));
+    (normalizedProtein * 0.4) +
+    (normalizedServings * 0.4) +
+    (normalizedDiscount * 0.2);
+  
+  // Scale to 1-10 range
+  const finalScore = 1 + (weightedScore * 9);
   
   return Math.round(finalScore * 10) / 10;
 }
 
 /**
  * Get color class for value rating
- * Logical progression: Gray → Amber → Green → Purple (Legendary!)
+ * Gray → Amber → Green → Purple (Legendary!)
  */
 export function getValueRatingColor(rating: number): string {
-  if (rating >= 8) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent - Legendary Purple
-  if (rating >= 6) return 'from-lime-400 to-green-400'; // Great (green)
-  if (rating >= 4) return 'from-amber-300 to-yellow-400'; // Good (amber/yellow)
-  return 'from-gray-300 to-slate-300'; // Average (neutral gray)
+  if (rating >= 8) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent
+  if (rating >= 6) return 'from-lime-400 to-green-400'; // Great
+  if (rating >= 4) return 'from-amber-300 to-yellow-400'; // Good
+  return 'from-gray-300 to-slate-300'; // Average
 }
 
 /**

@@ -12,7 +12,8 @@ import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
 import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
-import { calculateIntakeValueRating } from "@/utils/valueRating";
+import { calculateIntakeValueRating, calculateDatasetBenchmarks, DatasetBenchmarks } from "@/utils/valueRating";
+import { ValueBenchmarksProvider } from "@/hooks/useValueBenchmarks";
 
 // Data transformation function to handle different field naming conventions
 function transformProductData(rawProduct: any): Product {
@@ -30,6 +31,8 @@ function transformProductData(rawProduct: any): Product {
     TITLE: getField(['TITLE', 'title', 'name', 'product_name', 'Name']) || 'Product Name Not Available',
     COMPANY: getField(['COMPANY', 'company', 'brand', 'manufacturer', 'Brand']) || 'Unknown Brand',
     PRICE: getField(['PRICE', 'price', 'cost', 'Price']) || 'Price N/A',
+    RRP: getField(['RRP', 'rrp', 'original_price', 'retail_price', 'was_price']) || undefined,
+    SERVINGS: getField(['SERVINGS', 'servings', 'serving_count', 'num_servings', 'portions']) || undefined,
     AMOUNT: getField(['AMOUNT', 'amount', 'size', 'weight', 'quantity', 'Amount']) || undefined,
     PROTEIN_SERVING: getField(['PROTEIN_SERVING', 'protein_serving', 'protein', 'protein_per_serving', 'Protein']) || undefined,
     FLAVOUR: getField(['FLAVOUR', 'flavour', 'flavor', 'Flavor', 'Flavour']) || undefined,
@@ -162,6 +165,12 @@ useEffect(() => {
   fetchProducts();
 }, []);
 
+  // Calculate benchmarks once when products change
+  const benchmarks = useMemo(() => {
+    if (products.length === 0) return null;
+    return calculateDatasetBenchmarks(products);
+  }, [products]);
+
   // Get best value products using utility function (already deduplicates and filters out-of-stock)
   const bestValueProducts = useMemo(() => {
     return getTopValueProducts(products, 4);
@@ -246,8 +255,8 @@ useEffect(() => {
       
       switch (sortBy) {
         case 'value':
-          const valueA = calculateIntakeValueRating(a);
-          const valueB = calculateIntakeValueRating(b);
+          const valueA = calculateIntakeValueRating(a, benchmarks || undefined);
+          const valueB = calculateIntakeValueRating(b, benchmarks || undefined);
           return (valueB || 0) - (valueA || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
@@ -428,6 +437,7 @@ useEffect(() => {
 
   return (
     <ComparisonProvider>
+      <ValueBenchmarksProvider benchmarks={benchmarks}>
       <div className="min-h-screen relative">
         {/* Video Background with optimized loading */}
         <video 
@@ -626,6 +636,7 @@ useEffect(() => {
           <ComparisonModal />
         </div>
       </div>
+      </ValueBenchmarksProvider>
     </ComparisonProvider>
   );
 }

@@ -5,6 +5,7 @@ import { ExternalLink, Package, ImageIcon, TrendingUp, Star, Plus } from "lucide
 import { useState, useRef, useEffect } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
+import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 
 interface Product {
@@ -103,7 +104,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   const cardRef = useRef<HTMLDivElement>(null);
   const outOfStock = isOutOfStock(product);
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
-  const valueRating = calculateIntakeValueRating(product);
+  const { benchmarks } = useValueBenchmarks();
+  const valueRating = calculateIntakeValueRating(product, benchmarks || undefined);
   
   // Toggle to show value bar on all tiles (set to false to only show in comparison mode)
   const SHOW_VALUE_BAR_ALWAYS = true;

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, ExternalLink, Package, Trophy } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
+import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { numFromPrice, numFromProtein, incrementClickCount } from "@/utils/productUtils";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 
@@ -14,6 +15,7 @@ export function ComparisonModal() {
     showComparison, 
     setShowComparison 
   } = useComparison();
+  const { benchmarks } = useValueBenchmarks();
 
   const handleProductClick = (product: any) => {
     const url = product.URL || product.LINK;
@@ -125,7 +127,7 @@ export function ComparisonModal() {
                             Intake Value:
                           </span>
                           {(() => {
-                            const rating = calculateIntakeValueRating(product);
+                            const rating = calculateIntakeValueRating(product, benchmarks || undefined);
                             return rating ? (
                               <span className={`font-bold text-sm bg-gradient-to-r ${getValueRatingColor(rating)} bg-clip-text text-transparent`}>
                                 {rating}/10
@@ -136,7 +138,7 @@ export function ComparisonModal() {
                           })()}
                         </div>
                         {(() => {
-                          const rating = calculateIntakeValueRating(product);
+                          const rating = calculateIntakeValueRating(product, benchmarks || undefined);
                           if (rating) {
                             return (
                               <>
