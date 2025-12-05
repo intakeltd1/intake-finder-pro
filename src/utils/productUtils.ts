@@ -1,4 +1,5 @@
 // Utility functions for product data processing
+import { calculateIntakeValueRating, calculateDatasetBenchmarks, DatasetBenchmarks } from './valueRating';
 
 export const parseGrams = (amount?: string): number | null => {
   if (!amount) return null;
@@ -245,10 +246,14 @@ export const sortProducts = (products: Product[], sortBy: string): Product[] => 
   // Then apply secondary sorting while maintaining stock priority
   switch (sortBy) {
     case 'value':
+      // Use the new Intake Value algorithm for "Best Value" sorting
+      const benchmarks = calculateDatasetBenchmarks(products);
       return sorted.sort((a, b) => {
         const stockDiff = Number(isOutOfStock(a)) - Number(isOutOfStock(b));
         if (stockDiff !== 0) return stockDiff;
-        return calculateValueScore(b) - calculateValueScore(a);
+        const ratingA = calculateIntakeValueRating(a, benchmarks) || 0;
+        const ratingB = calculateIntakeValueRating(b, benchmarks) || 0;
+        return ratingB - ratingA;
       });
     case 'popularity':
       return sorted.sort((a, b) => {
@@ -330,22 +335,31 @@ export const getBaseProductName = (title: string): string => {
 // Export the fuzzy search function
 export { applyFuzzySearch };
 
-// Get top value products with deduplication by exact title (best protein per price ratio, one per title)
+// Get top value products using the new Intake Value algorithm (protein/£, servings/£, discount)
 export const getTopValueProducts = (products: Product[], count: number = 15): Product[] => {
+  // Calculate benchmarks from the full dataset for accurate scoring
+  const benchmarks = calculateDatasetBenchmarks(products);
+  
   const seenTitles = new Set<string>();
   const topProducts: Product[] = [];
   
   const sorted = products
     .filter(p => {
-      if (isOutOfStock(p) || calculateValueScore(p) <= 0) return false;
+      if (isOutOfStock(p)) return false;
       
       // Exclude samples (< 100g)
       const grams = parseGrams(p.AMOUNT);
       if (grams !== null && grams < 100) return false;
       
-      return true;
+      // Must have a valid rating
+      const rating = calculateIntakeValueRating(p, benchmarks);
+      return rating !== null && rating > 0;
     })
-    .sort((a, b) => calculateValueScore(b) - calculateValueScore(a));
+    .sort((a, b) => {
+      const ratingA = calculateIntakeValueRating(a, benchmarks) || 0;
+      const ratingB = calculateIntakeValueRating(b, benchmarks) || 0;
+      return ratingB - ratingA;
+    });
     
   for (const product of sorted) {
     const title = product.TITLE?.toLowerCase().trim();
