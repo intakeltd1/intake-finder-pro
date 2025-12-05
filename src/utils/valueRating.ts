@@ -143,9 +143,9 @@ function calculateRawWeightedScore(
     ? normalize(metrics.discountPercent, benchmarks.minDiscountPercent, benchmarks.maxDiscountPercent)
     : 0;
   
-  // Weighted average (55% protein, 38.3% servings, 6.7% discount)
-  // This prioritizes protein content while still valuing servings and minor discount consideration
-  return (normalizedProtein * 0.55) + (normalizedServings * 0.383) + (normalizedDiscount * 0.067);
+  // Weighted average (38.3% protein, 55% servings, 6.7% discount)
+  // This prioritizes servings per £1 as the main value metric
+  return (normalizedProtein * 0.383) + (normalizedServings * 0.55) + (normalizedDiscount * 0.067);
 }
 
 export interface ScoreRange {
