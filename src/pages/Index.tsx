@@ -188,6 +188,16 @@ useEffect(() => {
     return new Set(top10.map(p => p.URL || p.LINK));
   }, [products]);
 
+  // Identify products with perfect 10.0 rating (Top Value of the Day)
+  const topValueOfDayUrls = useMemo(() => {
+    if (!benchmarks || !scoreRange) return new Set<string>();
+    const perfectScoreProducts = products.filter(p => {
+      const rating = calculateIntakeValueRating(p, benchmarks, scoreRange);
+      return rating === 10.0;
+    });
+    return new Set(perfectScoreProducts.map(p => p.URL || p.LINK || ''));
+  }, [products, benchmarks, scoreRange]);
+
 
   // Check if any search criteria is active (for showing/hiding "Today's Top Picks")
   const hasSearchCriteria = useMemo(() => {
@@ -578,27 +588,34 @@ useEffect(() => {
             {groupedProducts.length > 0 ? (
               <>
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4 mb-8">
-                  {displayedProducts.map((product, index) => (
-                    <div 
-                      key={`${product.URL || product.LINK}-${index}`}
-                      className="staggered-fade-in"
-                      style={{ animationDelay: `${Math.max(0, (index - batchStartRef.current)) * 40}ms` }}
-                    >
-                      {top10Products.has(product.URL || product.LINK || '') ? (
-                        <div className="white-circle-border">
+                  {displayedProducts.map((product, index) => {
+                    const productUrl = product.URL || product.LINK || '';
+                    const isTopValueOfDay = topValueOfDayUrls.has(productUrl);
+                    const isTop10 = top10Products.has(productUrl);
+                    
+                    return (
+                      <div 
+                        key={`${productUrl}-${index}`}
+                        className="staggered-fade-in"
+                        style={{ animationDelay: `${Math.max(0, (index - batchStartRef.current)) * 40}ms` }}
+                      >
+                        {(isTop10 || isTopValueOfDay) ? (
+                          <div className="white-circle-border">
+                            <ProductCard
+                              product={product}
+                              isTopValue={isTop10 && !isTopValueOfDay}
+                              isTopValueOfDay={isTopValueOfDay}
+                            />
+                          </div>
+                        ) : (
                           <ProductCard
                             product={product}
-                            isTopValue={true}
+                            isTopValue={false}
                           />
-                        </div>
-                      ) : (
-                        <ProductCard
-                          product={product}
-                          isTopValue={false}
-                        />
-                      )}
-                    </div>
-                  ))}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* IntersectionObserver sentinel */}
