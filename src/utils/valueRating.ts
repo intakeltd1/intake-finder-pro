@@ -204,8 +204,8 @@ export function calculateIntakeValueRating(
     return Math.round((5 + rawScore * 5) * 10) / 10;
   }
   
-  // Normalize to 0-1 based on actual dataset range
-  const normalizedScore = normalize(rawScore, scoreRange.minScore, scoreRange.maxScore);
+  // Normalize to 0-1 based on actual dataset range, clamped to prevent out-of-range
+  const normalizedScore = Math.max(0, Math.min(1, normalize(rawScore, scoreRange.minScore, scoreRange.maxScore)));
   
   // Scale to 5.0-10.0 range (best = 10, worst = 5.0)
   // This ensures no product appears "bad" - all are at least average
