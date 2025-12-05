@@ -1,6 +1,6 @@
 // Intake Value Rating Algorithm
-// Dynamic benchmarking: best product = 10, worst = 1
-// Weights: 40% Protein/£, 40% Servings/£, 20% Discount %
+// Dynamic benchmarking: best product = 10, worst = 5.0 (brand-friendly)
+// Weights: 48.5% Protein/£, 48.5% Servings/£, 3% Discount %
 
 interface Product {
   PRICE?: string;
@@ -143,8 +143,9 @@ function calculateRawWeightedScore(
     ? normalize(metrics.discountPercent, benchmarks.minDiscountPercent, benchmarks.maxDiscountPercent)
     : 0;
   
-  // Weighted average (40% protein, 40% servings, 20% discount)
-  return (normalizedProtein * 0.4) + (normalizedServings * 0.4) + (normalizedDiscount * 0.2);
+  // Weighted average (48.5% protein, 48.5% servings, 3% discount)
+  // This prioritizes actual value metrics over promotional discounts
+  return (normalizedProtein * 0.485) + (normalizedServings * 0.485) + (normalizedDiscount * 0.03);
 }
 
 export interface ScoreRange {
@@ -180,13 +181,13 @@ export function calculateScoreRange(
 }
 
 /**
- * Calculate Intake Value Rating (0.1-10 scale) using dynamic benchmarks
- * Best product = 10, Worst product = 0.1, everything else scaled in between
+ * Calculate Intake Value Rating (5.0-10.0 scale) using dynamic benchmarks
+ * Best product = 10, Worst product = 5.0 (brand-friendly, no product is "bad")
  * 
  * @param product - Product to evaluate
  * @param benchmarks - Dataset benchmarks for normalization
  * @param scoreRange - Min/max scores from dataset for final scaling
- * @returns Value rating from 0.1-10
+ * @returns Value rating from 5.0-10.0
  */
 export function calculateIntakeValueRating(
   product: Product, 
@@ -198,37 +199,38 @@ export function calculateIntakeValueRating(
   const rawScore = calculateRawWeightedScore(product, benchmarks);
   if (rawScore === null) return null;
   
-  // If no score range, use raw score scaled to 1-10
+  // If no score range, use raw score scaled to 5-10
   if (!scoreRange) {
-    return Math.round((1 + rawScore * 9) * 10) / 10;
+    return Math.round((5 + rawScore * 5) * 10) / 10;
   }
   
   // Normalize to 0-1 based on actual dataset range
   const normalizedScore = normalize(rawScore, scoreRange.minScore, scoreRange.maxScore);
   
-  // Scale to 0.1-10 range (best = 10, worst = 0.1)
-  const finalScore = 0.1 + (normalizedScore * 9.9);
+  // Scale to 5.0-10.0 range (best = 10, worst = 5.0)
+  // This ensures no product appears "bad" - all are at least average
+  const finalScore = 5.0 + (normalizedScore * 5.0);
   
   return Math.round(finalScore * 10) / 10;
 }
 
 /**
- * Get color class for value rating
- * Gray → Amber → Green → Purple (Legendary!)
+ * Get color class for value rating (5.0-10.0 scale)
+ * All products shown positively: Amber → Green → Purple (Excellent!)
  */
 export function getValueRatingColor(rating: number): string {
-  if (rating >= 8) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent
-  if (rating >= 6) return 'from-lime-400 to-green-400'; // Great
-  if (rating >= 4) return 'from-amber-300 to-yellow-400'; // Good
-  return 'from-gray-300 to-slate-300'; // Average
+  if (rating >= 8.5) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent
+  if (rating >= 7) return 'from-lime-400 to-green-400'; // Great
+  if (rating >= 6) return 'from-amber-300 to-yellow-400'; // Good
+  return 'from-gray-300 to-slate-300'; // Average (5.0-5.9)
 }
 
 /**
- * Get label for value rating
+ * Get label for value rating (5.0-10.0 scale)
  */
 export function getValueRatingLabel(rating: number): string {
-  if (rating >= 8) return 'Excellent';
-  if (rating >= 6) return 'Great';
-  if (rating >= 4) return 'Good';
+  if (rating >= 8.5) return 'Excellent';
+  if (rating >= 7) return 'Great';
+  if (rating >= 6) return 'Good';
   return 'Average';
 }
