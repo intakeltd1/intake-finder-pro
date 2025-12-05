@@ -31,7 +31,6 @@ function AlgorithmExplanation() {
             <div className="w-8 h-8 rounded-full bg-lime-500/20 flex items-center justify-center">
               <TrendingUp className="h-4 w-4 text-lime-500" />
             </div>
-            <span className="font-semibold text-sm">48.5%</span>
           </div>
           <h4 className="font-medium text-sm">Protein per £1</h4>
           <p className="text-xs text-muted-foreground">
@@ -44,7 +43,6 @@ function AlgorithmExplanation() {
             <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
               <PiggyBank className="h-4 w-4 text-amber-500" />
             </div>
-            <span className="font-semibold text-sm">48.5%</span>
           </div>
           <h4 className="font-medium text-sm">Servings per £1</h4>
           <p className="text-xs text-muted-foreground">
@@ -57,7 +55,6 @@ function AlgorithmExplanation() {
             <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
               <Percent className="h-4 w-4 text-purple-500" />
             </div>
-            <span className="font-semibold text-sm">3%</span>
           </div>
           <h4 className="font-medium text-sm">Discount Factor</h4>
           <p className="text-xs text-muted-foreground">
@@ -79,11 +76,11 @@ function AlgorithmExplanation() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-purple-500 font-bold">•</span>
-            <span><strong>Brand-neutral:</strong> All products scored 5.0-10.0 — no product is marked as "bad"</span>
+            <span><strong>Non-biased clarity:</strong> Intake isn't affiliated with any brand — just unbiased data</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-purple-500 font-bold">•</span>
-            <span><strong>Transparent weighting:</strong> Value metrics (97%) outweigh promotional discounts (3%)</span>
+            <span><strong>Fair scoring:</strong> All products scored 5.0-10.0 — no product is marked as "bad"</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-purple-500 font-bold">•</span>
@@ -187,7 +184,7 @@ export function ComparisonModal() {
                 </div>
                 <div className="text-xs">
                   <span className="font-medium">Intake Value</span>
-                  <span className="text-muted-foreground"> = 48.5% Protein/£ + 48.5% Servings/£ + 3% Discount</span>
+                  <span className="text-muted-foreground"> = Protein/£ + Servings/£ + Discount consideration</span>
                 </div>
               </div>
 
