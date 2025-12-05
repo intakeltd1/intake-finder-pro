@@ -1,12 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Package, ImageIcon, TrendingUp, Star, Plus } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { ImageIcon, TrendingUp, Star, Plus, ChevronDown } from "lucide-react";
+import { useState, useRef } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Product {
   TITLE?: string;
@@ -19,11 +26,12 @@ interface Product {
   URL?: string;
   IMAGE_URL?: string;
   STOCK_STATUS?: string;
+  RRP?: string;
   [key: string]: any;
 }
 
 interface ProductCardProps {
-  product: Product;
+  product: Product & { variants?: Product[]; variantCount?: number };
   isTopValue?: boolean;
   isFeatured?: boolean;
   isPopular?: boolean;
@@ -102,33 +110,36 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const outOfStock = isOutOfStock(product);
+  
+  // Handle variants - selectedVariant tracks which flavour is selected
+  const hasVariants = product.variants && product.variants.length > 1;
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
+  const currentProduct = hasVariants ? product.variants![selectedVariantIndex] : product;
+  
+  const outOfStock = isOutOfStock(currentProduct);
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
   const { benchmarks } = useValueBenchmarks();
-  const valueRating = calculateIntakeValueRating(product, benchmarks || undefined);
+  const valueRating = calculateIntakeValueRating(currentProduct, benchmarks || undefined);
   
   // Toggle to show value bar on all tiles (set to false to only show in comparison mode)
   const SHOW_VALUE_BAR_ALWAYS = true;
   
   const handleCardClick = (e: React.MouseEvent) => {
-    const url = product.URL || product.LINK;
+    const url = currentProduct.URL || currentProduct.LINK;
     if (url) {
       incrementClickCount(url);
-      // Let the browser handle the navigation via the <a> tag
     }
   };
 
   const handleAddToComparison = (e: React.MouseEvent) => {
     e.stopPropagation();
-    e.preventDefault(); // Prevent the <a> tag from navigating
+    e.preventDefault();
     
-    if (!isInComparison(product) && comparisonProducts.length < 4) {
-      // Get card position for animation
+    if (!isInComparison(currentProduct) && comparisonProducts.length < 4) {
       if (cardRef.current) {
         const rect = cardRef.current.getBoundingClientRect();
         const clone = cardRef.current.cloneNode(true) as HTMLElement;
         
-        // Style the clone for animation
         clone.style.position = 'fixed';
         clone.style.top = `${rect.top}px`;
         clone.style.left = `${rect.left}px`;
@@ -140,11 +151,9 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         
         document.body.appendChild(clone);
         
-        // Calculate target position (bottom right corner)
         const targetX = window.innerWidth - rect.left - rect.width / 2 - 80;
         const targetY = window.innerHeight - rect.top - rect.height / 2 - 80;
         
-        // Single smooth arc animation with slight upward curve
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             clone.style.transition = 'all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
@@ -153,15 +162,14 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
           });
         });
         
-        // Clean up and add to comparison
         setTimeout(() => {
           if (document.body.contains(clone)) {
             document.body.removeChild(clone);
           }
-          addToComparison(product);
+          addToComparison(currentProduct);
         }, 500);
       } else {
-        addToComparison(product);
+        addToComparison(currentProduct);
       }
       
       setAddAnimation(true);
@@ -177,16 +185,25 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
     return 'border-border hover:border-primary/30';
   };
 
-  const productUrl = product.URL || product.LINK;
+  const productUrl = currentProduct.URL || currentProduct.LINK;
+
+  // Handle variant selection
+  const handleVariantChange = (value: string) => {
+    const index = parseInt(value, 10);
+    if (!isNaN(index)) {
+      setSelectedVariantIndex(index);
+      setImageError(false); // Reset image error when changing variant
+    }
+  };
 
   const cardContent = (
     <>
-      {/* Product Image - 50% mobile, 65% desktop */}
-      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-[52%] md:h-[52%]">
-        {product.IMAGE_URL && !imageError ? (
+      {/* Product Image */}
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-[50%] md:h-[48%]">
+        {currentProduct.IMAGE_URL && !imageError ? (
           <img
-            src={product.IMAGE_URL}
-            alt={product.TITLE || "Product image"}
+            src={currentProduct.IMAGE_URL}
+            alt={currentProduct.TITLE || "Product image"}
             className={`w-full h-full object-cover object-center transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
@@ -228,59 +245,94 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         </div>
       </div>
 
-      {/* Product Info - 50% mobile, 35% desktop */}
-      <CardContent className="p-2 pb-3 flex flex-col justify-between h-[48%] md:h-[48%]">
+      {/* Product Info */}
+      <CardContent className="p-2 pb-3 flex flex-col justify-between h-[50%] md:h-[52%]">
         {/* Company Name */}
-        <div className="mb-1">
+        <div className="mb-0.5">
           <p className="text-xs text-muted-foreground line-clamp-1">
-            {getBrandFromProduct(product)}
+            {getBrandFromProduct(currentProduct)}
           </p>
         </div>
 
         {/* Product Title */}
         <CardTitle className="text-xs mb-1 line-clamp-2 min-h-[2rem] flex items-start leading-tight">
-          {safeDisplayValue(product.TITLE, "Product Title Not Available")}
+          {safeDisplayValue(currentProduct.TITLE, "Product Title Not Available")}
         </CardTitle>
+
+        {/* Flavour Section - Static or Dropdown */}
+        <div className="mb-1" onClick={(e) => e.stopPropagation()}>
+          {hasVariants ? (
+            <div className="flex items-center justify-between gap-1">
+              <Select
+                value={selectedVariantIndex.toString()}
+                onValueChange={handleVariantChange}
+              >
+                <SelectTrigger 
+                  className="h-6 text-[10px] px-2 py-0 bg-background border-border/50 w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                >
+                  <SelectValue placeholder="Select flavour">
+                    {safeDisplayValue(currentProduct.FLAVOUR, 'No flavour')}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-background border-border z-[200] max-h-48">
+                  {product.variants!.map((variant, idx) => (
+                    <SelectItem 
+                      key={idx} 
+                      value={idx.toString()}
+                      className="text-xs"
+                    >
+                      {safeDisplayValue(variant.FLAVOUR, 'No flavour')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-[9px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+                +{product.variantCount! - 1} more
+              </span>
+            </div>
+          ) : (
+            <p className="text-[11px] text-muted-foreground line-clamp-1">
+              {safeDisplayValue(currentProduct.FLAVOUR, '')}
+            </p>
+          )}
+        </div>
 
         {/* Price and Amount */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex flex-col">
-            {product.RRP && product.RRP !== product.PRICE && (
+            {currentProduct.RRP && currentProduct.RRP !== currentProduct.PRICE && (
               <span className="text-xs text-muted-foreground line-through">
-                was {safeDisplayValue(product.RRP)}
+                was {safeDisplayValue(currentProduct.RRP)}
               </span>
             )}
             <span className="text-base font-bold text-primary">
-              {safeDisplayValue(product.PRICE, "Price N/A")}
+              {safeDisplayValue(currentProduct.PRICE, "Price N/A")}
             </span>
           </div>
-          {product.AMOUNT && safeDisplayValue(product.AMOUNT) !== 'N/A' && (
+          {currentProduct.AMOUNT && safeDisplayValue(currentProduct.AMOUNT) !== 'N/A' && (
             <Badge variant="secondary" className="text-xs px-1 py-0">
-              {safeDisplayValue(product.AMOUNT)}
+              {safeDisplayValue(currentProduct.AMOUNT)}
             </Badge>
           )}
         </div>
 
         {/* Product Details - Compact */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <div className="flex justify-between items-center text-xs">
-            <span className="text-muted-foreground">Protein per Serving:</span>
+            <span className="text-muted-foreground">Protein/Serving:</span>
             <span className="font-medium text-foreground">
-              {formatProtein(product.PROTEIN_SERVING)}
-            </span>
-          </div>
-          
-          <div className="flex justify-between items-center text-xs">
-            <span className="text-muted-foreground">Flavour:</span>
-            <span className="font-medium text-foreground">
-              {safeDisplayValue(product.FLAVOUR)}
+              {formatProtein(currentProduct.PROTEIN_SERVING)}
             </span>
           </div>
         </div>
 
-        {/* Intake Value Bar - toggle SHOW_VALUE_BAR_ALWAYS to control visibility */}
+        {/* Intake Value Bar */}
         {(SHOW_VALUE_BAR_ALWAYS || comparisonProducts.length > 0) && valueRating && !outOfStock && (
-          <div className="mt-2 pt-2 border-t border-border/30">
+          <div className="mt-1.5 pt-1.5 border-t border-border/30">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                 Intake Value
@@ -322,19 +374,19 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular }: Prod
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
       } flex flex-col relative overflow-hidden rounded-lg`}
     >
-      {/* Add to comparison button - OUTSIDE the link wrapper */}
+      {/* Add to comparison button */}
       <Button
         onClick={handleAddToComparison}
-        disabled={isInComparison(product) || comparisonProducts.length >= 4 || outOfStock}
+        disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
         size="sm"
         variant="outline"
         className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] ${
           addAnimation ? 'scale-0' : ''
         } ${
-          isInComparison(product) ? 'bg-primary text-primary-foreground' : ''
+          isInComparison(currentProduct) ? 'bg-primary text-primary-foreground' : ''
         }`}
       >
-        <Plus className={`h-4 w-4 font-bold ${isInComparison(product) ? 'text-primary-foreground' : 'text-primary'}`} />
+        <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
       </Button>
 
       {productUrl ? (

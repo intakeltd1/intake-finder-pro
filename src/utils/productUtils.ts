@@ -1,6 +1,66 @@
 // Utility functions for product data processing
 import { calculateIntakeValueRating, calculateDatasetBenchmarks, DatasetBenchmarks } from './valueRating';
 
+export interface Product {
+  TITLE?: string;
+  COMPANY?: string;
+  PRICE?: string;
+  AMOUNT?: string;
+  PROTEIN_SERVING?: string;
+  FLAVOUR?: string;
+  LINK?: string;
+  URL?: string;
+  IMAGE_URL?: string;
+  STOCK_STATUS?: string;
+  RRP?: string;
+  SERVINGS?: string;
+  [key: string]: any;
+}
+
+export interface GroupedProduct extends Product {
+  variants: Product[];
+  variantCount: number;
+}
+
+// Group products by exact title, selecting best value as default
+export const groupProductsByTitle = (products: Product[], benchmarks?: DatasetBenchmarks | null): GroupedProduct[] => {
+  const groupedMap = new Map<string, Product[]>();
+  
+  // Group by exact title (case-insensitive, trimmed)
+  products.forEach(product => {
+    const title = (product.TITLE || '').toLowerCase().trim();
+    if (!title) return;
+    
+    if (!groupedMap.has(title)) {
+      groupedMap.set(title, []);
+    }
+    groupedMap.get(title)!.push(product);
+  });
+  
+  // Convert to GroupedProduct array, selecting best value variant as default
+  const grouped: GroupedProduct[] = [];
+  
+  groupedMap.forEach((variants) => {
+    // Sort variants by Intake Value rating (best first)
+    const sortedVariants = [...variants].sort((a, b) => {
+      const ratingA = calculateIntakeValueRating(a, benchmarks || undefined) || 0;
+      const ratingB = calculateIntakeValueRating(b, benchmarks || undefined) || 0;
+      return ratingB - ratingA;
+    });
+    
+    // Use the best value variant as the default display
+    const bestVariant = sortedVariants[0];
+    
+    grouped.push({
+      ...bestVariant,
+      variants: sortedVariants,
+      variantCount: sortedVariants.length
+    });
+  });
+  
+  return grouped;
+};
+
 export const parseGrams = (amount?: string): number | null => {
   if (!amount) return null;
   const match = amount.match(/([\d.]+)\s*(kg|g)/i);
@@ -49,20 +109,6 @@ export const incrementClickCount = (productUrl: string): void => {
   clickData[productUrl] = (clickData[productUrl] || 0) + 1;
   localStorage.setItem('product-clicks', JSON.stringify(clickData));
 };
-
-export interface Product {
-  TITLE?: string;
-  COMPANY?: string;
-  PRICE?: string;
-  AMOUNT?: string;
-  PROTEIN_SERVING?: string;
-  FLAVOUR?: string;
-  LINK?: string;
-  URL?: string;
-  IMAGE_URL?: string;
-  STOCK_STATUS?: string;
-  [key: string]: any; // For any additional fields
-}
 
 // Smart search with fuzzy matching and flavor grouping
 const createSmartSearch = (query: string): (item: Product) => boolean => {
