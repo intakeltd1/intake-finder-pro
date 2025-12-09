@@ -210,8 +210,8 @@ useEffect(() => {
 
   // Check if any search criteria is active (for showing/hiding "Today's Top Picks")
   const hasSearchCriteria = useMemo(() => {
-    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all';
-  }, [debouncedQuery, quantityFilter, productTypeFilter]);
+    return debouncedQuery.trim() !== '' || quantityFilter !== 'all' || productTypeFilter !== 'all' || sortBy !== 'value';
+  }, [debouncedQuery, quantityFilter, productTypeFilter, sortBy]);
 
   // Optimized filtering with debouncing and memoization
   const filteredAndSortedProducts = useMemo(() => {

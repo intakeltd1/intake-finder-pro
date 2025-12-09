@@ -88,10 +88,6 @@ function AlgorithmExplanation() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-purple-500 font-bold">•</span>
-            <span><strong>Fair scoring:</strong> All products scored 5.0-10.0 — no product is marked as "bad"</span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="text-purple-500 font-bold">•</span>
             <span><strong>Data-driven:</strong> Only products with verified specs rank highest</span>
           </li>
         </ul>
