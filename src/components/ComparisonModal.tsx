@@ -136,7 +136,7 @@ export function ComparisonModal() {
     showComparison, 
     setShowComparison 
   } = useComparison();
-  const { benchmarks, scoreRange } = useValueBenchmarks();
+  const { benchmarks, rankings } = useValueBenchmarks();
 
   const handleProductClick = (product: any) => {
     const url = product.URL || product.LINK;
@@ -190,7 +190,7 @@ export function ComparisonModal() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {comparisonProducts.map((product) => {
-                  const rating = calculateIntakeValueRating(product, benchmarks || undefined, scoreRange || undefined);
+                  const rating = calculateIntakeValueRating(product, benchmarks || undefined, undefined, rankings || undefined);
                   
                   return (
                     <div
