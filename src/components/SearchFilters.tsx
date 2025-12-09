@@ -47,16 +47,17 @@ export function SearchFilters({
             placeholder="Search products, flavours..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-8 bg-background/20 border-white/30 text-foreground placeholder:text-white/70 focus:bg-background/30 focus:border-white/50 h-6 text-xs"
+            className="pl-8 bg-background/20 border-white/30 text-foreground placeholder:text-white/70 focus:bg-background/30 focus:border-white/50 h-7 text-xs"
           />
         </div>
 
-        {/* Filters Row */}
-        <div className="flex flex-col lg:flex-row gap-2 items-start lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
+        {/* Filters Row - Responsive Grid */}
+        <div className="flex flex-col gap-2">
+          {/* Dropdowns Container */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 w-full">
             {/* Product Type Filter */}
             <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
-              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 w-[140px] h-6 text-xs">
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 h-7 text-xs w-full min-w-0">
                 <SelectValue placeholder="Product Type" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border shadow-lg z-50">
@@ -72,11 +73,11 @@ export function SearchFilters({
 
             {/* Quantity Filter */}
             <Select value={quantityFilter} onValueChange={setQuantityFilter}>
-              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 w-[140px] h-6 text-xs">
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 h-7 text-xs w-full min-w-0">
                 <SelectValue placeholder="Quantity" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border shadow-lg z-50">
-                <SelectItem value="all">All quantities</SelectItem>
+                <SelectItem value="all">All Quantities</SelectItem>
                 <SelectItem value="<1kg">Less than 1kg</SelectItem>
                 <SelectItem value="1-2kg">1-2kg</SelectItem>
                 <SelectItem value="2-3kg">2-3kg</SelectItem>
@@ -85,39 +86,37 @@ export function SearchFilters({
               </SelectContent>
             </Select>
 
-            {/* Reset Button */}
-            {isFiltered && (
-              <Button
-                onClick={handleReset}
-                variant="outline"
-                size="sm"
-                className="h-6 px-2 text-xs bg-background/20 border-white/30 text-foreground hover:bg-background/30 hover:border-white/50"
-              >
-                <RotateCcw className="h-3 w-3 mr-1" />
-                Reset
-              </Button>
-            )}
-          </div>
-
-          {/* Sort Options - Moved to right side */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 w-[140px] h-6 text-xs">
+            {/* Sort Options */}
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 h-7 text-xs w-full min-w-0">
+                <div className="flex items-center gap-1 truncate">
+                  <SortDesc className="h-3 w-3 shrink-0 text-white/70" />
                   <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent className="bg-card border-border shadow-lg z-50">
-                  <SelectItem value="value">Best Value</SelectItem>
-                  <SelectItem value="price_low">Price: Low to High</SelectItem>
-                  <SelectItem value="protein">Protein per Serving</SelectItem>
-                </SelectContent>
-              </Select>
-              <SortDesc className="h-3 w-3 text-white/70" />
-            </div>
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-card border-border shadow-lg z-50">
+                <SelectItem value="value">Best Value</SelectItem>
+                <SelectItem value="price_low">Price: Low to High</SelectItem>
+                <SelectItem value="protein">Protein per Serving</SelectItem>
+              </SelectContent>
+            </Select>
 
-            {/* Results Count */}
-            <div className="text-xs font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-2 py-1 rounded-md text-foreground whitespace-nowrap">
-              {resultCount} products
+            {/* Results Count & Reset - Always visible */}
+            <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
+              {isFiltered && (
+                <Button
+                  onClick={handleReset}
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs bg-background/20 border-white/30 text-foreground hover:bg-background/30 hover:border-white/50 shrink-0"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1" />
+                  Reset
+                </Button>
+              )}
+              <div className="text-xs font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-2 py-1.5 rounded-md text-foreground whitespace-nowrap ml-auto">
+                {resultCount} products
+              </div>
             </div>
           </div>
         </div>
