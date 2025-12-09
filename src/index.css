@@ -143,11 +143,11 @@ All colors MUST be HSL.
 
 .staggered-fade-in {
   opacity: 0;
-  animation: staggered-fade-in 0.4s ease-out forwards;
+  animation: staggered-fade-in 0.6s ease-out forwards;
 }
 
 .fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.8s ease-out forwards;
 }
 
 /* Simplified video background with higher opacity */
@@ -185,7 +185,7 @@ All colors MUST be HSL.
   bottom: -4px;
   border: 3px solid white;
   border-radius: 1rem;
-  animation: white-circle 2s linear infinite;
+  animation: white-circle 4s linear infinite;
   pointer-events: none;
   z-index: 10;
 }
