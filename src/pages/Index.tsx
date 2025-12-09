@@ -10,7 +10,7 @@ import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { ComparisonWidget } from "@/components/ComparisonWidget";
 import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
-import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName, groupProductsByTitle, GroupedProduct } from "@/utils/productUtils";
+import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName, groupProductsByTitle, GroupedProduct, deduplicateByFlavour } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
 import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, DatasetBenchmarks, ScoreRange } from "@/utils/valueRating";
 import { ValueBenchmarksProvider } from "@/hooks/useValueBenchmarks";
@@ -149,9 +149,12 @@ useEffect(() => {
       // Transform data to match expected field structure and filter out products with insufficient data
       const transformedProducts = items.map(transformProductData).filter(hasMinimumData);
       
-      console.log(`Filtered products: ${transformedProducts.length} out of ${items.length} products have sufficient data`);
+      // Deduplicate by TITLE + FLAVOUR, keeping the version with more complete data
+      const deduplicatedProducts = deduplicateByFlavour(transformedProducts);
       
-      setProducts(transformedProducts || []);
+      console.log(`Pipeline: ${items.length} raw → ${transformedProducts.length} filtered → ${deduplicatedProducts.length} deduplicated (removed ${transformedProducts.length - deduplicatedProducts.length} duplicate flavours)`);
+      
+      setProducts(deduplicatedProducts);
       setLastUpdatedAt(metaDate || response.headers.get('last-modified') || response.headers.get('date'));
       setError(null);
     } catch (error) {

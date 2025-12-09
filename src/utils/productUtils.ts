@@ -1,6 +1,43 @@
 // Utility functions for product data processing
 import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, DatasetBenchmarks, ScoreRange } from './valueRating';
 
+// Calculate data completeness score for deduplication
+const getDataCompletenessScore = (product: Product): number => {
+  let score = 0;
+  if (product.PRICE && product.PRICE !== 'Price N/A') score += 1;
+  if (product.RRP) score += 1;
+  if (product.SERVINGS) score += 1;
+  if (product.AMOUNT && product.AMOUNT !== 'nan') score += 1;
+  if (product.PROTEIN_SERVING) score += 1;
+  if (product.IMAGE_URL) score += 1;
+  if (product.FLAVOUR) score += 1;
+  return score;
+};
+
+// Deduplicate products by TITLE + FLAVOUR, keeping the version with most complete data
+export const deduplicateByFlavour = (products: Product[]): Product[] => {
+  const seen = new Map<string, Product>();
+  
+  products.forEach(product => {
+    const key = `${(product.TITLE || '').toLowerCase().trim()}|${(product.FLAVOUR || '').toLowerCase().trim()}`;
+    
+    const existingProduct = seen.get(key);
+    if (!existingProduct) {
+      seen.set(key, product);
+    } else {
+      // Keep the one with more complete data
+      const existingScore = getDataCompletenessScore(existingProduct);
+      const newScore = getDataCompletenessScore(product);
+      
+      if (newScore > existingScore) {
+        seen.set(key, product); // Replace with better data version
+      }
+    }
+  });
+  
+  return Array.from(seen.values());
+};
+
 export interface Product {
   TITLE?: string;
   COMPANY?: string;
