@@ -20,17 +20,17 @@ export function ComparisonWidget() {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="relative">
-              {/* Pulsing ring animation */}
-              <div className={`absolute inset-0 rounded-full animate-ping opacity-30 ${
+              {/* Slow pulsing ring animation */}
+              <div className={`absolute inset-0 rounded-full animate-ping opacity-20 ${
                 hasProducts ? 'bg-primary' : 'bg-purple-500'
-              }`} style={{ animationDuration: '2s' }} />
+              }`} style={{ animationDuration: '4s' }} />
               
-              {/* Outer glow ring */}
+              {/* Outer glow ring - slower pulse */}
               <div className={`absolute -inset-1 rounded-full blur-sm ${
                 hasProducts 
-                  ? 'bg-gradient-to-r from-primary via-primary/80 to-primary animate-pulse' 
-                  : 'bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 animate-pulse'
-              }`} style={{ animationDuration: '1.5s' }} />
+                  ? 'bg-gradient-to-r from-primary via-primary/80 to-primary' 
+                  : 'bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500'
+              }`} style={{ animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite' }} />
               
               <Button
                 onClick={() => setShowComparison(true)}
