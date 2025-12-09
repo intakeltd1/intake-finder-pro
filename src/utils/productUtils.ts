@@ -98,13 +98,36 @@ export const groupProductsByTitle = (products: Product[], benchmarks?: DatasetBe
   return grouped;
 };
 
+// Parse amount string to grams, handling various formats: "500g", "1.2kg", "500G", "1KG", "500 g", "1.2 kg"
 export const parseGrams = (amount?: string): number | null => {
-  if (!amount) return null;
-  const match = amount.match(/([\d.]+)\s*(kg|g)/i);
+  if (!amount || amount === 'nan') return null;
+  
+  // Clean the string and convert to lowercase
+  const cleaned = amount.trim().toLowerCase();
+  
+  // Match patterns like "1.2kg", "500g", "1 kg", "500 g", "2.4kg", etc.
+  const match = cleaned.match(/([\d.]+)\s*(kg|g)\b/i);
   if (!match) return null;
+  
   let value = parseFloat(match[1]);
-  if (match[2].toLowerCase() === 'kg') value *= 1000;
-  return value;
+  if (isNaN(value)) return null;
+  
+  // Convert kg to grams
+  if (match[2].toLowerCase() === 'kg') {
+    value *= 1000;
+  }
+  
+  return Math.round(value); // Round to avoid floating point issues
+};
+
+// Format grams to display string (always uses g or kg depending on size)
+export const formatAmount = (grams: number): string => {
+  if (grams >= 1000) {
+    const kg = grams / 1000;
+    // Format nicely: 1000g = "1kg", 1200g = "1.2kg", 2400g = "2.4kg"
+    return kg % 1 === 0 ? `${kg}kg` : `${kg.toFixed(1)}kg`;
+  }
+  return `${grams}g`;
 };
 
 export const numFromPrice = (price?: string | number): number => {
