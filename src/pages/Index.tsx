@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Instagram, Info } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { Header, StickyTimer } from "@/components/Header";
 import { SearchFilters } from "@/components/SearchFilters";
 import { ProductCard } from "@/components/ProductCard";
@@ -12,7 +12,7 @@ import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
 import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName, groupProductsByTitle, GroupedProduct, deduplicateByFlavour } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
-import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, DatasetBenchmarks, ScoreRange } from "@/utils/valueRating";
+import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, calculateProductRankings, DatasetBenchmarks, ScoreRange, ProductRankings } from "@/utils/valueRating";
 import { ValueBenchmarksProvider } from "@/hooks/useValueBenchmarks";
 
 // Data transformation function to handle different field naming conventions
@@ -174,10 +174,16 @@ useEffect(() => {
     return calculateDatasetBenchmarks(products);
   }, [products]);
 
-  // Calculate score range for 0.1-10 scaling (best=10, worst=0.1)
+  // Calculate score range for backward compatibility
   const scoreRange = useMemo(() => {
     if (products.length === 0 || !benchmarks) return null;
     return calculateScoreRange(products, benchmarks);
+  }, [products, benchmarks]);
+
+  // Calculate rank-based scores for full 5.0-10.0 distribution
+  const rankings = useMemo(() => {
+    if (products.length === 0 || !benchmarks) return null;
+    return calculateProductRankings(products, benchmarks);
   }, [products, benchmarks]);
 
   // Get best value products using utility function (already deduplicates and filters out-of-stock)
@@ -193,13 +199,13 @@ useEffect(() => {
 
   // Identify products with perfect 10.0 rating (Top Value of the Day)
   const topValueOfDayUrls = useMemo(() => {
-    if (!benchmarks || !scoreRange) return new Set<string>();
+    if (!benchmarks || !rankings) return new Set<string>();
     const perfectScoreProducts = products.filter(p => {
-      const rating = calculateIntakeValueRating(p, benchmarks, scoreRange);
+      const rating = calculateIntakeValueRating(p, benchmarks, scoreRange, rankings);
       return rating === 10.0;
     });
     return new Set(perfectScoreProducts.map(p => p.URL || p.LINK || ''));
-  }, [products, benchmarks, scoreRange]);
+  }, [products, benchmarks, scoreRange, rankings]);
 
 
   // Check if any search criteria is active (for showing/hiding "Today's Top Picks")
@@ -274,8 +280,8 @@ useEffect(() => {
       
       switch (sortBy) {
         case 'value':
-          const valueA = calculateIntakeValueRating(a, benchmarks || undefined, scoreRange || undefined);
-          const valueB = calculateIntakeValueRating(b, benchmarks || undefined, scoreRange || undefined);
+          const valueA = calculateIntakeValueRating(a, benchmarks || undefined, scoreRange || undefined, rankings || undefined);
+          const valueB = calculateIntakeValueRating(b, benchmarks || undefined, scoreRange || undefined, rankings || undefined);
           return (valueB || 0) - (valueA || 0);
         case 'price_low':
           const priceA = parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '0');
@@ -461,7 +467,7 @@ useEffect(() => {
 
   return (
     <ComparisonProvider>
-      <ValueBenchmarksProvider benchmarks={benchmarks} scoreRange={scoreRange}>
+      <ValueBenchmarksProvider benchmarks={benchmarks} scoreRange={scoreRange} rankings={rankings}>
       <div className="min-h-screen relative">
         {/* Video Background with optimized loading */}
         <video 
