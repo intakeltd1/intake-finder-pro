@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          added_at: string | null
+          id: string
+          product_image: string | null
+          product_title: string | null
+          product_url: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          id?: string
+          product_image?: string | null
+          product_title?: string | null
+          product_url: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          id?: string
+          product_image?: string | null
+          product_title?: string | null
+          product_url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       price_history: {
         Row: {
           id: string
@@ -41,6 +76,24 @@ export type Database = {
           recorded_at?: string | null
           recorded_date?: string
           rrp?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
         }
         Relationships: []
       }

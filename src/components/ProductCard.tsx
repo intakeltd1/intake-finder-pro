@@ -1,14 +1,17 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, TrendingUp, Star, Plus, ChevronDown, Crown } from "lucide-react";
+import { ImageIcon, TrendingUp, Star, Plus, ChevronDown, Crown, Heart } from "lucide-react";
 import { useState, useRef } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { usePriceTrend } from "@/hooks/usePriceTrend";
+import { useAuth } from "@/hooks/useAuth";
+import { useFavorites } from "@/hooks/useFavorites";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 import { PriceTrendIcon } from "@/components/PriceTrendIcon";
+import { LoginPromptDialog } from "@/components/LoginPromptDialog";
 import {
   Select,
   SelectContent,
@@ -112,6 +115,7 @@ const safeDisplayValue = (value: any, fallback: string = 'N/A'): string => {
 export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopValueOfDay }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   
   // Handle variants - selectedVariant tracks which flavour is selected
@@ -125,6 +129,11 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
   const { benchmarks, scoreRange, rankings } = useValueBenchmarks();
   const valueRating = calculateIntakeValueRating(currentProduct, benchmarks || undefined, scoreRange || undefined, rankings || undefined);
   const priceTrend = usePriceTrend(productUrl);
+  
+  // Auth & Favorites
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const isProductFavorited = productUrl ? isFavorite(productUrl) : false;
   
   // Toggle to show value bar on all tiles (set to false to only show in comparison mode)
   const SHOW_VALUE_BAR_ALWAYS = true;
@@ -180,6 +189,18 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
       setAddAnimation(true);
       setTimeout(() => setAddAnimation(false), 500);
     }
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    
+    toggleFavorite(currentProduct);
   };
 
   const getBorderClass = () => {
@@ -378,52 +399,72 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
   );
 
   return (
-    <Card 
-      ref={cardRef}
-      className={`h-[360px] sm:h-[380px] md:h-[420px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
-        outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
-      } flex flex-col relative overflow-hidden rounded-lg`}
-    >
-      {/* Add to comparison button */}
-      <Button
-        onClick={handleAddToComparison}
-        disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
-        size="sm"
-        variant="outline"
-        className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] ${
-          addAnimation ? 'scale-0' : ''
-        } ${
-          isInComparison(currentProduct) ? 'bg-primary text-primary-foreground' : ''
-        }`}
+    <>
+      <Card 
+        ref={cardRef}
+        className={`h-[360px] sm:h-[380px] md:h-[420px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
+          outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
+        } flex flex-col relative overflow-hidden rounded-lg`}
       >
-        <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
-      </Button>
-
-      {/* Price trend indicator */}
-      {priceTrend && !outOfStock && (
-        <PriceTrendIcon 
-          trend={priceTrend} 
-          className="absolute top-12 right-2 z-[100]"
-        />
-      )}
-
-      {productUrl ? (
-        <a
-          href={productUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={handleCardClick}
-          className="block h-full w-full cursor-pointer text-inherit no-underline hover:text-inherit"
+        {/* Favorite button */}
+        <Button
+          onClick={handleFavoriteClick}
+          size="sm"
+          variant="ghost"
+          className={`absolute top-2 left-14 h-8 w-8 p-0 bg-background/80 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] hover:bg-background/90 ${
+            isProductFavorited ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
+          }`}
         >
+          <Heart className={`h-4 w-4 ${isProductFavorited ? 'fill-current' : ''}`} />
+        </Button>
+
+        {/* Add to comparison button */}
+        <Button
+          onClick={handleAddToComparison}
+          disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
+          size="sm"
+          variant="outline"
+          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] ${
+            addAnimation ? 'scale-0' : ''
+          } ${
+            isInComparison(currentProduct) ? 'bg-primary text-primary-foreground' : ''
+          }`}
+        >
+          <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
+        </Button>
+
+        {/* Price trend indicator */}
+        {priceTrend && !outOfStock && (
+          <PriceTrendIcon 
+            trend={priceTrend} 
+            className="absolute top-12 right-2 z-[100]"
+          />
+        )}
+
+        {productUrl ? (
+          <a
+            href={productUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={handleCardClick}
+            className="block h-full w-full cursor-pointer text-inherit no-underline hover:text-inherit"
+          >
+            <div className="h-full flex flex-col">
+              {cardContent}
+            </div>
+          </a>
+        ) : (
           <div className="h-full flex flex-col">
             {cardContent}
           </div>
-        </a>
-      ) : (
-        <div className="h-full flex flex-col">
-          {cardContent}
-        </div>
-      )}
-    </Card>
+        )}
+      </Card>
+
+      {/* Login Prompt Dialog */}
+      <LoginPromptDialog 
+        open={showLoginPrompt} 
+        onOpenChange={setShowLoginPrompt} 
+      />
+    </>
   );
 }

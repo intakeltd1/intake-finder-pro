@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Menu, X, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, X, ExternalLink, Heart, LogIn, LogOut, User } from 'lucide-react';
 import {
   Drawer,
   DrawerClose,
@@ -11,6 +12,8 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { Separator } from "@/components/ui/separator";
 
 const navigationLinks = [
   { title: 'Home', url: 'https://intakeltd.com', description: 'Visit our main website' },
@@ -21,6 +24,18 @@ const navigationLinks = [
 
 export function NavigationDrawer() {
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setOpen(false);
+  };
+
+  const handleNavigate = (path: string) => {
+    setOpen(false);
+    navigate(path);
+  };
 
   return (
     <Drawer direction="left" open={open} onOpenChange={setOpen}>
@@ -50,7 +65,46 @@ export function NavigationDrawer() {
           </div>
         </DrawerHeader>
         
-        <div className="flex-1 p-4">
+        <div className="flex-1 p-4 overflow-y-auto">
+          {/* User Section */}
+          {user ? (
+            <div className="mb-4 p-3 rounded-lg bg-muted/50">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{user.email}</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => handleNavigate('/favorites')}
+              >
+                <Heart className="h-4 w-4 mr-2 text-primary fill-primary" />
+                My Favorites
+              </Button>
+            </div>
+          ) : (
+            <div className="mb-4">
+              <Button
+                variant="default"
+                className="w-full"
+                onClick={() => handleNavigate('/auth')}
+              >
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign In
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Save favorites & get price alerts
+              </p>
+            </div>
+          )}
+
+          <Separator className="mb-4" />
+
           <nav className="space-y-3">
             {navigationLinks.map((link, index) => (
               <a
@@ -76,6 +130,12 @@ export function NavigationDrawer() {
         </div>
         
         <DrawerFooter className="border-t">
+          {user && (
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="w-full">
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          )}
           <div className="text-center text-sm text-muted-foreground">
             <p>© 2024 Intake Ltd</p>
           </div>
