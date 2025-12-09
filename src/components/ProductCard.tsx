@@ -6,7 +6,9 @@ import { useState, useRef } from "react";
 import { incrementClickCount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
+import { usePriceTrend } from "@/hooks/usePriceTrend";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
+import { PriceTrendIcon } from "@/components/PriceTrendIcon";
 import {
   Select,
   SelectContent,
@@ -116,11 +118,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
   const hasVariants = product.variants && product.variants.length > 1;
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const currentProduct = hasVariants ? product.variants![selectedVariantIndex] : product;
+  const productUrl = currentProduct.URL || currentProduct.LINK;
   
   const outOfStock = isOutOfStock(currentProduct);
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
   const { benchmarks, scoreRange, rankings } = useValueBenchmarks();
   const valueRating = calculateIntakeValueRating(currentProduct, benchmarks || undefined, scoreRange || undefined, rankings || undefined);
+  const priceTrend = usePriceTrend(productUrl);
   
   // Toggle to show value bar on all tiles (set to false to only show in comparison mode)
   const SHOW_VALUE_BAR_ALWAYS = true;
@@ -186,7 +190,6 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
     return 'border-border hover:border-primary/30';
   };
 
-  const productUrl = currentProduct.URL || currentProduct.LINK;
 
   // Handle variant selection
   const handleVariantChange = (value: string) => {
@@ -395,6 +398,14 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
       >
         <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
       </Button>
+
+      {/* Price trend indicator */}
+      {priceTrend && !outOfStock && (
+        <PriceTrendIcon 
+          trend={priceTrend} 
+          className="absolute top-12 right-2 z-[100]"
+        />
+      )}
 
       {productUrl ? (
         <a
