@@ -339,16 +339,16 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
 
         {/* Intake Value Bar */}
         {(SHOW_VALUE_BAR_ALWAYS || comparisonProducts.length > 0) && valueRating && !outOfStock && (
-          <div className="mt-1.5 pt-1.5 border-t border-border/30">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="mt-1 pt-1 border-t border-border/30">
+            <div className="flex items-center justify-between mb-0.5">
+              <span className="text-[9px] md:text-[10px] font-medium text-muted-foreground uppercase tracking-wider truncate">
                 Intake Value
               </span>
-              <span className={`text-xs font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent`}>
+              <span className={`text-[10px] md:text-xs font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent flex-shrink-0 ml-1`}>
                 {valueRating}
               </span>
             </div>
-            <div className="relative h-1.5 bg-muted/20 rounded-full overflow-hidden">
+            <div className="relative h-1 md:h-1.5 bg-muted/20 rounded-full overflow-hidden">
               <div 
                 className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 ${
                   valueRating >= 8 ? 'shadow-lg animate-[shimmer_2s_ease-in-out_infinite]' : 'shadow-sm'
@@ -365,7 +365,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                 />
               )}
             </div>
-            <p className="text-[9px] text-muted-foreground/70 mt-0.5 text-right">
+            <p className="text-[8px] md:text-[9px] text-muted-foreground/70 mt-0.5 text-right truncate">
               {getValueRatingLabel(valueRating)}
             </p>
           </div>
