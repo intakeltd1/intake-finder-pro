@@ -414,13 +414,15 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
             disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
             size="sm"
             variant="outline"
-            className={`h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 ${
+            className={`h-8 w-8 p-0 border-2 bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 ${
               addAnimation ? 'scale-0' : ''
             } ${
-              isInComparison(currentProduct) ? 'bg-primary text-primary-foreground' : ''
+              isInComparison(currentProduct) 
+                ? 'bg-purple-500 border-purple-500 text-white' 
+                : 'border-purple-500 text-purple-500 hover:bg-purple-500/10'
             }`}
           >
-            <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
+            <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-white' : 'text-purple-500'}`} />
           </Button>
 
           {/* Favorite button */}
@@ -430,8 +432,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
             variant="outline"
             className={`h-8 w-8 p-0 border-2 bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 ${
               isProductFavorited 
-                ? 'border-red-500 text-red-500' 
-                : 'border-primary text-primary hover:border-red-500 hover:text-red-500'
+                ? 'border-red-500 text-red-500 bg-red-500/10' 
+                : 'border-red-500 text-red-500 hover:bg-red-500/10'
             }`}
           >
             <Heart className={`h-4 w-4 ${isProductFavorited ? 'fill-current' : ''}`} />

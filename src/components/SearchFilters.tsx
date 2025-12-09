@@ -1,8 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Search, SortDesc } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, SortDesc, RotateCcw } from "lucide-react";
 
 interface SearchFiltersProps {
   query: string;
@@ -27,6 +27,15 @@ export function SearchFilters({
   setProductTypeFilter,
   resultCount,
 }: SearchFiltersProps) {
+  const isFiltered = query.trim() !== '' || sortBy !== 'value' || quantityFilter !== 'all' || productTypeFilter !== 'all';
+
+  const handleReset = () => {
+    setQuery('');
+    setSortBy('value');
+    setQuantityFilter('all');
+    setProductTypeFilter('all');
+  };
+
   return (
     <Card className="bg-background/20 backdrop-blur-md border-2 border-white/20 text-foreground p-2 md:p-3 shadow-lg">
       <div className="space-y-2">
@@ -47,7 +56,7 @@ export function SearchFilters({
           <div className="flex flex-col sm:flex-row gap-2 flex-1 w-full">
             {/* Product Type Filter */}
             <Select value={productTypeFilter} onValueChange={setProductTypeFilter}>
-              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[120px] h-6 text-xs">
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 w-[140px] h-6 text-xs">
                 <SelectValue placeholder="Product Type" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border shadow-lg z-50">
@@ -63,7 +72,7 @@ export function SearchFilters({
 
             {/* Quantity Filter */}
             <Select value={quantityFilter} onValueChange={setQuantityFilter}>
-              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[110px] h-6 text-xs">
+              <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 w-[140px] h-6 text-xs">
                 <SelectValue placeholder="Quantity" />
               </SelectTrigger>
               <SelectContent className="bg-card border-border shadow-lg z-50">
@@ -75,20 +84,33 @@ export function SearchFilters({
                 <SelectItem value=">5kg">More than 5kg</SelectItem>
               </SelectContent>
             </Select>
+
+            {/* Reset Button */}
+            {isFiltered && (
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="sm"
+                className="h-6 px-2 text-xs bg-background/20 border-white/30 text-foreground hover:bg-background/30 hover:border-white/50"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset
+              </Button>
+            )}
           </div>
 
           {/* Sort Options - Moved to right side */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 min-w-[140px] h-6 text-xs">
+                <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 w-[140px] h-6 text-xs">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
-              <SelectContent className="bg-card border-border shadow-lg z-50">
-                <SelectItem value="value">Best Value (Protein/Price)</SelectItem>
-                <SelectItem value="price_low">Price: Low to High</SelectItem>
-                <SelectItem value="protein">Protein per Serving</SelectItem>
-               </SelectContent>
+                <SelectContent className="bg-card border-border shadow-lg z-50">
+                  <SelectItem value="value">Best Value</SelectItem>
+                  <SelectItem value="price_low">Price: Low to High</SelectItem>
+                  <SelectItem value="protein">Protein per Serving</SelectItem>
+                </SelectContent>
               </Select>
               <SortDesc className="h-3 w-3 text-white/70" />
             </div>

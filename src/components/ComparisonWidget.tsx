@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, Eye, Info } from "lucide-react";
+import { Scale, Eye, Info, ArrowUp } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
 import {
   Tooltip,
@@ -14,8 +14,31 @@ export function ComparisonWidget() {
   
   const hasProducts = comparisonProducts.length > 0;
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-fade-in">
+    <div className="fixed bottom-6 right-6 z-50 animate-fade-in flex flex-col gap-2 items-center">
+      {/* Return to Top Button */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              onClick={scrollToTop}
+              size="sm"
+              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-2 border-white/30 text-foreground hover:bg-background hover:scale-110 transition-all duration-200 shadow-lg"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="left" className="bg-card border-border">
+            <p className="text-xs">Back to top</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      {/* Comparison Widget */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
