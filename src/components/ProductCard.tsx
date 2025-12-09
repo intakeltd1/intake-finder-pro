@@ -299,7 +299,12 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
         </CardTitle>
 
         {/* Flavour Section - Static or Dropdown */}
-        <div className="mb-1" onClick={(e) => e.stopPropagation()}>
+        <div 
+          className="mb-1 relative z-[150]" 
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
           {hasVariants ? (
             <div className="flex items-center justify-between gap-1">
               <Select
@@ -312,12 +317,18 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                     e.stopPropagation();
                     e.preventDefault();
                   }}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
                 >
                   <SelectValue placeholder="Select flavour">
                     {safeDisplayValue(currentProduct.FLAVOUR, 'No flavour')}
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent className="bg-background border-border z-[200] max-h-48">
+                <SelectContent 
+                  className="bg-background border-border z-[200] max-h-48"
+                  onPointerDownOutside={(e) => e.stopPropagation()}
+                >
                   {product.variants!.map((variant, idx) => (
                     <SelectItem 
                       key={idx} 

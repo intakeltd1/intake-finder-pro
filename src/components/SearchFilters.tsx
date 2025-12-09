@@ -103,17 +103,18 @@ export function SearchFilters({
 
             {/* Results Count & Reset - Always visible */}
             <div className="flex items-center gap-2 col-span-2 sm:col-span-1">
-              {isFiltered && (
-                <Button
-                  onClick={handleReset}
-                  variant="outline"
-                  size="sm"
-                  className="h-7 px-2 text-xs bg-background/20 border-white/30 text-foreground hover:bg-background/30 hover:border-white/50 shrink-0"
-                >
-                  <RotateCcw className="h-3 w-3 mr-1" />
-                  Reset
-                </Button>
-              )}
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="sm"
+                disabled={!isFiltered}
+                className={`h-7 px-2 text-xs bg-background/20 border-white/30 text-foreground hover:bg-background/30 hover:border-white/50 shrink-0 transition-opacity ${
+                  !isFiltered ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset
+              </Button>
               <div className="text-xs font-medium bg-background/20 backdrop-blur-sm border border-white/30 px-2 py-1.5 rounded-md text-foreground whitespace-nowrap ml-auto">
                 {resultCount} products
               </div>

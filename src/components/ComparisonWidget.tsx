@@ -19,15 +19,15 @@ export function ComparisonWidget() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 animate-fade-in flex flex-col gap-2 items-center">
-      {/* Return to Top Button */}
+    <div className="fixed bottom-6 right-6 z-50 animate-fade-in flex flex-col gap-2 items-end">
+      {/* Return to Top Button - Aligned with right edge of comparison widget */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               onClick={scrollToTop}
               size="sm"
-              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-2 border-white/30 text-foreground hover:bg-background hover:scale-110 transition-all duration-200 shadow-lg"
+              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm border-2 border-white/30 text-foreground hover:bg-background hover:scale-110 transition-all duration-200 shadow-lg mr-[7px]"
             >
               <ArrowUp className="h-4 w-4" />
             </Button>
