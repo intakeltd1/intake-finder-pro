@@ -406,40 +406,42 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
           outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
         } flex flex-col relative overflow-hidden rounded-lg`}
       >
-        {/* Favorite button */}
-        <Button
-          onClick={handleFavoriteClick}
-          size="sm"
-          variant="ghost"
-          className={`absolute top-2 left-14 h-8 w-8 p-0 bg-background/80 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] hover:bg-background/90 ${
-            isProductFavorited ? 'text-red-500' : 'text-muted-foreground hover:text-red-500'
-          }`}
-        >
-          <Heart className={`h-4 w-4 ${isProductFavorited ? 'fill-current' : ''}`} />
-        </Button>
+        {/* Right-side icon stack */}
+        <div className="absolute top-2 right-2 z-[100] flex flex-col gap-1.5">
+          {/* Add to comparison button */}
+          <Button
+            onClick={handleAddToComparison}
+            disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
+            size="sm"
+            variant="outline"
+            className={`h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 ${
+              addAnimation ? 'scale-0' : ''
+            } ${
+              isInComparison(currentProduct) ? 'bg-primary text-primary-foreground' : ''
+            }`}
+          >
+            <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
+          </Button>
 
-        {/* Add to comparison button */}
-        <Button
-          onClick={handleAddToComparison}
-          disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
-          size="sm"
-          variant="outline"
-          className={`absolute top-2 right-2 h-8 w-8 p-0 border-2 border-primary bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 z-[100] ${
-            addAnimation ? 'scale-0' : ''
-          } ${
-            isInComparison(currentProduct) ? 'bg-primary text-primary-foreground' : ''
-          }`}
-        >
-          <Plus className={`h-4 w-4 font-bold ${isInComparison(currentProduct) ? 'text-primary-foreground' : 'text-primary'}`} />
-        </Button>
+          {/* Favorite button */}
+          <Button
+            onClick={handleFavoriteClick}
+            size="sm"
+            variant="outline"
+            className={`h-8 w-8 p-0 border-2 bg-background/90 backdrop-blur-sm transition-all duration-200 rounded-full hover:scale-110 ${
+              isProductFavorited 
+                ? 'border-red-500 text-red-500' 
+                : 'border-primary text-primary hover:border-red-500 hover:text-red-500'
+            }`}
+          >
+            <Heart className={`h-4 w-4 ${isProductFavorited ? 'fill-current' : ''}`} />
+          </Button>
 
-        {/* Price trend indicator */}
-        {priceTrend && !outOfStock && (
-          <PriceTrendIcon 
-            trend={priceTrend} 
-            className="absolute top-12 right-2 z-[100]"
-          />
-        )}
+          {/* Price trend indicator */}
+          {priceTrend && !outOfStock && (
+            <PriceTrendIcon trend={priceTrend} />
+          )}
+        </div>
 
         {productUrl ? (
           <a

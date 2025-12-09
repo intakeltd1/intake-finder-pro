@@ -18,44 +18,34 @@ export function PriceTrendIcon({ trend, className = '' }: PriceTrendIconProps) {
   
   return (
     <div 
-      className={`flex items-center justify-center ${className}`}
+      className={`h-8 w-8 flex items-center justify-center rounded-full border-2 bg-background/90 backdrop-blur-sm ${
+        isFalling ? 'border-green-500' : 'border-red-500'
+      } ${className}`}
       title={isFalling ? 'Price falling' : 'Price rising'}
     >
       <svg 
-        width="20" 
-        height="20" 
+        width="16" 
+        height="16" 
         viewBox="0 0 20 20" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
-        className="drop-shadow-sm"
       >
-        {/* Background circle */}
-        <circle 
-          cx="10" 
-          cy="10" 
-          r="9" 
-          fill="hsl(var(--background))" 
-          stroke={color}
-          strokeWidth="1.5"
-          opacity="0.95"
-        />
-        
         {/* Chart line */}
         {isFalling ? (
           // Falling trend - line going down left to right
           <path
-            d="M5 7 L10 10 L15 13"
+            d="M4 6 L10 10 L16 14"
             stroke={color}
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
         ) : (
           // Rising trend - line going up left to right
           <path
-            d="M5 13 L10 10 L15 7"
+            d="M4 14 L10 10 L16 6"
             stroke={color}
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -65,9 +55,9 @@ export function PriceTrendIcon({ trend, className = '' }: PriceTrendIconProps) {
         {isFalling ? (
           // Down arrow at the end
           <path
-            d="M13 11 L15 13 L13 15"
+            d="M13 11 L16 14 L13 17"
             stroke={color}
-            strokeWidth="1.5"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="none"
@@ -75,9 +65,9 @@ export function PriceTrendIcon({ trend, className = '' }: PriceTrendIconProps) {
         ) : (
           // Up arrow at the end
           <path
-            d="M13 9 L15 7 L13 5"
+            d="M13 9 L16 6 L13 3"
             stroke={color}
-            strokeWidth="1.5"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
             fill="none"
