@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
   try {
     console.log('Starting price sync...');
 
-    // Initialize Supabase client
+    // Initialize Supabase client with service role key
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -29,7 +29,8 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to fetch product data: ${response.status}`);
     }
 
-    const products = await response.json();
+    const jsonData = await response.json();
+    const products = jsonData.data || jsonData;
     console.log(`Fetched ${products.length} products`);
 
     // Clean up old price history (older than 30 days)
@@ -38,31 +39,53 @@ Deno.serve(async (req) => {
       console.warn('Cleanup warning:', cleanupError.message);
     }
 
-    // Prepare price records
-    const priceRecords = products
-      .filter((product: any) => {
-        const url = product.URL || product.LINK;
-        const price = parseFloat(product.Price || product.PRICE || '0');
-        return url && price > 0;
-      })
-      .map((product: any) => {
-        const url = product.URL || product.LINK;
-        const price = parseFloat(product.Price || product.PRICE || '0');
-        const rrp = parseFloat(product.RRP || product['Recommended Retail Price'] || '0') || null;
-        const title = product.Title || product.TITLE || product.Name || '';
+    // Parse price string to number
+    const parsePrice = (priceStr: string | undefined): number => {
+      if (!priceStr) return 0;
+      const cleaned = priceStr.replace(/[£$€\s,]/g, '').trim();
+      return parseFloat(cleaned) || 0;
+    };
 
-        return {
+    // Build a map to deduplicate by URL (keep lowest price for each URL)
+    const today = new Date().toISOString().split('T')[0];
+    const priceMap = new Map<string, any>();
+
+    for (const product of products) {
+      const url = product.URL || product.LINK;
+      const price = parsePrice(product.Price || product.PRICE);
+      
+      if (!url || price <= 0) continue;
+
+      const rrp = parsePrice(product.RRP || product['Recommended Retail Price']);
+      const title = product.Title || product.TITLE || product.Name || '';
+
+      // If we already have this URL, keep the one with lower price
+      if (priceMap.has(url)) {
+        const existing = priceMap.get(url);
+        if (price < existing.price) {
+          priceMap.set(url, {
+            product_url: url,
+            product_title: title.substring(0, 255),
+            price: price,
+            rrp: rrp > 0 ? rrp : null,
+            recorded_date: today,
+          });
+        }
+      } else {
+        priceMap.set(url, {
           product_url: url,
           product_title: title.substring(0, 255),
           price: price,
           rrp: rrp > 0 ? rrp : null,
-          recorded_date: new Date().toISOString().split('T')[0],
-        };
-      });
+          recorded_date: today,
+        });
+      }
+    }
 
-    console.log(`Prepared ${priceRecords.length} price records`);
+    const priceRecords = Array.from(priceMap.values());
+    console.log(`Prepared ${priceRecords.length} unique price records`);
 
-    // Upsert in batches (Supabase has limits)
+    // Upsert in batches
     const BATCH_SIZE = 500;
     let successCount = 0;
     let errorCount = 0;
@@ -78,10 +101,11 @@ Deno.serve(async (req) => {
         });
 
       if (error) {
-        console.error(`Batch ${i / BATCH_SIZE + 1} error:`, error.message);
+        console.error(`Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, error.message);
         errorCount += batch.length;
       } else {
         successCount += batch.length;
+        console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1} complete: ${batch.length} records`);
       }
     }
 
@@ -93,6 +117,7 @@ Deno.serve(async (req) => {
         message: 'Price sync completed',
         stats: {
           total_products: products.length,
+          unique_urls: priceRecords.length,
           records_synced: successCount,
           errors: errorCount,
         },
