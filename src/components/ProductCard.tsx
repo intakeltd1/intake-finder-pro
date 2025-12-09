@@ -119,8 +119,8 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
   
   const outOfStock = isOutOfStock(currentProduct);
   const { addToComparison, isInComparison, comparisonProducts } = useComparison();
-  const { benchmarks, scoreRange } = useValueBenchmarks();
-  const valueRating = calculateIntakeValueRating(currentProduct, benchmarks || undefined, scoreRange || undefined);
+  const { benchmarks, scoreRange, rankings } = useValueBenchmarks();
+  const valueRating = calculateIntakeValueRating(currentProduct, benchmarks || undefined, scoreRange || undefined, rankings || undefined);
   
   // Toggle to show value bar on all tiles (set to false to only show in comparison mode)
   const SHOW_VALUE_BAR_ALWAYS = true;

@@ -1,12 +1,15 @@
 // Intake Value Rating Algorithm
-// Dynamic benchmarking: best product = 10, worst = 5.0 (brand-friendly)
-// Weights: 48.5% Protein/£, 48.5% Servings/£, 3% Discount %
+// RANK-BASED scoring: distributes scores across full 5.0-10.0 range
+// Best product = 10.0, worst = 5.0, all others distributed by percentile rank
+// Weights: 55% Servings/£, 38.3% Protein/£, 6.7% Discount %
 
 interface Product {
   PRICE?: string;
   RRP?: string;
   SERVINGS?: string;
   PROTEIN_SERVING?: string;
+  URL?: string;
+  LINK?: string;
   [key: string]: any;
 }
 
@@ -144,8 +147,12 @@ function calculateRawWeightedScore(
     : 0;
   
   // Weighted average (38.3% protein, 55% servings, 6.7% discount)
-  // This prioritizes servings per £1 as the main value metric
   return (normalizedProtein * 0.383) + (normalizedServings * 0.55) + (normalizedDiscount * 0.067);
+}
+
+// Get unique identifier for a product
+function getProductKey(product: Product): string {
+  return product.URL || product.LINK || `${product.TITLE}-${product.FLAVOUR}-${product.PRICE}`;
 }
 
 export interface ScoreRange {
@@ -154,8 +161,8 @@ export interface ScoreRange {
 }
 
 /**
- * Calculate score range from entire dataset
- * Call this once when data loads alongside benchmarks
+ * DEPRECATED: Use calculateProductRankings instead
+ * Kept for backward compatibility
  */
 export function calculateScoreRange(
   products: Product[],
@@ -180,35 +187,122 @@ export function calculateScoreRange(
   return { minScore, maxScore };
 }
 
+export interface ProductRankings {
+  rankMap: Map<string, number>;       // productKey -> rank (1 = best)
+  totalRankedProducts: number;        // Total products with valid scores
+  rawScores: Map<string, number>;     // productKey -> raw score (for debugging)
+}
+
 /**
- * Calculate Intake Value Rating (5.0-10.0 scale) using dynamic benchmarks
- * Best product = 10, Worst product = 5.0 (brand-friendly, no product is "bad")
+ * Calculate rank-based scores for all products
+ * This ensures the full 5.0-10.0 range is utilized based on percentile ranking
+ */
+export function calculateProductRankings(
+  products: Product[],
+  benchmarks: DatasetBenchmarks
+): ProductRankings {
+  // Calculate raw scores for all products
+  const scoredProducts: { key: string; score: number }[] = [];
+  const rawScores = new Map<string, number>();
+  
+  for (const product of products) {
+    const score = calculateRawWeightedScore(product, benchmarks);
+    if (score !== null) {
+      const key = getProductKey(product);
+      scoredProducts.push({ key, score });
+      rawScores.set(key, score);
+    }
+  }
+  
+  // Sort by score descending (best first)
+  scoredProducts.sort((a, b) => b.score - a.score);
+  
+  // Assign ranks (handling ties - products with same score get same rank)
+  const rankMap = new Map<string, number>();
+  let currentRank = 1;
+  let previousScore: number | null = null;
+  let sameRankCount = 0;
+  
+  for (let i = 0; i < scoredProducts.length; i++) {
+    const { key, score } = scoredProducts[i];
+    
+    if (previousScore !== null && Math.abs(score - previousScore) < 0.0001) {
+      // Same score as previous - assign same rank
+      rankMap.set(key, currentRank);
+      sameRankCount++;
+    } else {
+      // New score - advance rank by count of tied products
+      currentRank = currentRank + sameRankCount;
+      rankMap.set(key, currentRank);
+      sameRankCount = 1;
+    }
+    
+    previousScore = score;
+  }
+  
+  return {
+    rankMap,
+    totalRankedProducts: scoredProducts.length,
+    rawScores
+  };
+}
+
+/**
+ * Calculate Intake Value Rating using RANK-BASED scoring (5.0-10.0 scale)
+ * Best product = 10.0, Worst product = 5.0
+ * All products distributed by percentile rank across this range
  * 
  * @param product - Product to evaluate
  * @param benchmarks - Dataset benchmarks for normalization
- * @param scoreRange - Min/max scores from dataset for final scaling
+ * @param scoreRange - DEPRECATED: kept for backward compatibility, ignored if rankings provided
+ * @param rankings - Rank-based scoring data (preferred method)
  * @returns Value rating from 5.0-10.0
  */
 export function calculateIntakeValueRating(
   product: Product, 
   benchmarks?: DatasetBenchmarks,
-  scoreRange?: ScoreRange
+  scoreRange?: ScoreRange,
+  rankings?: ProductRankings
 ): number | null {
   if (!benchmarks) return null;
   
+  // Use rank-based scoring if rankings are provided
+  if (rankings && rankings.totalRankedProducts > 0) {
+    const key = getProductKey(product);
+    const rank = rankings.rankMap.get(key);
+    
+    if (rank === undefined) {
+      // Product not in rankings (likely missing price data)
+      return null;
+    }
+    
+    // Convert rank to 5.0-10.0 scale
+    // Rank 1 (best) -> 10.0
+    // Last rank (worst) -> 5.0
+    const totalProducts = rankings.totalRankedProducts;
+    
+    if (totalProducts === 1) {
+      return 10.0; // Only one product = best
+    }
+    
+    // Percentile position: 0 = worst, 1 = best
+    const percentile = (totalProducts - rank) / (totalProducts - 1);
+    
+    // Scale to 5.0-10.0 range
+    const finalScore = 5.0 + (percentile * 5.0);
+    
+    return Math.round(finalScore * 10) / 10;
+  }
+  
+  // Fallback to old linear scaling (deprecated path)
   const rawScore = calculateRawWeightedScore(product, benchmarks);
   if (rawScore === null) return null;
   
-  // If no score range, use raw score scaled to 5-10
   if (!scoreRange) {
     return Math.round((5 + rawScore * 5) * 10) / 10;
   }
   
-  // Normalize to 0-1 based on actual dataset range, clamped to prevent out-of-range
   const normalizedScore = Math.max(0, Math.min(1, normalize(rawScore, scoreRange.minScore, scoreRange.maxScore)));
-  
-  // Scale to 5.0-10.0 range (best = 10, worst = 5.0)
-  // This ensures no product appears "bad" - all are at least average
   const finalScore = 5.0 + (normalizedScore * 5.0);
   
   return Math.round(finalScore * 10) / 10;
@@ -216,7 +310,7 @@ export function calculateIntakeValueRating(
 
 /**
  * Get color class for value rating (5.0-10.0 scale)
- * All products shown positively: Amber → Green → Purple (Excellent!)
+ * All products shown positively: Gray → Amber → Green → Purple (Excellent!)
  */
 export function getValueRatingColor(rating: number): string {
   if (rating >= 8.5) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent
