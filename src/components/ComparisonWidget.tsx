@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Scale, Eye, Info, Sparkles } from "lucide-react";
+import { Scale, Eye, Info } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
 import {
   Tooltip,
@@ -19,68 +19,70 @@ export function ComparisonWidget() {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              onClick={() => setShowComparison(true)}
-              className={`relative shadow-xl hover:shadow-2xl transition-all duration-300 rounded-full group hover:scale-105 ${
-                hasProducts 
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground p-4' 
-                  : 'bg-gradient-to-br from-violet-500/90 to-purple-600/90 hover:from-violet-500 hover:to-purple-600 text-white p-3'
-              }`}
-              size="lg"
-            >
-              <Scale className={`transition-transform group-hover:rotate-12 ${hasProducts ? 'h-6 w-6 mr-2' : 'h-5 w-5'}`} />
-              {hasProducts ? (
-                <>
-                  <span className="font-medium">Compare</span>
-                  <Badge 
-                    variant="secondary" 
-                    className="ml-2 bg-white/20 text-primary-foreground border-0 group-hover:bg-white/30 transition-all duration-300 group-hover:scale-110"
-                  >
-                    {comparisonProducts.length}
-                  </Badge>
-                </>
-              ) : (
-                <Info className="h-4 w-4 ml-1 opacity-80" />
-              )}
+            <div className="relative">
+              {/* Pulsing ring animation */}
+              <div className={`absolute inset-0 rounded-full animate-ping opacity-30 ${
+                hasProducts ? 'bg-primary' : 'bg-purple-500'
+              }`} style={{ animationDuration: '2s' }} />
               
-              {/* Glow effect */}
-              <div className={`absolute inset-0 rounded-full blur-xl transition-all duration-300 ${
+              {/* Outer glow ring */}
+              <div className={`absolute -inset-1 rounded-full blur-sm ${
                 hasProducts 
-                  ? 'bg-primary/20 group-hover:bg-primary/30' 
-                  : 'bg-purple-500/30 group-hover:bg-purple-500/40'
-              }`} />
+                  ? 'bg-gradient-to-r from-primary via-primary/80 to-primary animate-pulse' 
+                  : 'bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 animate-pulse'
+              }`} style={{ animationDuration: '1.5s' }} />
               
-              {/* Preview thumbnails - only when has products */}
-              {hasProducts && (
-                <div className="absolute -top-2 -left-2 flex -space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
-                  {comparisonProducts.slice(0, 3).map((product, index) => (
-                    <div
-                      key={product.URL || product.LINK || index}
-                      className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/40 flex items-center justify-center overflow-hidden backdrop-blur-sm"
-                      style={{ 
-                        zIndex: 10 - index,
-                        animation: `scale-in 0.3s ease-out ${index * 0.1}s backwards`
-                      }}
+              <Button
+                onClick={() => setShowComparison(true)}
+                className={`relative shadow-2xl hover:shadow-[0_0_40px_rgba(139,92,246,0.5)] transition-all duration-300 rounded-full group hover:scale-110 border-2 ${
+                  hasProducts 
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground p-4 border-primary-foreground/20' 
+                    : 'bg-gradient-to-br from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white p-4 border-white/30'
+                }`}
+                size="lg"
+              >
+                <Scale className={`transition-transform group-hover:rotate-12 ${hasProducts ? 'h-6 w-6 mr-2' : 'h-6 w-6'}`} />
+                {hasProducts ? (
+                  <>
+                    <span className="font-semibold">Compare</span>
+                    <Badge 
+                      variant="secondary" 
+                      className="ml-2 bg-white/25 text-primary-foreground border-0 group-hover:bg-white/40 transition-all duration-300 group-hover:scale-110 font-bold"
                     >
-                      {product.IMAGE_URL ? (
-                        <img
-                          src={product.IMAGE_URL}
-                          alt="Product"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Eye className="h-3 w-3 text-white" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Sparkle animation for empty state */}
-              {!hasProducts && (
-                <Sparkles className="absolute -top-1 -right-1 h-3 w-3 text-yellow-300 animate-pulse" />
-              )}
-            </Button>
+                      {comparisonProducts.length}
+                    </Badge>
+                  </>
+                ) : (
+                  <Info className="h-4 w-4 ml-1 opacity-90" />
+                )}
+                
+                {/* Preview thumbnails - only when has products */}
+                {hasProducts && (
+                  <div className="absolute -top-2 -left-2 flex -space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-110">
+                    {comparisonProducts.slice(0, 3).map((product, index) => (
+                      <div
+                        key={product.URL || product.LINK || index}
+                        className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/40 flex items-center justify-center overflow-hidden backdrop-blur-sm"
+                        style={{ 
+                          zIndex: 10 - index,
+                          animation: `scale-in 0.3s ease-out ${index * 0.1}s backwards`
+                        }}
+                      >
+                        {product.IMAGE_URL ? (
+                          <img
+                            src={product.IMAGE_URL}
+                            alt="Product"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Eye className="h-3 w-3 text-white" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Button>
+            </div>
           </TooltipTrigger>
           {!hasProducts && (
             <TooltipContent side="left" className="max-w-xs bg-card border-border">
