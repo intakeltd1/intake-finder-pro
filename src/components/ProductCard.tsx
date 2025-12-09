@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, TrendingUp, Star, Plus, ChevronDown, Crown, Heart } from "lucide-react";
 import { useState, useRef } from "react";
-import { incrementClickCount } from "@/utils/productUtils";
+import { incrementClickCount, parseGrams, formatAmount } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { usePriceTrend } from "@/hooks/usePriceTrend";
@@ -110,6 +110,14 @@ const safeDisplayValue = (value: any, fallback: string = 'N/A'): string => {
     return fallback;
   }
   return String(value);
+};
+
+// Format amount to normalized display (lowercase units, kg for 1000g+)
+const formatDisplayAmount = (amount?: string): string => {
+  if (!amount || amount === 'nan' || amount === 'undefined') return '';
+  const grams = parseGrams(amount);
+  if (grams === null) return amount; // Return original if can't parse
+  return formatAmount(grams);
 };
 
 export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopValueOfDay }: ProductCardProps) {
@@ -344,9 +352,9 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
               {safeDisplayValue(currentProduct.PRICE, "Price N/A")}
             </span>
           </div>
-          {currentProduct.AMOUNT && safeDisplayValue(currentProduct.AMOUNT) !== 'N/A' && (
+          {currentProduct.AMOUNT && formatDisplayAmount(currentProduct.AMOUNT) && (
             <Badge variant="secondary" className="text-xs px-1 py-0">
-              {safeDisplayValue(currentProduct.AMOUNT)}
+              {formatDisplayAmount(currentProduct.AMOUNT)}
             </Badge>
           )}
         </div>
