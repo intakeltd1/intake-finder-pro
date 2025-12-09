@@ -351,7 +351,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
             <div className="relative h-1 md:h-1.5 bg-muted/20 rounded-full overflow-hidden">
               <div 
                 className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 ${
-                  valueRating >= 8 ? 'shadow-lg animate-[shimmer_2s_ease-in-out_infinite]' : 'shadow-sm'
+                  valueRating >= 9.5 ? 'shadow-lg animate-[shimmer_2s_ease-in-out_infinite]' : 'shadow-sm'
                 }`}
                 style={{ 
                   width: `${(valueRating / 10) * 100}%`,

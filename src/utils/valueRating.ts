@@ -313,7 +313,7 @@ export function calculateIntakeValueRating(
  * All products shown positively: Gray → Amber → Green → Purple (Excellent!)
  */
 export function getValueRatingColor(rating: number): string {
-  if (rating >= 8.5) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent
+  if (rating >= 9.5) return 'from-purple-500 via-violet-500 to-purple-600'; // Excellent (top ~10%)
   if (rating >= 7) return 'from-lime-400 to-green-400'; // Great
   if (rating >= 6) return 'from-amber-300 to-yellow-400'; // Good
   return 'from-gray-300 to-slate-300'; // Average (5.0-5.9)
@@ -323,7 +323,7 @@ export function getValueRatingColor(rating: number): string {
  * Get label for value rating (5.0-10.0 scale)
  */
 export function getValueRatingLabel(rating: number): string {
-  if (rating >= 8.5) return 'Excellent';
+  if (rating >= 9.5) return 'Excellent';
   if (rating >= 7) return 'Great';
   if (rating >= 6) return 'Good';
   return 'Average';
