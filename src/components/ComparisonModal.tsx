@@ -1,12 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { X, ExternalLink, Package, Trophy, Scale, Sparkles, TrendingUp, PiggyBank, Percent, LineChart } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
-import { incrementClickCount } from "@/utils/productUtils";
+import { incrementClickCount, numFromPrice } from "@/utils/productUtils";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
 function AlgorithmExplanation() {
   return (
     <div className="space-y-6 py-4">
@@ -103,29 +111,43 @@ function AlgorithmExplanation() {
   );
 }
 
-function ValueScoreBreakdown({ rating }: { rating: number }) {
-  return (
-    <div className="pt-2 border-t border-border/30">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-muted-foreground flex items-center gap-1 text-xs font-medium">
-          <Trophy className="h-3 w-3" />
-          Intake Value:
-        </span>
-        <span className={`font-bold text-sm bg-gradient-to-r ${getValueRatingColor(rating)} bg-clip-text text-transparent`}>
-          {rating}/10
-        </span>
-      </div>
-      <div className="relative h-2 bg-muted/20 rounded-full overflow-hidden">
-        <div 
-          className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(rating)} rounded-full transition-all duration-500`}
-          style={{ width: `${(rating / 10) * 100}%` }}
-        />
-      </div>
-      <p className="text-[10px] text-muted-foreground/70 mt-1 text-right">
-        {getValueRatingLabel(rating)}
-      </p>
-    </div>
-  );
+// Helper to calculate derived values
+function calculateDerivedValues(product: any) {
+  const price = numFromPrice(product.PRICE);
+  const servings = parseInt(String(product.SERVINGS || '0').replace(/\D/g, '')) || 0;
+  const proteinPerServing = parseFloat(String(product.PROTEIN_SERVING || '0')) || 0;
+  const rrp = numFromPrice(product.RRP);
+  
+  // Price per serving
+  const pricePerServing = servings > 0 && price < Infinity ? (price / servings) : null;
+  
+  // Protein per £1
+  const proteinPerPound = proteinPerServing > 0 && price < Infinity && servings > 0 
+    ? ((proteinPerServing * servings) / price) 
+    : null;
+  
+  // Servings per £1
+  const servingsPerPound = servings > 0 && price < Infinity ? (servings / price) : null;
+  
+  // Discount percentage
+  const discountPercent = rrp < Infinity && price < Infinity && rrp > price 
+    ? Math.round(((rrp - price) / rrp) * 100) 
+    : null;
+
+  return {
+    pricePerServing,
+    proteinPerPound,
+    servingsPerPound,
+    discountPercent,
+  };
+}
+
+// Format a value or return "—" if null/unavailable
+function formatValue(value: any, suffix = '', prefix = ''): string {
+  if (value === null || value === undefined || value === '' || value === 'See Website') {
+    return '—';
+  }
+  return `${prefix}${value}${suffix}`;
 }
 
 export function ComparisonModal() {
@@ -147,6 +169,88 @@ export function ComparisonModal() {
   };
 
   const hasProducts = comparisonProducts.length > 0;
+
+  // Define comparison rows with labels
+  const comparisonRows = [
+    { 
+      label: 'Price', 
+      getValue: (p: any) => formatValue(p.PRICE),
+      highlight: true 
+    },
+    { 
+      label: 'RRP', 
+      getValue: (p: any) => formatValue(p.RRP),
+    },
+    { 
+      label: 'Discount', 
+      getValue: (p: any) => {
+        const { discountPercent } = calculateDerivedValues(p);
+        return discountPercent ? `${discountPercent}% off` : '—';
+      },
+      highlight: true,
+      highlightColor: 'text-green-500'
+    },
+    { 
+      label: 'Amount', 
+      getValue: (p: any) => formatValue(p.AMOUNT),
+    },
+    { 
+      label: 'Servings', 
+      getValue: (p: any) => formatValue(String(p.SERVINGS || '').trim()),
+    },
+    { 
+      label: 'Price/Serving', 
+      getValue: (p: any) => {
+        const { pricePerServing } = calculateDerivedValues(p);
+        return pricePerServing ? `£${pricePerServing.toFixed(2)}` : '—';
+      },
+    },
+    { 
+      label: 'Protein/Serving', 
+      getValue: (p: any) => formatValue(p.PROTEIN_SERVING, 'g'),
+    },
+    { 
+      label: 'Protein/100g', 
+      getValue: (p: any) => formatValue(p.PROTEIN_100G, 'g'),
+    },
+    { 
+      label: 'Protein per £1', 
+      getValue: (p: any) => {
+        const { proteinPerPound } = calculateDerivedValues(p);
+        return proteinPerPound ? `${proteinPerPound.toFixed(1)}g` : '—';
+      },
+      highlight: true,
+      highlightColor: 'text-lime-500'
+    },
+    { 
+      label: 'Servings per £1', 
+      getValue: (p: any) => {
+        const { servingsPerPound } = calculateDerivedValues(p);
+        return servingsPerPound ? servingsPerPound.toFixed(2) : '—';
+      },
+      highlight: true,
+      highlightColor: 'text-amber-500'
+    },
+    { 
+      label: 'Flavour', 
+      getValue: (p: any) => formatValue(p.FLAVOUR),
+    },
+    { 
+      label: 'Stock Status', 
+      getValue: (p: any) => {
+        const status = p.OUT_OF_STOCK || p.STOCK_STATUS;
+        if (!status || status === 'See Website') return '—';
+        const isInStock = status.toLowerCase().includes('in stock') || status.toLowerCase().includes('instock');
+        return isInStock ? 'In Stock' : 'Out of Stock';
+      },
+      getClassName: (p: any) => {
+        const status = p.OUT_OF_STOCK || p.STOCK_STATUS;
+        if (!status || status === 'See Website') return '';
+        const isInStock = status.toLowerCase().includes('in stock') || status.toLowerCase().includes('instock');
+        return isInStock ? 'text-green-500' : 'text-destructive';
+      }
+    },
+  ];
 
   return (
     <Dialog open={showComparison} onOpenChange={setShowComparison}>
@@ -188,114 +292,152 @@ export function ComparisonModal() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {comparisonProducts.map((product) => {
-                  const rating = calculateIntakeValueRating(product, benchmarks || undefined, undefined, rankings || undefined);
-                  
-                  return (
-                    <div
-                      key={product.URL || product.LINK}
-                      className="border rounded-lg p-4 space-y-4 relative group hover:shadow-md transition-shadow"
-                    >
-                      {/* Remove button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromComparison(product.URL || product.LINK || '')}
-                        className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive hover:text-destructive-foreground"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-
-                      {/* Product Image */}
-                      <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                        {product.IMAGE_URL ? (
-                          <img
-                            src={product.IMAGE_URL}
-                            alt={product.TITLE || "Product"}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-sm line-clamp-2">
-                          {product.TITLE || "Product Name Not Available"}
-                        </h3>
-
-                        {/* Comparison Data */}
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Price:</span>
-                            <span className="font-medium text-primary">
-                              {product.PRICE || "N/A"}
+              {/* Comparison Table */}
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="w-[140px] font-semibold">Attribute</TableHead>
+                      {comparisonProducts.map((product) => (
+                        <TableHead 
+                          key={product.URL || product.LINK} 
+                          className="min-w-[180px] text-center"
+                        >
+                          <div className="flex flex-col items-center gap-2 py-2">
+                            {/* Product Image */}
+                            <div className="w-16 h-16 bg-muted rounded-md overflow-hidden flex-shrink-0">
+                              {product.IMAGE_URL ? (
+                                <img
+                                  src={product.IMAGE_URL}
+                                  alt={product.TITLE || "Product"}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Product Title */}
+                            <span className="text-xs font-medium line-clamp-2 text-center leading-tight">
+                              {product.TITLE || "Product"}
                             </span>
+                            {/* Remove button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFromComparison(product.URL || product.LINK || '')}
+                              className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
                           </div>
-                          
-                          {product.AMOUNT && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Amount:</span>
-                              <Badge variant="secondary" className="text-xs">
-                                {product.AMOUNT}
-                              </Badge>
-                            </div>
-                          )}
-                          
-                          {product.PROTEIN_SERVING && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Protein/serving:</span>
-                              <span className="font-medium">{product.PROTEIN_SERVING}</span>
-                            </div>
-                          )}
-                          
-                          {product.FLAVOUR && (
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Flavour:</span>
-                              <span className="font-medium">{product.FLAVOUR}</span>
-                            </div>
-                          )}
-
-                          {/* Intake Value Rating */}
-                          {rating && <ValueScoreBreakdown rating={rating} />}
-                          {!rating && (
-                            <div className="pt-2 border-t border-border/30">
-                              <span className="text-xs text-muted-foreground">Value rating unavailable</span>
-                            </div>
-                          )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* Intake Value Rating Row */}
+                    <TableRow className="bg-gradient-to-r from-violet-500/5 to-purple-600/5">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="h-3.5 w-3.5 text-purple-500" />
+                          Intake Value
                         </div>
+                      </TableCell>
+                      {comparisonProducts.map((product) => {
+                        const rating = calculateIntakeValueRating(product, benchmarks || undefined, undefined, rankings || undefined);
+                        return (
+                          <TableCell key={product.URL || product.LINK} className="text-center">
+                            {rating ? (
+                              <div className="space-y-1">
+                                <span className={`font-bold text-lg bg-gradient-to-r ${getValueRatingColor(rating)} bg-clip-text text-transparent`}>
+                                  {rating}/10
+                                </span>
+                                <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden mx-auto max-w-[100px]">
+                                  <div 
+                                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(rating)} rounded-full`}
+                                    style={{ width: `${(rating / 10) * 100}%` }}
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {getValueRatingLabel(rating)}
+                                </p>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">—</span>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
 
-                        {/* 30-Day Price History Chart */}
-                        <div className="pt-3 border-t border-border/30 space-y-2">
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <LineChart className="h-3 w-3" />
-                            30-Day Price History
+                    {/* Data Rows */}
+                    {comparisonRows.map((row, index) => (
+                      <TableRow key={row.label} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
+                        <TableCell className="font-medium text-sm text-muted-foreground">
+                          {row.label}
+                        </TableCell>
+                        {comparisonProducts.map((product) => {
+                          const value = row.getValue(product);
+                          const customClass = row.getClassName ? row.getClassName(product) : '';
+                          const highlightClass = row.highlight && value !== '—' 
+                            ? (row.highlightColor || 'font-semibold') 
+                            : '';
+                          return (
+                            <TableCell 
+                              key={product.URL || product.LINK} 
+                              className={`text-center text-sm ${highlightClass} ${customClass}`}
+                            >
+                              {value}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+
+                    {/* Price History Row */}
+                    <TableRow>
+                      <TableCell className="font-medium text-sm text-muted-foreground align-top pt-4">
+                        <div className="flex items-center gap-1.5">
+                          <LineChart className="h-3.5 w-3.5" />
+                          30-Day Price
+                        </div>
+                      </TableCell>
+                      {comparisonProducts.map((product) => (
+                        <TableCell key={product.URL || product.LINK} className="text-center">
+                          <div className="w-full max-w-[160px] mx-auto">
+                            <PriceHistoryChart 
+                              productUrl={product.URL || product.LINK || ''} 
+                              compact 
+                            />
                           </div>
-                          <PriceHistoryChart 
-                            productUrl={product.URL || product.LINK || ''} 
-                            compact 
-                          />
-                        </div>
+                        </TableCell>
+                      ))}
+                    </TableRow>
 
-                        {/* View Product Button */}
-                        {(product.URL || product.LINK) && (
-                          <Button
-                            onClick={() => handleProductClick(product)}
-                            className="w-full"
-                            size="sm"
-                          >
-                            <ExternalLink className="h-3 w-3 mr-2" />
-                            View Product
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+                    {/* Action Row */}
+                    <TableRow>
+                      <TableCell className="font-medium text-sm text-muted-foreground">
+                        Action
+                      </TableCell>
+                      {comparisonProducts.map((product) => (
+                        <TableCell key={product.URL || product.LINK} className="text-center">
+                          {(product.URL || product.LINK) && (
+                            <Button
+                              onClick={() => handleProductClick(product)}
+                              size="sm"
+                              className="w-full max-w-[140px]"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1.5" />
+                              View Product
+                            </Button>
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}
