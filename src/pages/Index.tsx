@@ -654,7 +654,7 @@ useEffect(() => {
              {/* Footer with product count and stock status */}
              <div className="text-center text-sm text-foreground/60 space-y-1">
                <p>
-                 Showing {displayedProducts.length} of {products.length} products total
+                 Showing {displayedProducts.length} of {groupedProducts.length} products ({products.length} variants total)
                </p>
                <p>
                  Stock levels and prices are updated regularly. Click any product to view current availability.
