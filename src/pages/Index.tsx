@@ -229,18 +229,25 @@ useEffect(() => {
       });
     }
 
-    // Apply quantity filter efficiently
+    // Apply quantity filter using proper numeric parsing
     if (quantityFilter !== 'all') {
       filtered = filtered.filter(product => {
-        const amount = product.AMOUNT?.toLowerCase() || '';
+        const amount = product.AMOUNT?.trim() || '';
+        
+        // Parse to grams for accurate comparison
+        const match = amount.toLowerCase().match(/([\d.]+)\s*(kg|g)\b/i);
+        if (!match) return false; // Exclude products without parseable amount
+        
+        let grams = parseFloat(match[1]);
+        if (isNaN(grams)) return false;
+        if (match[2].toLowerCase() === 'kg') grams *= 1000;
+        
         switch (quantityFilter) {
-          case '<1kg': return amount.includes('g') && !amount.includes('kg');
-          case '1-2kg': return amount.includes('1kg') || amount.includes('1.') || 
-                         (amount.includes('2kg') && !amount.includes('2.5') && !amount.includes('2.7'));
-          case '2-3kg': return amount.includes('2.') || amount.includes('2kg') || amount.includes('3kg');
-          case '3-5kg': return amount.includes('3.') || amount.includes('4') || amount.includes('5kg');
-          case '>5kg': return amount.includes('6') || amount.includes('7') || amount.includes('8') || 
-                        amount.includes('9') || amount.includes('10');
+          case '<1kg': return grams < 1000;
+          case '1-2kg': return grams >= 1000 && grams < 2000;
+          case '2-3kg': return grams >= 2000 && grams < 3000;
+          case '3-5kg': return grams >= 3000 && grams <= 5000;
+          case '>5kg': return grams > 5000;
           default: return true;
         }
       });
