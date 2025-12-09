@@ -1,12 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, ExternalLink, Package, Trophy, Scale, Sparkles, TrendingUp, PiggyBank, Percent } from "lucide-react";
+import { X, ExternalLink, Package, Trophy, Scale, Sparkles, TrendingUp, PiggyBank, Percent, LineChart } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { incrementClickCount } from "@/utils/productUtils";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
-
+import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 function AlgorithmExplanation() {
   return (
     <div className="space-y-6 py-4">
@@ -267,6 +267,18 @@ export function ComparisonModal() {
                               <span className="text-xs text-muted-foreground">Value rating unavailable</span>
                             </div>
                           )}
+                        </div>
+
+                        {/* 30-Day Price History Chart */}
+                        <div className="pt-3 border-t border-border/30 space-y-2">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <LineChart className="h-3 w-3" />
+                            30-Day Price History
+                          </div>
+                          <PriceHistoryChart 
+                            productUrl={product.URL || product.LINK || ''} 
+                            compact 
+                          />
                         </div>
 
                         {/* View Product Button */}

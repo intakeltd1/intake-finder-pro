@@ -1,1 +1,7 @@
 project_id = "mpeqtdfuiqhprvmftqis"
+
+[functions.sync-prices]
+verify_jwt = false
+
+[functions.get-price-history]
+verify_jwt = false

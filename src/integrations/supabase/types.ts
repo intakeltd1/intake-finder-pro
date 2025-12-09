@@ -14,13 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      price_history: {
+        Row: {
+          id: string
+          price: number
+          product_title: string | null
+          product_url: string
+          recorded_at: string | null
+          recorded_date: string
+          rrp: number | null
+        }
+        Insert: {
+          id?: string
+          price: number
+          product_title?: string | null
+          product_url: string
+          recorded_at?: string | null
+          recorded_date?: string
+          rrp?: number | null
+        }
+        Update: {
+          id?: string
+          price?: number
+          product_title?: string | null
+          product_url?: string
+          recorded_at?: string | null
+          recorded_date?: string
+          rrp?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_price_history: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
