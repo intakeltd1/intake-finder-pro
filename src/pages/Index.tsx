@@ -197,15 +197,25 @@ useEffect(() => {
     return new Set(top10.map(p => p.URL || p.LINK));
   }, [products]);
 
-  // Identify products with perfect 10.0 rating (Top Value of the Day)
-  const topValueOfDayUrls = useMemo(() => {
-    if (!benchmarks || !rankings) return new Set<string>();
-    const perfectScoreProducts = products.filter(p => {
-      const rating = calculateIntakeValueRating(p, benchmarks, scoreRange, rankings);
-      return rating === 10.0;
-    });
-    return new Set(perfectScoreProducts.map(p => p.URL || p.LINK || ''));
-  }, [products, benchmarks, scoreRange, rankings]);
+  // Identify the SINGLE Top Value of the Day product (rank 1 only)
+  const topValueOfDayUrl = useMemo(() => {
+    if (!rankings || rankings.totalRankedProducts === 0) return null;
+    
+    // Find the single product with rank 1 (the absolute best)
+    for (const [key, rank] of rankings.rankMap.entries()) {
+      if (rank === 1) {
+        // Find the product with this key
+        const product = products.find(p => {
+          const pKey = p.URL || p.LINK || `${p.TITLE}-${p.FLAVOUR}-${p.PRICE}`;
+          return pKey === key;
+        });
+        if (product && !isOutOfStock(product)) {
+          return product.URL || product.LINK || '';
+        }
+      }
+    }
+    return null;
+  }, [products, rankings]);
 
 
   // Check if any search criteria is active (for showing/hiding "Today's Top Picks")
@@ -580,20 +590,26 @@ useEffect(() => {
                   Today's Top Picks
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                  {bestValueProducts.map((product, index) => (
-                    <div 
-                      key={`best-value-${index}`}
-                      className="staggered-fade-in"
-                      style={{ animationDelay: `${500 + (index * 100)}ms` }}
-                    >
-                      <div className="white-circle-border">
-                        <ProductCard
-                          product={product}
-                          isFeatured={true}
-                        />
+                  {bestValueProducts.map((product, index) => {
+                    const productUrl = product.URL || product.LINK || '';
+                    const isTopValueOfDay = topValueOfDayUrl === productUrl;
+                    
+                    return (
+                      <div 
+                        key={`best-value-${index}`}
+                        className="staggered-fade-in"
+                        style={{ animationDelay: `${500 + (index * 100)}ms` }}
+                      >
+                        <div className="white-circle-border">
+                          <ProductCard
+                            product={product}
+                            isFeatured={!isTopValueOfDay}
+                            isTopValueOfDay={isTopValueOfDay}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -606,7 +622,7 @@ useEffect(() => {
                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 md:gap-4 mb-8">
                   {displayedProducts.map((product, index) => {
                     const productUrl = product.URL || product.LINK || '';
-                    const isTopValueOfDay = topValueOfDayUrls.has(productUrl);
+                    const isTopValueOfDay = topValueOfDayUrl === productUrl;
                     const isTop10 = top10Products.has(productUrl);
                     
                     return (
