@@ -23,15 +23,9 @@ import type { Database } from '@/integrations/supabase/types';
 // Option 2: Hardcode your self-hosted credentials here when you export to GitHub
 
 const SUPABASE_CONFIG = {
-  // Your self-hosted Supabase URL (uncomment and update when leaving Lovable)
-  // url: 'https://nnlowmcqtpmjmohuzzgf.supabase.co',
-  
-  // Your self-hosted anon key (uncomment and update when leaving Lovable)
-  // anonKey: 'your-anon-key-here',
-  
-  // Current: Use Lovable Cloud (will be overridden when you update above)
-  url: import.meta.env.VITE_SUPABASE_URL as string,
-  anonKey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+  // NOW USING YOUR SELF-HOSTED SUPABASE (nnlowmcqtpmjmohuzzgf)
+  url: 'https://nnlowmcqtpmjmohuzzgf.supabase.co',
+  anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ubG93bWNxdHBtam1vaHV6emdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNjYzNjIsImV4cCI6MjA4MDk0MjM2Mn0.H3-q7GJBZ8FLB1R4ZRAPyk-a8peSkaHJrp1Y0m1pg44',
 };
 
 // =============================================================================
