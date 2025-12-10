@@ -59,19 +59,25 @@ export interface GroupedProduct extends Product {
   variantCount: number;
 }
 
-// Group products by exact title, selecting best value as default
+// Group products by exact title + amount (size), selecting best value as default
+// This ensures each package size gets its own tile, with flavour variants in the dropdown
 export const groupProductsByTitle = (products: Product[], benchmarks?: DatasetBenchmarks | null, scoreRange?: ScoreRange | null): GroupedProduct[] => {
   const groupedMap = new Map<string, Product[]>();
   
-  // Group by exact title (case-insensitive, trimmed)
+  // Group by exact title + normalized amount (case-insensitive, trimmed)
   products.forEach(product => {
     const title = (product.TITLE || '').toLowerCase().trim();
     if (!title) return;
     
-    if (!groupedMap.has(title)) {
-      groupedMap.set(title, []);
+    // Normalize amount to grams for consistent grouping
+    const grams = parseGrams(product.AMOUNT);
+    const amountKey = grams !== null ? String(grams) : 'unknown';
+    const groupKey = `${title}|${amountKey}`;
+    
+    if (!groupedMap.has(groupKey)) {
+      groupedMap.set(groupKey, []);
     }
-    groupedMap.get(title)!.push(product);
+    groupedMap.get(groupKey)!.push(product);
   });
   
   // Convert to GroupedProduct array, selecting best value variant as default
