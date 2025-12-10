@@ -14,12 +14,19 @@ const getDataCompletenessScore = (product: Product): number => {
   return score;
 };
 
-// Deduplicate products by TITLE + FLAVOUR, keeping the version with most complete data
+// Deduplicate products by TITLE + AMOUNT + FLAVOUR, keeping the version with most complete data
+// This ensures each size variant of each flavour is preserved as a unique product
 export const deduplicateByFlavour = (products: Product[]): Product[] => {
   const seen = new Map<string, Product>();
   
   products.forEach(product => {
-    const key = `${(product.TITLE || '').toLowerCase().trim()}|${(product.FLAVOUR || '').toLowerCase().trim()}`;
+    const title = (product.TITLE || '').toLowerCase().trim();
+    const flavour = (product.FLAVOUR || '').toLowerCase().trim();
+    // Normalize amount to grams for consistent deduplication
+    const grams = parseGrams(product.AMOUNT);
+    const amountKey = grams !== null ? String(grams) : 'unknown';
+    
+    const key = `${title}|${amountKey}|${flavour}`;
     
     const existingProduct = seen.get(key);
     if (!existingProduct) {
