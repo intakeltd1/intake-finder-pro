@@ -312,9 +312,9 @@ export function calculateIntakeValueRating(
       finalScore = 5.0 + (percentile * 5.0);
     }
     
-    // CAP: Products with missing price/protein/servings data cannot score above 7.0
-    if (hasMissingData && finalScore > 7.0) {
-      finalScore = 7.0;
+    // CAP: Products with missing price/protein/servings data cannot score above 5.1
+    if (hasMissingData && finalScore > 5.1) {
+      finalScore = 5.1;
     }
     
     return Math.round(finalScore * 10) / 10;
@@ -332,9 +332,9 @@ export function calculateIntakeValueRating(
     finalScore = 5.0 + (normalizedScore * 5.0);
   }
   
-  // CAP: Products with missing data cannot score above 7.0
-  if (rawResult.hasMissingData && finalScore > 7.0) {
-    finalScore = 7.0;
+  // CAP: Products with missing data cannot score above 5.1
+  if (rawResult.hasMissingData && finalScore > 5.1) {
+    finalScore = 5.1;
   }
   
   return Math.round(finalScore * 10) / 10;
