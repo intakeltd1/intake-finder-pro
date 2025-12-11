@@ -121,15 +121,19 @@ const normalize = (value: number, min: number, max: number): number => {
 
 /**
  * Calculate raw weighted score for a product (internal use)
+ * Returns { score, hasMissingData } to track data quality
  */
 function calculateRawWeightedScore(
   product: Product,
   benchmarks: DatasetBenchmarks
-): number | null {
+): { score: number; hasMissingData: boolean } | null {
   const price = parsePrice(product.PRICE);
-  if (!price) return null;
+  if (!price) return null; // Products without price cannot be scored
   
   const metrics = calculateRawMetrics(product);
+  
+  // Track if product has missing essential data
+  const hasMissingData = metrics.proteinPerPound === null || metrics.servingsPerPound === null;
   
   // Normalize protein per £1 (penalize missing data with 0.15)
   const normalizedProtein = metrics.proteinPerPound !== null
@@ -147,7 +151,9 @@ function calculateRawWeightedScore(
     : 0;
   
   // Weighted average (38.3% protein, 55% servings, 6.7% discount)
-  return (normalizedProtein * 0.383) + (normalizedServings * 0.55) + (normalizedDiscount * 0.067);
+  const score = (normalizedProtein * 0.383) + (normalizedServings * 0.55) + (normalizedDiscount * 0.067);
+  
+  return { score, hasMissingData };
 }
 
 // Get unique identifier for a product
@@ -172,10 +178,10 @@ export function calculateScoreRange(
   let maxScore = -Infinity;
   
   for (const product of products) {
-    const score = calculateRawWeightedScore(product, benchmarks);
-    if (score !== null) {
-      minScore = Math.min(minScore, score);
-      maxScore = Math.max(maxScore, score);
+    const result = calculateRawWeightedScore(product, benchmarks);
+    if (result !== null) {
+      minScore = Math.min(minScore, result.score);
+      maxScore = Math.max(maxScore, result.score);
     }
   }
   
@@ -191,6 +197,7 @@ export interface ProductRankings {
   rankMap: Map<string, number>;       // productKey -> rank (1 = best)
   totalRankedProducts: number;        // Total products with valid scores
   rawScores: Map<string, number>;     // productKey -> raw score (for debugging)
+  hasMissingDataMap: Map<string, boolean>; // productKey -> whether product has missing data
 }
 
 /**
@@ -202,15 +209,17 @@ export function calculateProductRankings(
   benchmarks: DatasetBenchmarks
 ): ProductRankings {
   // Calculate raw scores for all products
-  const scoredProducts: { key: string; score: number }[] = [];
+  const scoredProducts: { key: string; score: number; hasMissingData: boolean }[] = [];
   const rawScores = new Map<string, number>();
+  const hasMissingDataMap = new Map<string, boolean>();
   
   for (const product of products) {
-    const score = calculateRawWeightedScore(product, benchmarks);
-    if (score !== null) {
+    const result = calculateRawWeightedScore(product, benchmarks);
+    if (result !== null) {
       const key = getProductKey(product);
-      scoredProducts.push({ key, score });
-      rawScores.set(key, score);
+      scoredProducts.push({ key, score: result.score, hasMissingData: result.hasMissingData });
+      rawScores.set(key, result.score);
+      hasMissingDataMap.set(key, result.hasMissingData);
     }
   }
   
@@ -243,7 +252,8 @@ export function calculateProductRankings(
   return {
     rankMap,
     totalRankedProducts: scoredProducts.length,
-    rawScores
+    rawScores,
+    hasMissingDataMap
   };
 }
 
@@ -266,44 +276,66 @@ export function calculateIntakeValueRating(
 ): number | null {
   if (!benchmarks) return null;
   
+  // Check if price is missing - products without price cannot be scored
+  const price = product.PRICE?.replace(/[^\d.]/g, '');
+  const priceVal = price ? parseFloat(price) : null;
+  if (!priceVal || priceVal <= 0) {
+    return null; // No rating for products without valid price
+  }
+  
   // Use rank-based scoring if rankings are provided
   if (rankings && rankings.totalRankedProducts > 0) {
-    const key = getProductKey(product);
+    const key = product.URL || product.LINK || `${product.TITLE}-${product.FLAVOUR}-${product.PRICE}`;
     const rank = rankings.rankMap.get(key);
     
     if (rank === undefined) {
-      // Product not in rankings (likely missing price data)
+      // Product not in rankings
       return null;
     }
+    
+    // Check if product has missing data (protein or servings)
+    const hasMissingData = rankings.hasMissingDataMap.get(key) ?? false;
     
     // Convert rank to 5.0-10.0 scale
     // Rank 1 (best) -> 10.0
     // Last rank (worst) -> 5.0
     const totalProducts = rankings.totalRankedProducts;
     
+    let finalScore: number;
     if (totalProducts === 1) {
-      return 10.0; // Only one product = best
+      finalScore = 10.0; // Only one product = best
+    } else {
+      // Percentile position: 0 = worst, 1 = best
+      const percentile = (totalProducts - rank) / (totalProducts - 1);
+      
+      // Scale to 5.0-10.0 range
+      finalScore = 5.0 + (percentile * 5.0);
     }
     
-    // Percentile position: 0 = worst, 1 = best
-    const percentile = (totalProducts - rank) / (totalProducts - 1);
-    
-    // Scale to 5.0-10.0 range
-    const finalScore = 5.0 + (percentile * 5.0);
+    // CAP: Products with missing price/protein/servings data cannot score above 7.0
+    if (hasMissingData && finalScore > 7.0) {
+      finalScore = 7.0;
+    }
     
     return Math.round(finalScore * 10) / 10;
   }
   
   // Fallback to old linear scaling (deprecated path)
-  const rawScore = calculateRawWeightedScore(product, benchmarks);
-  if (rawScore === null) return null;
+  const rawResult = calculateRawWeightedScore(product, benchmarks);
+  if (rawResult === null) return null;
   
+  let finalScore: number;
   if (!scoreRange) {
-    return Math.round((5 + rawScore * 5) * 10) / 10;
+    finalScore = 5 + rawResult.score * 5;
+  } else {
+    const normalizedScore = Math.max(0, Math.min(1, normalize(rawResult.score, scoreRange.minScore, scoreRange.maxScore)));
+    finalScore = 5.0 + (normalizedScore * 5.0);
   }
   
-  const normalizedScore = Math.max(0, Math.min(1, normalize(rawScore, scoreRange.minScore, scoreRange.maxScore)));
-  const finalScore = 5.0 + (normalizedScore * 5.0);
+  // CAP: Products with missing data cannot score above 7.0
+  if (rawResult.hasMissingData && finalScore > 7.0) {
+    finalScore = 7.0;
+  }
   
   return Math.round(finalScore * 10) / 10;
 }
