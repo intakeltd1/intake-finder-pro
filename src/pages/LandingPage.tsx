@@ -45,7 +45,7 @@ const LandingPage = () => {
             <img
               src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png"
               alt="Intake"
-              className="h-8 sm:h-10 w-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
+              className="h-5 sm:h-6 w-auto filter drop-shadow-[0_0_12px_rgba(255,255,255,0.5)]"
             />
           </div>
           <NavigationDrawer />
