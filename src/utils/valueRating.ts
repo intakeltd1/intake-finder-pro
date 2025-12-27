@@ -3,6 +3,8 @@
 // Best product = 10.0, worst = 5.0, all others distributed by percentile rank
 // Weights: 55% Servings/£, 38.3% Protein/£, 6.7% Discount %
 
+import { isValidServings } from '@/utils/productUtils';
+
 interface Product {
   PRICE?: string;
   RRP?: string;
@@ -30,9 +32,13 @@ const parsePrice = (price?: string): number | null => {
   return isNaN(value) || value <= 0 ? null : value;
 };
 
-// Parse servings from string
+// Parse servings from string - returns null for invalid formats (mass/volume units)
 const parseServings = (servings?: string): number | null => {
   if (!servings) return null;
+  
+  // Validate that this is actually a serving count, not a weight like "500g"
+  if (!isValidServings(servings)) return null;
+  
   const match = String(servings).replace(/[^\d.]/g, '');
   const value = parseFloat(match);
   return isNaN(value) || value <= 0 ? null : value;

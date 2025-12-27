@@ -190,6 +190,52 @@ export const numFromProtein = (protein?: string | number): number => {
   return parseFloat(match) || 0;
 };
 
+/**
+ * Validates that a servings value is a proper count, not a weight/volume measurement.
+ * Returns false for values like "500g", "2.5kg", "1000ml" which are product weights, not serving counts.
+ * This prevents the scraper's fallback (using product weight when servings unavailable) from
+ * corrupting value calculations.
+ */
+export const isValidServings = (servings?: string): boolean => {
+  if (!servings) return false;
+  
+  const servingsStr = String(servings).toLowerCase().trim();
+  
+  // Must contain at least one digit
+  if (!/\d/.test(servingsStr)) return false;
+  
+  // Reject values that end with or contain mass/volume units
+  // These indicate the scraper captured product weight instead of serving count
+  const massVolumePatterns = [
+    /\d+\s*g\b/i,       // "500g", "500 g"
+    /\d+\s*kg\b/i,      // "2.5kg", "1 kg"
+    /\d+\s*ml\b/i,      // "500ml", "500 ml"
+    /\d+\s*l\b/i,       // "1l", "2 l", "1.5l"
+    /\d+\s*oz\b/i,      // "16oz"
+    /\d+\s*lb\b/i,      // "5lb", "2.2 lb"
+    /\d+\s*lbs\b/i,     // "5lbs"
+    /\d+\s*litre/i,     // "1 litre"
+    /\d+\s*liter/i,     // "1 liter"
+  ];
+  
+  if (massVolumePatterns.some(pattern => pattern.test(servingsStr))) {
+    return false;
+  }
+  
+  // Extract numeric value
+  const numericMatch = servingsStr.replace(/[^\d.]/g, '');
+  const numericValue = parseFloat(numericMatch);
+  
+  // Reject invalid numbers or suspicious values
+  if (isNaN(numericValue) || numericValue <= 0) return false;
+  
+  // Sanity check: serving counts should be reasonable (1-500 range)
+  // Values like 1000 or 2500 are almost certainly weights in grams
+  if (numericValue > 500) return false;
+  
+  return true;
+};
+
 // Calculate protein value score (protein per serving / price)
 export const calculateValueScore = (product: Product): number => {
   const price = numFromPrice(product.PRICE);
