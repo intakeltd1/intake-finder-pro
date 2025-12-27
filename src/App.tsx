@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { FavoritesProvider } from "@/hooks/useFavorites";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
+import Electrolytes from "./pages/Electrolytes";
 import Auth from "./pages/Auth";
 import Favorites from "./pages/Favorites";
 import ComingSoon from "./pages/ComingSoon";
@@ -25,7 +26,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/protein" element={<Index />} />
-              <Route path="/electrolytes" element={<ComingSoon category="Electrolytes" />} />
+              <Route path="/electrolytes" element={<Electrolytes />} />
               <Route path="/pre-workout" element={<ComingSoon category="Pre-Workout" />} />
               <Route path="/recovery" element={<ComingSoon category="Recovery" />} />
               <Route path="/auth" element={<Auth />} />
