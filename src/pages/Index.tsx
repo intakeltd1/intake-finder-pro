@@ -10,7 +10,7 @@ import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { ComparisonWidget } from "@/components/ComparisonWidget";
 import { ComparisonModal } from "@/components/ComparisonModal";
 import { ComparisonProvider } from "@/hooks/useComparison";
-import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName, groupProductsByTitle, GroupedProduct, deduplicateByFlavour } from "@/utils/productUtils";
+import { applyFuzzySearch, isOutOfStock, getTopValueProducts, getBaseProductName, groupProductsByTitle, GroupedProduct, deduplicateByFlavour, isValidProductPrice } from "@/utils/productUtils";
 import { useScrollAnimations } from "@/components/ScrollAnimations";
 import { calculateIntakeValueRating, calculateDatasetBenchmarks, calculateScoreRange, calculateProductRankings, DatasetBenchmarks, ScoreRange, ProductRankings } from "@/utils/valueRating";
 import { ValueBenchmarksProvider } from "@/hooks/useValueBenchmarks";
@@ -59,7 +59,7 @@ function transformProductData(rawProduct: any): Product {
 function hasMinimumData(product: Product): boolean {
   const requiredFields = [
     product.TITLE && product.TITLE !== 'Product Name Not Available',
-    product.PRICE && product.PRICE !== 'Price N/A',
+    isValidProductPrice(product.PRICE), // Validates price format and rejects "per shake" style prices
     product.IMAGE_URL
   ];
   
