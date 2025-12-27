@@ -3,7 +3,6 @@ import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, Zap } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
@@ -20,6 +19,10 @@ import {
   calculateElectrolyteBenchmarks,
   calculateElectrolyteRankings,
 } from "@/utils/electrolyteValueRating";
+import { 
+  processElectrolyteProducts,
+  GroupedElectrolyteProduct 
+} from "@/utils/electrolyteProductUtils";
 
 export default function Electrolytes() {
   const [products, setProducts] = useState<ElectrolyteProduct[]>([]);
@@ -111,18 +114,25 @@ export default function Electrolytes() {
     });
   }, [filteredByMode, debouncedQuery]);
 
-  // Sort by value rating
+  // Process: deduplicate and group by flavor (like protein page)
+  const { grouped: groupedProducts, stats: processingStats } = useMemo(() => {
+    const result = processElectrolyteProducts(searchFiltered, benchmarks, rankings, isSubscription);
+    console.log(`Processing pipeline: ${result.stats.original} filtered → ${result.stats.deduplicated} deduplicated → ${result.stats.grouped} grouped tiles`);
+    return result;
+  }, [searchFiltered, benchmarks, rankings, isSubscription]);
+
+  // Sort grouped products by value rating
   const sortedProducts = useMemo(() => {
-    if (!rankings) return searchFiltered;
+    if (!rankings) return groupedProducts;
     
-    return [...searchFiltered].sort((a, b) => {
+    return [...groupedProducts].sort((a, b) => {
       const keyA = a.PAGE_URL || `${a.TITLE}-${a.FLAVOUR}`;
       const keyB = b.PAGE_URL || `${b.TITLE}-${b.FLAVOUR}`;
       const rankA = rankings.rankMap.get(keyA) ?? Infinity;
       const rankB = rankings.rankMap.get(keyB) ?? Infinity;
       return rankA - rankB;
     });
-  }, [searchFiltered, rankings]);
+  }, [groupedProducts, rankings]);
 
   // Get top value products
   const topValueProducts = useMemo(() => {
@@ -276,25 +286,42 @@ export default function Electrolytes() {
 
             {/* Search and Toggle */}
             <div className="px-4 md:px-6 pb-4 md:pb-5 space-y-4">
-              {/* Subscription Toggle */}
-              <div className="flex items-center justify-center gap-4 p-3 bg-background/30 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="subscription-toggle"
-                    checked={isSubscription}
-                    onCheckedChange={setIsSubscription}
-                  />
-                  <Label 
-                    htmlFor="subscription-toggle" 
-                    className="text-sm font-medium text-foreground cursor-pointer"
-                  >
-                    {isSubscription ? 'Subscription Prices' : 'One-Time Purchase'}
-                  </Label>
-                </div>
+              {/* Subscription Toggle - Professional dual-label design */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-background/30 rounded-lg">
+                <button
+                  onClick={() => setIsSubscription(false)}
+                  className={`text-xs sm:text-sm font-medium transition-all duration-200 px-2 sm:px-3 py-1.5 rounded-md whitespace-nowrap ${
+                    !isSubscription 
+                      ? 'text-primary bg-primary/20 shadow-sm' 
+                      : 'text-foreground/60 hover:text-foreground/80'
+                  }`}
+                >
+                  One-Time
+                </button>
+                
+                <Switch
+                  id="subscription-toggle"
+                  checked={isSubscription}
+                  onCheckedChange={setIsSubscription}
+                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted"
+                />
+                
+                <button
+                  onClick={() => setIsSubscription(true)}
+                  className={`text-xs sm:text-sm font-medium transition-all duration-200 px-2 sm:px-3 py-1.5 rounded-md whitespace-nowrap ${
+                    isSubscription 
+                      ? 'text-primary bg-primary/20 shadow-sm' 
+                      : 'text-foreground/60 hover:text-foreground/80'
+                  }`}
+                >
+                  Subscription
+                </button>
+                
                 {isSubscription && (
-                  <Badge className="bg-primary/20 text-primary border-primary/30 flex items-center gap-1">
-                    <Zap className="h-3 w-3" />
-                    Shows servings/week
+                  <Badge className="bg-primary/20 text-primary border-primary/30 flex items-center gap-1 ml-2 text-[10px] sm:text-xs">
+                    <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                    <span className="hidden sm:inline">Shows servings/week</span>
+                    <span className="sm:hidden">Servings/wk</span>
                   </Badge>
                 )}
               </div>
@@ -312,7 +339,14 @@ export default function Electrolytes() {
 
               {/* Results Count */}
               <div className="flex items-center justify-between text-xs text-foreground/70">
-                <span>{sortedProducts.length} products found</span>
+                <span>
+                  {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''} 
+                  {processingStats.grouped < processingStats.deduplicated && (
+                    <span className="text-foreground/50 ml-1">
+                      ({processingStats.deduplicated} variants)
+                    </span>
+                  )}
+                </span>
                 <span>{isSubscription ? 'Subscription mode' : 'One-time purchase mode'}</span>
               </div>
             </div>

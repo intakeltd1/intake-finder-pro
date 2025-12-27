@@ -11,17 +11,30 @@ import {
   ElectrolyteBenchmarks,
   ElectrolyteRankings
 } from "@/utils/electrolyteValueRating";
+import { GroupedElectrolyteProduct } from "@/utils/electrolyteProductUtils";
 import { useElectrolyteComparison, getProductKey } from "@/hooks/useElectrolyteComparison";
 import { toTitleCase, formatBrand as formatBrandName, formatFlavour } from "@/utils/textFormatting";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ElectrolyteProductCardProps {
-  product: ElectrolyteProduct;
+  product: ElectrolyteProduct | GroupedElectrolyteProduct;
   isSubscription: boolean;
   benchmarks: ElectrolyteBenchmarks | null;
   rankings: ElectrolyteRankings | null;
   isTopValue?: boolean;
   isTopValueOfDay?: boolean;
 }
+
+// Type guard to check if product has variants
+const hasVariants = (product: ElectrolyteProduct | GroupedElectrolyteProduct): product is GroupedElectrolyteProduct => {
+  return 'variants' in product && Array.isArray(product.variants) && product.variants.length > 1;
+};
 
 // Brand extraction helper
 const extractBrandFromUrl = (url?: string): string | undefined => {
@@ -69,21 +82,27 @@ export function ElectrolyteProductCard({
 }: ElectrolyteProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const cardRef = useRef<HTMLDivElement | null>(null);
   
-  const { addToComparison, isInComparison, comparisonProducts } = useElectrolyteComparison();
-  const isCompared = isInComparison(product);
+  // Handle variants
+  const productHasVariants = hasVariants(product);
+  const currentProduct = productHasVariants ? product.variants[selectedVariantIndex] : product;
+  const variantCount = productHasVariants ? product.variantCount : 1;
   
-  const activePrice = getActivePrice(product, isSubscription);
-  const outOfStock = product.IN_STOCK === false;
+  const { addToComparison, isInComparison, comparisonProducts } = useElectrolyteComparison();
+  const isCompared = isInComparison(currentProduct);
+  
+  const activePrice = getActivePrice(currentProduct, isSubscription);
+  const outOfStock = currentProduct.IN_STOCK === false;
   
   const valueRating = benchmarks && rankings
-    ? calculateElectrolyteValueRating(product, benchmarks, rankings, isSubscription)
+    ? calculateElectrolyteValueRating(currentProduct, benchmarks, rankings, isSubscription)
     : null;
 
   const handleCardClick = () => {
-    if (product.PAGE_URL) {
-      window.open(product.PAGE_URL, '_blank', 'noopener,noreferrer');
+    if (currentProduct.PAGE_URL) {
+      window.open(currentProduct.PAGE_URL, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -122,14 +141,22 @@ export function ElectrolyteProductCard({
           if (document.body.contains(clone)) {
             document.body.removeChild(clone);
           }
-          addToComparison(product);
+          addToComparison(currentProduct);
         }, 500);
       } else {
-        addToComparison(product);
+        addToComparison(currentProduct);
       }
       
       setAddAnimation(true);
       setTimeout(() => setAddAnimation(false), 500);
+    }
+  };
+
+  const handleVariantChange = (value: string) => {
+    const index = parseInt(value, 10);
+    if (!isNaN(index)) {
+      setSelectedVariantIndex(index);
+      setImageError(false);
     }
   };
 
@@ -141,7 +168,7 @@ export function ElectrolyteProductCard({
   };
 
   // Calculate total electrolytes
-  const totalElectrolytes = (product.SODIUM_MG ?? 0) + (product.POTASSIUM_MG ?? 0) + (product.MAGNESIUM_MG ?? 0);
+  const totalElectrolytes = (currentProduct.SODIUM_MG ?? 0) + (currentProduct.POTASSIUM_MG ?? 0) + (currentProduct.MAGNESIUM_MG ?? 0);
 
   // Format price display
   const formatPrice = (price: number | null) => {
@@ -150,7 +177,7 @@ export function ElectrolyteProductCard({
   };
 
   // Format RRP with discount
-  const rrpNum = typeof product.RRP_NUM === 'number' ? product.RRP_NUM : null;
+  const rrpNum = typeof currentProduct.RRP_NUM === 'number' ? currentProduct.RRP_NUM : null;
   const discountPercent = activePrice && rrpNum && rrpNum > activePrice
     ? Math.round(((rrpNum - activePrice) / rrpNum) * 100)
     : null;
@@ -165,10 +192,10 @@ export function ElectrolyteProductCard({
     >
       {/* Product Image */}
       <div className="relative w-full overflow-hidden rounded-t-lg bg-white flex-1 min-h-0">
-        {product.IMAGE_URL && !imageError ? (
+        {currentProduct.IMAGE_URL && !imageError ? (
           <img
-            src={product.IMAGE_URL}
-            alt={product.TITLE || "Product image"}
+            src={currentProduct.IMAGE_URL}
+            alt={currentProduct.TITLE || "Product image"}
             className={`w-full h-full object-cover object-center transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
@@ -204,16 +231,16 @@ export function ElectrolyteProductCard({
         </div>
 
         {/* Format Badge */}
-        {product.FORMAT && (
+        {currentProduct.FORMAT && (
           <Badge variant="secondary" className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 text-[8px] sm:text-[9px]">
-            {product.FORMAT}
+            {currentProduct.FORMAT}
           </Badge>
         )}
       </div>
 
       {/* Add to comparison button */}
       <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-[100] flex flex-col gap-1 sm:gap-1.5">
-        {product.FORMAT && <div className="h-5 sm:h-6" />} {/* Spacer for format badge */}
+        {currentProduct.FORMAT && <div className="h-5 sm:h-6" />} {/* Spacer for format badge */}
         <Button
           onClick={handleAddToComparison}
           disabled={isCompared || comparisonProducts.length >= 4 || outOfStock}
@@ -238,27 +265,75 @@ export function ElectrolyteProductCard({
       <CardContent className="p-2 sm:p-2.5 md:p-3 flex flex-col gap-0.5 sm:gap-1">
         {/* Brand Name */}
         <p className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-          {getBrandFromProduct(product)}
+          {getBrandFromProduct(currentProduct)}
         </p>
 
         {/* Product Title */}
         <CardTitle className="text-[11px] sm:text-[12px] md:text-[13px] font-heading font-semibold line-clamp-2 leading-tight">
-          {toTitleCase(safeDisplayValue(product.TITLE, "Product Title Not Available"))}
+          {toTitleCase(safeDisplayValue(currentProduct.TITLE, "Product Title Not Available"))}
         </CardTitle>
 
-        {/* Flavour */}
-        {product.FLAVOUR && product.FLAVOUR !== 'Flavour' && (
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground line-clamp-1">
-            {formatFlavour(product.FLAVOUR)}
-          </p>
-        )}
+        {/* Flavour Section - with dropdown for variants */}
+        <div 
+          className="relative z-[150]" 
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+        >
+          {productHasVariants ? (
+            <div className="flex items-center justify-between gap-1">
+              <Select
+                value={selectedVariantIndex.toString()}
+                onValueChange={handleVariantChange}
+              >
+                <SelectTrigger 
+                  className="h-5 sm:h-6 text-[8px] sm:text-[9px] md:text-[10px] px-1.5 py-0 bg-background border-border/50 w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                  }}
+                  onTouchStart={(e) => e.stopPropagation()}
+                  onTouchEnd={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                >
+                  <SelectValue placeholder="Select flavour">
+                    {formatFlavour(safeDisplayValue(currentProduct.FLAVOUR, 'No flavour'))}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent 
+                  className="bg-background border-border z-[200] max-h-48"
+                  onPointerDownOutside={(e) => e.stopPropagation()}
+                >
+                  {(product as GroupedElectrolyteProduct).variants.map((variant, idx) => (
+                    <SelectItem 
+                      key={idx} 
+                      value={idx.toString()}
+                      className="text-xs"
+                    >
+                      {formatFlavour(safeDisplayValue(variant.FLAVOUR, 'No flavour'))}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-[7px] sm:text-[8px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+                +{variantCount - 1}
+              </span>
+            </div>
+          ) : (
+            currentProduct.FLAVOUR && currentProduct.FLAVOUR !== 'Flavour' && (
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground line-clamp-1">
+                {formatFlavour(currentProduct.FLAVOUR)}
+              </p>
+            )
+          )}
+        </div>
 
         {/* Price and Servings */}
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
-            {product.RRP_NUM && discountPercent && discountPercent > 0 && (
+            {currentProduct.RRP_NUM && discountPercent && discountPercent > 0 && (
               <span className="text-[8px] sm:text-[9px] text-muted-foreground line-through">
-                was £{product.RRP_NUM.toFixed(2)}
+                was £{currentProduct.RRP_NUM.toFixed(2)}
               </span>
             )}
             <div className="flex items-center gap-1.5">
@@ -273,16 +348,16 @@ export function ElectrolyteProductCard({
             </div>
           </div>
           <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 font-medium">
-            {product.SERVINGS || 'N/A'} servings
+            {currentProduct.SERVINGS || 'N/A'} servings
           </Badge>
         </div>
 
-        {/* Subscription Amount - shown when subscription mode is active */}
-        {isSubscription && product.SUB_AMOUNT && (
-          <div className="flex items-center gap-1 bg-primary/10 rounded px-1.5 py-0.5">
-            <Zap className="h-2.5 w-2.5 text-primary" />
-            <span className="text-[9px] sm:text-[10px] font-medium text-primary">
-              {product.SUB_AMOUNT}
+        {/* Subscription Amount - highlighted when subscription mode is active */}
+        {isSubscription && currentProduct.SUB_AMOUNT && (
+          <div className="flex items-center gap-1 bg-primary/20 rounded px-1.5 py-1 border border-primary/30 animate-pulse">
+            <Zap className="h-3 w-3 text-primary" />
+            <span className="text-[10px] sm:text-[11px] font-semibold text-primary">
+              {currentProduct.SUB_AMOUNT}
             </span>
           </div>
         )}
@@ -292,19 +367,19 @@ export function ElectrolyteProductCard({
           <div className="text-center">
             <p className="text-[7px] sm:text-[8px] text-muted-foreground">Sodium</p>
             <p className="text-[9px] sm:text-[10px] font-semibold text-foreground">
-              {product.SODIUM_MG ? `${Math.round(product.SODIUM_MG)}mg` : 'N/A'}
+              {currentProduct.SODIUM_MG ? `${Math.round(currentProduct.SODIUM_MG)}mg` : 'N/A'}
             </p>
           </div>
           <div className="text-center">
             <p className="text-[7px] sm:text-[8px] text-muted-foreground">Potassium</p>
             <p className="text-[9px] sm:text-[10px] font-semibold text-foreground">
-              {product.POTASSIUM_MG ? `${Math.round(product.POTASSIUM_MG)}mg` : 'N/A'}
+              {currentProduct.POTASSIUM_MG ? `${Math.round(currentProduct.POTASSIUM_MG)}mg` : 'N/A'}
             </p>
           </div>
           <div className="text-center">
             <p className="text-[7px] sm:text-[8px] text-muted-foreground">Magnesium</p>
             <p className="text-[9px] sm:text-[10px] font-semibold text-foreground">
-              {product.MAGNESIUM_MG ? `${Math.round(product.MAGNESIUM_MG)}mg` : 'N/A'}
+              {currentProduct.MAGNESIUM_MG ? `${Math.round(currentProduct.MAGNESIUM_MG)}mg` : 'N/A'}
             </p>
           </div>
         </div>
