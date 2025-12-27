@@ -1,7 +1,8 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ImageIcon, Crown, Zap, Droplets } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { ImageIcon, Crown, Zap, Droplets, Plus, Check } from "lucide-react";
+import { useState, useRef } from "react";
 import { 
   ElectrolyteProduct, 
   getActivePrice,
@@ -10,6 +11,7 @@ import {
   ElectrolyteBenchmarks,
   ElectrolyteRankings
 } from "@/utils/electrolyteValueRating";
+import { useElectrolyteComparison, getProductKey } from "@/hooks/useElectrolyteComparison";
 import { toTitleCase, formatBrand as formatBrandName, formatFlavour } from "@/utils/textFormatting";
 
 interface ElectrolyteProductCardProps {
@@ -66,6 +68,11 @@ export function ElectrolyteProductCard({
   isTopValueOfDay
 }: ElectrolyteProductCardProps) {
   const [imageError, setImageError] = useState(false);
+  const [addAnimation, setAddAnimation] = useState(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  
+  const { addToComparison, isInComparison, comparisonProducts } = useElectrolyteComparison();
+  const isCompared = isInComparison(product);
   
   const activePrice = getActivePrice(product, isSubscription);
   const outOfStock = product.IN_STOCK === false;
@@ -77,6 +84,52 @@ export function ElectrolyteProductCard({
   const handleCardClick = () => {
     if (product.PAGE_URL) {
       window.open(product.PAGE_URL, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleAddToComparison = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (!isCompared && comparisonProducts.length < 4) {
+      if (cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const clone = cardRef.current.cloneNode(true) as HTMLElement;
+        
+        clone.style.position = 'fixed';
+        clone.style.top = `${rect.top}px`;
+        clone.style.left = `${rect.left}px`;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+        clone.style.zIndex = '9999';
+        clone.style.pointerEvents = 'none';
+        clone.style.transition = 'none';
+        
+        document.body.appendChild(clone);
+        
+        const targetX = window.innerWidth - rect.left - rect.width / 2 - 80;
+        const targetY = window.innerHeight - rect.top - rect.height / 2 - 80;
+        
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            clone.style.transition = 'all 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+            clone.style.transform = `translate(${targetX}px, ${targetY}px) scale(0.2) rotate(3deg)`;
+            clone.style.opacity = '0';
+          });
+        });
+        
+        setTimeout(() => {
+          if (document.body.contains(clone)) {
+            document.body.removeChild(clone);
+          }
+          addToComparison(product);
+        }, 500);
+      } else {
+        addToComparison(product);
+      }
+      
+      setAddAnimation(true);
+      setTimeout(() => setAddAnimation(false), 500);
     }
   };
 
@@ -97,12 +150,14 @@ export function ElectrolyteProductCard({
   };
 
   // Format RRP with discount
-  const discountPercent = activePrice && product.RRP_NUM && product.RRP_NUM > activePrice
-    ? Math.round(((product.RRP_NUM - activePrice) / product.RRP_NUM) * 100)
+  const rrpNum = typeof product.RRP_NUM === 'number' ? product.RRP_NUM : null;
+  const discountPercent = activePrice && rrpNum && rrpNum > activePrice
+    ? Math.round(((rrpNum - activePrice) / rrpNum) * 100)
     : null;
 
   return (
     <Card 
+      ref={cardRef}
       className={`h-[380px] sm:h-[420px] md:h-[460px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
         outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg cursor-pointer'
       } flex flex-col relative overflow-hidden rounded-lg`}
@@ -154,6 +209,29 @@ export function ElectrolyteProductCard({
             {product.FORMAT}
           </Badge>
         )}
+      </div>
+
+      {/* Add to comparison button */}
+      <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-[100] flex flex-col gap-1 sm:gap-1.5">
+        {product.FORMAT && <div className="h-5 sm:h-6" />} {/* Spacer for format badge */}
+        <Button
+          onClick={handleAddToComparison}
+          disabled={isCompared || comparisonProducts.length >= 4 || outOfStock}
+          size="icon"
+          className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full shadow-lg transition-all duration-300 ${
+            isCompared
+              ? 'bg-blue-500 text-white cursor-default'
+              : comparisonProducts.length >= 4
+              ? 'bg-muted text-muted-foreground cursor-not-allowed'
+              : 'bg-background/80 backdrop-blur-sm text-foreground hover:bg-blue-500 hover:text-white hover:scale-110'
+          } ${addAnimation ? 'scale-125' : ''}`}
+        >
+          {isCompared ? (
+            <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+          ) : (
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+          )}
+        </Button>
       </div>
 
       {/* Product Info */}
