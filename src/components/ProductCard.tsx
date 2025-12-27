@@ -258,7 +258,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
           <img
             src={currentProduct.IMAGE_URL}
             alt={currentProduct.TITLE || "Product image"}
-            className={`w-full h-full object-contain object-center transition-transform duration-300 rounded-t-lg ${
+            className={`w-full h-full object-cover object-center transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
             loading="lazy"
