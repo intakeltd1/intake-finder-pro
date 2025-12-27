@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import CategoryCard from "@/components/CategoryCard";
-import { Zap, Droplets, Dumbbell, Heart } from "lucide-react";
+import { Droplets, Dumbbell } from "lucide-react";
 
 const categories = [
   {
@@ -16,21 +16,7 @@ const categories = [
     description: "Find the best hydration supplements",
     icon: Droplets,
     href: "/electrolytes",
-    available: false,
-  },
-  {
-    title: "Pre-Workout",
-    description: "Maximize your training performance",
-    icon: Zap,
-    href: "/pre-workout",
-    available: false,
-  },
-  {
-    title: "Recovery",
-    description: "Optimize post-workout nutrition",
-    icon: Heart,
-    href: "/recovery",
-    available: false,
+    available: true,
   },
 ];
 
