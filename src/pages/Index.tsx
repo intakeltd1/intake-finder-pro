@@ -57,15 +57,13 @@ function transformProductData(rawProduct: any): Product {
 
 // Helper function to check if a product has sufficient data to display
 function hasMinimumData(product: Product): boolean {
-  const requiredFields = [
-    product.TITLE && product.TITLE !== 'Product Name Not Available',
-    isValidProductPrice(product.PRICE), // Validates price format and rejects "per shake" style prices
-    product.IMAGE_URL
-  ];
-  
-  // Count non-null required fields
-  const validFields = requiredFields.filter(Boolean).length;
-  return validFields >= 2; // At least 2 out of 3 essential fields (title, price, image)
+  // For ranking + comparisons to be meaningful, we require a real product price (not "per serving/shake")
+  return Boolean(
+    product.TITLE &&
+      product.TITLE !== 'Product Name Not Available' &&
+      product.IMAGE_URL &&
+      isValidProductPrice(product.PRICE)
+  );
 }
 
 interface Product {
@@ -116,7 +114,11 @@ useEffect(() => {
       // Try to parse flexible shapes and extract lastUpdated
       const text = await response.text();
       let parsed: any;
-      try { parsed = JSON.parse(text); } catch (e) { throw new Error('Invalid JSON format'); }
+      try {
+        parsed = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Invalid JSON format');
+      }
 
       let items: Product[] = [];
       let metaDate: string | undefined;
@@ -126,7 +128,7 @@ useEffect(() => {
       if (Array.isArray(parsed)) {
         // If the first element is a meta object with a timestamp, use it and drop it from the list
         const first = parsed[0];
-        if (first && !first.URL && (pickDate(first))) {
+        if (first && !first.URL && pickDate(first)) {
           metaDate = pickDate(first);
           items = parsed.slice(1) as Product[];
         } else {
@@ -138,34 +140,25 @@ useEffect(() => {
       }
 
       console.log('Loaded products:', items?.length, metaDate ? `(lastUpdated: ${metaDate})` : '');
-      
+
       // Debug: Log the structure of the first few products to understand the data format
       if (items && items.length > 0) {
         console.log('First product structure:', items[0]);
         console.log('Sample product fields:', Object.keys(items[0] || {}));
         console.log('First 3 products:', items.slice(0, 3));
       }
-      
+
       // Transform data to match expected field structure and filter out products with insufficient data
       const transformedProducts = items.map(transformProductData);
-      
-      // Debug: Check for invalid price formats before filtering
-      const invalidPriceProducts = transformedProducts.filter(p => {
-        const price = (p.PRICE || '').toLowerCase();
-        return price.includes('per shake') || price.includes('per serving') || price.includes('per scoop') || price.includes('per portion');
-      });
-      if (invalidPriceProducts.length > 0) {
-        console.log(`Found ${invalidPriceProducts.length} products with invalid price formats:`, invalidPriceProducts.slice(0, 5).map(p => ({ title: p.TITLE, price: p.PRICE })));
-      }
-      
       const validProducts = transformedProducts.filter(hasMinimumData);
-      console.log(`Price validation: ${transformedProducts.length} total → ${validProducts.length} valid (rejected ${transformedProducts.length - validProducts.length} with invalid data)`);
-      
+
       // Deduplicate by TITLE + FLAVOUR, keeping the version with more complete data
       const deduplicatedProducts = deduplicateByFlavour(validProducts);
-      
-      console.log(`Pipeline: ${items.length} raw → ${validProducts.length} filtered → ${deduplicatedProducts.length} deduplicated (removed ${validProducts.length - deduplicatedProducts.length} duplicate flavours)`);
-      
+
+      console.log(
+        `Pipeline: ${items.length} raw → ${validProducts.length} filtered → ${deduplicatedProducts.length} deduplicated (removed ${validProducts.length - deduplicatedProducts.length} duplicate flavours)`
+      );
+
       setProducts(deduplicatedProducts);
       setLastUpdatedAt(metaDate || response.headers.get('last-modified') || response.headers.get('date'));
       setError(null);
