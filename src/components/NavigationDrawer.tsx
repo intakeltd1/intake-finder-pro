@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ExternalLink, Heart, LogIn, LogOut, User, Home, Dumbbell, Droplets, Zap, HeartPulse } from 'lucide-react';
+import { Menu, X, ExternalLink, Heart, LogIn, LogOut, User, Home, Dumbbell, Droplets } from 'lucide-react';
 import {
   Drawer,
   DrawerClose,
@@ -19,9 +19,7 @@ import { Badge } from "@/components/ui/badge";
 const internalLinks = [
   { title: 'Home', path: '/', icon: Home, description: 'Intake IQ landing' },
   { title: 'Protein Powders', path: '/protein', icon: Dumbbell, description: 'Compare protein supplements' },
-  { title: 'Electrolytes', path: '/electrolytes', icon: Droplets, description: 'Coming soon', comingSoon: true },
-  { title: 'Pre-Workout', path: '/pre-workout', icon: Zap, description: 'Coming soon', comingSoon: true },
-  { title: 'Recovery', path: '/recovery', icon: HeartPulse, description: 'Coming soon', comingSoon: true },
+  { title: 'Electrolytes', path: '/electrolytes', icon: Droplets, description: 'Compare electrolyte supplements' },
 ];
 
 const externalLinks = [
@@ -131,7 +129,7 @@ export function NavigationDrawer() {
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'hover:bg-muted'
-                    } ${link.comingSoon ? 'opacity-60' : ''}`}
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
@@ -144,11 +142,6 @@ export function NavigationDrawer() {
                         </div>
                       </div>
                     </div>
-                    {link.comingSoon && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        Soon
-                      </Badge>
-                    )}
                   </button>
                 );
               })}
