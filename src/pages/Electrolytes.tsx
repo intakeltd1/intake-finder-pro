@@ -317,13 +317,6 @@ export default function Electrolytes() {
                   Subscription
                 </button>
                 
-                {isSubscription && (
-                  <Badge className="bg-primary/20 text-primary border-primary/30 flex items-center gap-1 ml-2 text-[10px] sm:text-xs">
-                    <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                    <span className="hidden sm:inline">Shows servings/week</span>
-                    <span className="sm:hidden">Servings/wk</span>
-                  </Badge>
-                )}
               </div>
 
               {/* Search */}
