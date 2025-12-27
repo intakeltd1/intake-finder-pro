@@ -143,6 +143,39 @@ export const formatAmount = (grams: number): string => {
   return `${grams}g`;
 };
 
+/**
+ * Validates that a price string represents a proper product price, not a per-serving/per-shake price.
+ * Returns false for prices like "£0.69 per shake" which should be filtered out.
+ */
+export const isValidProductPrice = (price?: string): boolean => {
+  if (!price || price === 'Price N/A') return false;
+  
+  const priceStr = String(price).toLowerCase().trim();
+  
+  // Reject prices with descriptive text (these are per-serving prices, not product prices)
+  const invalidPatterns = [
+    'per shake', 'per serving', 'per scoop', 'per portion',
+    'each', 'per 100g', 'per 100ml', '/serving', '/shake', '/scoop',
+    'per meal', 'per bar', 'per capsule', 'per tablet', 'per sachet'
+  ];
+  
+  if (invalidPatterns.some(pattern => priceStr.includes(pattern))) {
+    return false;
+  }
+  
+  // Must contain at least one digit
+  if (!/\d/.test(priceStr)) return false;
+  
+  // Extract numeric value and ensure it's reasonable for a product price
+  const numericMatch = priceStr.replace(/[^\d.]/g, '');
+  const numericValue = parseFloat(numericMatch);
+  
+  // Reject if no valid number found or value is 0
+  if (isNaN(numericValue) || numericValue <= 0) return false;
+  
+  return true;
+};
+
 export const numFromPrice = (price?: string | number): number => {
   if (!price) return Infinity;
   const priceStr = String(price);
