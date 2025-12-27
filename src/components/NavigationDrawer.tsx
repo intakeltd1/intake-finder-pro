@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Menu, X, ExternalLink, Heart, LogIn, LogOut, User } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, ExternalLink, Heart, LogIn, LogOut, User, Home, Dumbbell, Droplets, Zap, HeartPulse } from 'lucide-react';
 import {
   Drawer,
   DrawerClose,
@@ -14,18 +14,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
-const navigationLinks = [
-  { title: 'Home', url: 'https://intakeltd.com', description: 'Visit our main website' },
+const internalLinks = [
+  { title: 'Home', path: '/', icon: Home, description: 'Intake IQ landing' },
+  { title: 'Protein Powders', path: '/protein', icon: Dumbbell, description: 'Compare protein supplements' },
+  { title: 'Electrolytes', path: '/electrolytes', icon: Droplets, description: 'Coming soon', comingSoon: true },
+  { title: 'Pre-Workout', path: '/pre-workout', icon: Zap, description: 'Coming soon', comingSoon: true },
+  { title: 'Recovery', path: '/recovery', icon: HeartPulse, description: 'Coming soon', comingSoon: true },
+];
+
+const externalLinks = [
+  { title: 'Intake Ltd', url: 'https://intakeltd.com', description: 'Visit our main website' },
   { title: 'Products', url: 'https://www.intakeltd.com/collections/all', description: 'Browse our full product range' },
   { title: 'Contact', url: 'https://www.intakeltd.com/pages/contact', description: 'Get in touch with us' },
-  { title: 'Mind-Muscle Connection', url: 'https://www.intakeltd.com/blogs/mind-muscle-connection', description: 'Read our latest blog posts' },
 ];
 
 export function NavigationDrawer() {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
@@ -105,28 +114,77 @@ export function NavigationDrawer() {
 
           <Separator className="mb-4" />
 
-          <nav className="space-y-3">
-            {navigationLinks.map((link, index) => (
-              <a
-                key={index}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group"
-                onClick={() => setOpen(false)}
-              >
-                <div>
-                  <div className="font-medium text-foreground group-hover:text-primary">
-                    {link.title}
+          {/* Internal Navigation */}
+          <div className="mb-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
+              Compare
+            </p>
+            <nav className="space-y-1">
+              {internalLinks.map((link) => {
+                const Icon = link.icon;
+                const isActive = location.pathname === link.path;
+                return (
+                  <button
+                    key={link.path}
+                    onClick={() => handleNavigate(link.path)}
+                    className={`w-full flex items-center justify-between p-3 rounded-lg transition-colors group text-left ${
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'hover:bg-muted'
+                    } ${link.comingSoon ? 'opacity-60' : ''}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
+                      <div>
+                        <div className={`font-medium ${isActive ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
+                          {link.title}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {link.description}
+                        </div>
+                      </div>
+                    </div>
+                    {link.comingSoon && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        Soon
+                      </Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <Separator className="mb-4" />
+
+          {/* External Links */}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-1">
+              Intake Ltd
+            </p>
+            <nav className="space-y-1">
+              {externalLinks.map((link, index) => (
+                <a
+                  key={index}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors group"
+                  onClick={() => setOpen(false)}
+                >
+                  <div>
+                    <div className="font-medium text-foreground group-hover:text-primary">
+                      {link.title}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {link.description}
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {link.description}
-                  </div>
-                </div>
-                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
-              </a>
-            ))}
-          </nav>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-primary" />
+                </a>
+              ))}
+            </nav>
+          </div>
         </div>
         
         <DrawerFooter className="border-t">
