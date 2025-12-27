@@ -253,7 +253,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
   const cardContent = (
     <>
       {/* Product Image */}
-      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-[52%] md:h-[50%]">
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white flex-1 min-h-0">
         {currentProduct.IMAGE_URL && !imageError ? (
           <img
             src={currentProduct.IMAGE_URL}
@@ -266,60 +266,60 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-white rounded-t-lg">
-            <ImageIcon className="h-12 w-12 text-muted-foreground" />
+            <ImageIcon className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 text-muted-foreground" />
           </div>
         )}
 
         {/* Stock Status Badge */}
         {outOfStock && (
-          <Badge variant="destructive" className="absolute bottom-2 left-2">
+          <Badge variant="destructive" className="absolute bottom-2 left-2 text-[10px] sm:text-xs">
             Out of Stock
           </Badge>
         )}
 
         {/* Special Product Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
+        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-col gap-1">
           {isTopValueOfDay && !outOfStock && (
-            <Badge className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-amber-900 font-bold shadow-xl animate-pulse flex items-center gap-1 border border-amber-300">
-              <Crown className="h-3 w-3" />
-              Top Value of the Day
+            <Badge className="bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 text-amber-900 font-bold shadow-xl animate-pulse flex items-center gap-1 border border-amber-300 text-[9px] sm:text-[10px]">
+              <Crown className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              Top Value
             </Badge>
           )}
           {isFeatured && !outOfStock && !isTopValueOfDay && (
-            <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-1">
-              <Star className="h-3 w-3" />
+            <Badge className="bg-primary text-primary-foreground font-medium flex items-center gap-1 text-[9px] sm:text-[10px]">
+              <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               Featured
             </Badge>
           )}
           {isTopValue && !outOfStock && !isFeatured && !isTopValueOfDay && (
-            <Badge className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white font-semibold shadow-lg">
+            <Badge className="bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 text-white font-semibold shadow-lg text-[9px] sm:text-[10px]">
               Best Value
             </Badge>
           )}
           {isPopular && !outOfStock && !isFeatured && !isTopValue && !isTopValueOfDay && (
-            <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium flex items-center gap-1">
-              <TrendingUp className="h-3 w-3" />
+            <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium flex items-center gap-1 text-[9px] sm:text-[10px]">
+              <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               Popular
             </Badge>
           )}
         </div>
       </div>
 
-      {/* Product Info */}
-      <CardContent className="p-2.5 flex flex-col justify-between h-[48%] md:h-[50%]">
-        {/* Brand Name - Small uppercase for premium feel */}
-        <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5">
+      {/* Product Info - compact, no empty space */}
+      <CardContent className="p-2 sm:p-2.5 md:p-3 flex flex-col gap-0.5 sm:gap-1">
+        {/* Brand Name */}
+        <p className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
           {getBrandFromProduct(currentProduct)}
         </p>
 
-        {/* Product Title - Larger, font-heading */}
-        <CardTitle className="text-[13px] font-heading font-semibold line-clamp-2 min-h-[2.2rem] leading-tight mb-1">
+        {/* Product Title */}
+        <CardTitle className="text-[11px] sm:text-[12px] md:text-[13px] font-heading font-semibold line-clamp-2 leading-tight">
           {toTitleCase(safeDisplayValue(currentProduct.TITLE, "Product Title Not Available"))}
         </CardTitle>
 
-        {/* Flavour Section - Static or Dropdown */}
+        {/* Flavour Section */}
         <div 
-          className="mb-1 relative z-[150]" 
+          className="relative z-[150]" 
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
@@ -331,7 +331,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                 onValueChange={handleVariantChange}
               >
                 <SelectTrigger 
-                  className="h-5 text-[9px] px-1.5 py-0 bg-background border-border/50 w-full"
+                  className="h-5 sm:h-6 text-[8px] sm:text-[9px] md:text-[10px] px-1.5 py-0 bg-background border-border/50 w-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -359,56 +359,56 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-[8px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+              <span className="text-[7px] sm:text-[8px] text-muted-foreground whitespace-nowrap flex-shrink-0">
                 +{product.variantCount! - 1}
               </span>
             </div>
           ) : (
-            <p className="text-[10px] text-muted-foreground line-clamp-1">
+            <p className="text-[9px] sm:text-[10px] text-muted-foreground line-clamp-1">
               {formatFlavour(safeDisplayValue(currentProduct.FLAVOUR, ''))}
             </p>
           )}
         </div>
 
-        {/* Price and Servings/Amount - Price is prominent */}
-        <div className="flex items-center justify-between mb-1">
+        {/* Price and Servings/Amount */}
+        <div className="flex items-center justify-between">
           <div className="flex flex-col">
             {currentProduct.RRP && currentProduct.RRP !== currentProduct.PRICE && (
-              <span className="text-[9px] text-muted-foreground line-through">
+              <span className="text-[8px] sm:text-[9px] text-muted-foreground line-through">
                 was {safeDisplayValue(currentProduct.RRP)}
               </span>
             )}
-            <span className="text-base font-bold text-primary tabular-nums tracking-tight">
+            <span className="text-sm sm:text-base md:text-lg font-bold text-primary tabular-nums tracking-tight">
               {safeDisplayValue(currentProduct.PRICE, "Price N/A")}
             </span>
           </div>
           {getServingsOrAmountDisplay(currentProduct) && (
-            <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 font-medium">
+            <Badge variant="secondary" className="text-[8px] sm:text-[9px] px-1 sm:px-1.5 py-0.5 font-medium">
               {getServingsOrAmountDisplay(currentProduct)}
             </Badge>
           )}
         </div>
 
-        {/* Protein per Serving - Compact single line */}
-        <div className="flex justify-between items-center text-xs mb-0.5">
-          <span className="text-muted-foreground text-[10px]">Protein/Serving</span>
-          <span className="font-semibold text-foreground tabular-nums text-[11px]">
+        {/* Protein per Serving */}
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground text-[9px] sm:text-[10px]">Protein/Serving</span>
+          <span className="font-semibold text-foreground tabular-nums text-[10px] sm:text-[11px]">
             {formatProtein(currentProduct.PROTEIN_SERVING)}
           </span>
         </div>
 
-        {/* Intake Value Bar - Compact */}
+        {/* Intake Value Bar */}
         {(SHOW_VALUE_BAR_ALWAYS || comparisonProducts.length > 0) && valueRating && !outOfStock && (
-          <div className="mt-auto pt-1 border-t border-border/30">
-            <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[8px] font-heading font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="pt-1 border-t border-border/30">
+            <div className="flex items-center justify-between">
+              <span className="text-[7px] sm:text-[8px] font-heading font-medium text-muted-foreground uppercase tracking-wider">
                 Intake Value
               </span>
-              <span className={`text-[10px] font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent tabular-nums`}>
+              <span className={`text-[9px] sm:text-[10px] font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent tabular-nums`}>
                 {valueRating}
               </span>
             </div>
-            <div className="relative h-1 bg-muted/20 rounded-full overflow-hidden">
+            <div className="relative h-1 bg-muted/20 rounded-full overflow-hidden mt-0.5">
               <div 
                 className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 ${
                   valueRating >= 9.5 ? 'shadow-lg animate-[shimmer_2s_ease-in-out_infinite]' : 'shadow-sm'
@@ -435,19 +435,19 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
     <>
       <Card 
         ref={cardRef}
-        className={`h-[380px] sm:h-[400px] md:h-[440px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
+        className={`h-[340px] sm:h-[380px] md:h-[420px] transition-all duration-300 group hover:shadow-card ${getBorderClass()} ${
           outOfStock ? 'opacity-60 grayscale' : 'hover:scale-[1.02] hover:rounded-lg'
         } flex flex-col relative overflow-hidden rounded-lg`}
       >
         {/* Right-side icon stack */}
-        <div className="absolute top-2 right-2 z-[100] flex flex-col gap-1.5">
+        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-[100] flex flex-col gap-1 sm:gap-1.5">
           {/* Add to comparison button */}
           <Button
             onClick={handleAddToComparison}
             disabled={isInComparison(currentProduct) || comparisonProducts.length >= 4 || outOfStock}
             size="sm"
             variant="outline"
-            className={`h-8 w-8 p-0 border-2 backdrop-blur-sm transition-all duration-300 rounded-full hover:scale-110 ${
+            className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 border-2 backdrop-blur-sm transition-all duration-300 rounded-full hover:scale-110 ${
               addAnimation ? 'scale-0' : ''
             } ${
               isInComparison(currentProduct) 
@@ -455,7 +455,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                 : 'bg-background/80 border-white/60 text-white hover:border-purple-500 hover:text-purple-500 hover:bg-purple-500/10'
             }`}
           >
-            <Plus className="h-4 w-4 font-bold" />
+            <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 font-bold" />
           </Button>
 
           {/* Favorite button */}
@@ -463,13 +463,13 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
             onClick={handleFavoriteClick}
             size="sm"
             variant="outline"
-            className={`h-8 w-8 p-0 border-2 backdrop-blur-sm transition-all duration-300 rounded-full hover:scale-110 ${
+            className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 border-2 backdrop-blur-sm transition-all duration-300 rounded-full hover:scale-110 ${
               isProductFavorited 
                 ? 'bg-red-500 border-red-500 text-white' 
                 : 'bg-background/80 border-white/60 text-white hover:border-red-500 hover:text-red-500 hover:bg-red-500/10'
             }`}
           >
-            <Heart className={`h-4 w-4 ${isProductFavorited ? 'fill-current' : ''}`} />
+            <Heart className={`h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 ${isProductFavorited ? 'fill-current' : ''}`} />
           </Button>
 
           {/* Price trend indicator */}
