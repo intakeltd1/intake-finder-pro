@@ -6,6 +6,7 @@ import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { incrementClickCount, numFromPrice, isValidServings } from "@/utils/productUtils";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
+import { toTitleCase, formatFlavour } from "@/utils/textFormatting";
 import {
   Table,
   TableBody,
@@ -234,7 +235,7 @@ export function ComparisonModal() {
     },
     { 
       label: 'Flavour', 
-      getValue: (p: any) => formatValue(p.FLAVOUR),
+      getValue: (p: any) => formatFlavour(p.FLAVOUR) || '—',
     },
     { 
       label: 'Stock Status', 
@@ -320,8 +321,8 @@ export function ComparisonModal() {
                               )}
                             </div>
                             {/* Product Title */}
-                            <span className="text-xs font-medium line-clamp-2 text-center leading-tight">
-                              {product.TITLE || "Product"}
+                            <span className="text-xs font-heading font-medium line-clamp-2 text-center leading-tight">
+                              {toTitleCase(product.TITLE) || "Product"}
                             </span>
                             {/* Remove button */}
                             <Button
