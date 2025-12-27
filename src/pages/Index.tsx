@@ -147,12 +147,24 @@ useEffect(() => {
       }
       
       // Transform data to match expected field structure and filter out products with insufficient data
-      const transformedProducts = items.map(transformProductData).filter(hasMinimumData);
+      const transformedProducts = items.map(transformProductData);
+      
+      // Debug: Check for invalid price formats before filtering
+      const invalidPriceProducts = transformedProducts.filter(p => {
+        const price = (p.PRICE || '').toLowerCase();
+        return price.includes('per shake') || price.includes('per serving') || price.includes('per scoop') || price.includes('per portion');
+      });
+      if (invalidPriceProducts.length > 0) {
+        console.log(`Found ${invalidPriceProducts.length} products with invalid price formats:`, invalidPriceProducts.slice(0, 5).map(p => ({ title: p.TITLE, price: p.PRICE })));
+      }
+      
+      const validProducts = transformedProducts.filter(hasMinimumData);
+      console.log(`Price validation: ${transformedProducts.length} total → ${validProducts.length} valid (rejected ${transformedProducts.length - validProducts.length} with invalid data)`);
       
       // Deduplicate by TITLE + FLAVOUR, keeping the version with more complete data
-      const deduplicatedProducts = deduplicateByFlavour(transformedProducts);
+      const deduplicatedProducts = deduplicateByFlavour(validProducts);
       
-      console.log(`Pipeline: ${items.length} raw → ${transformedProducts.length} filtered → ${deduplicatedProducts.length} deduplicated (removed ${transformedProducts.length - deduplicatedProducts.length} duplicate flavours)`);
+      console.log(`Pipeline: ${items.length} raw → ${validProducts.length} filtered → ${deduplicatedProducts.length} deduplicated (removed ${validProducts.length - deduplicatedProducts.length} duplicate flavours)`);
       
       setProducts(deduplicatedProducts);
       setLastUpdatedAt(metaDate || response.headers.get('last-modified') || response.headers.get('date'));
