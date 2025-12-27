@@ -1,16 +1,19 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, ArrowLeft, Zap } from "lucide-react";
+import { AlertCircle, Zap } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { CookiesDisclaimer } from "@/components/CookiesDisclaimer";
 import { ElectrolyteProductCard } from "@/components/ElectrolyteProductCard";
+import { ElectrolyteComparisonWidget } from "@/components/ElectrolyteComparisonWidget";
+import { ElectrolyteComparisonModal } from "@/components/ElectrolyteComparisonModal";
+import { ElectrolyteComparisonProvider } from "@/hooks/useElectrolyteComparison";
+import { filterByValidFlavor, countInvalidFlavors } from "@/utils/flavorFilter";
 import {
   ElectrolyteProduct,
   hasValidPrice,
@@ -55,9 +58,13 @@ export default function Electrolytes() {
           items = parsed;
         }
 
-        console.log('Loaded electrolyte products:', items?.length, metaDate ? `(lastUpdated: ${metaDate})` : '');
+        // Apply core flavor filtering to remove invalid entries
+        const validFlavors = filterByValidFlavor(items);
+        const removedCount = countInvalidFlavors(items);
+        
+        console.log(`Loaded electrolyte products: ${items.length}, filtered out ${removedCount} with invalid flavors, remaining: ${validFlavors.length}`, metaDate ? `(lastUpdated: ${metaDate})` : '');
 
-        setProducts(items);
+        setProducts(validFlavors);
         setLastUpdatedAt(metaDate || null);
         setError(null);
       } catch (error) {
@@ -221,6 +228,7 @@ export default function Electrolytes() {
   }
 
   return (
+    <ElectrolyteComparisonProvider>
     <div className="min-h-screen relative">
       {/* Video Background */}
       <video 
@@ -436,7 +444,16 @@ export default function Electrolytes() {
         </div>
 
         <CookiesDisclaimer />
+        
+        {/* Comparison Widget & Modal */}
+        <ElectrolyteComparisonWidget />
+        <ElectrolyteComparisonModal 
+          isSubscription={isSubscription} 
+          benchmarks={benchmarks} 
+          rankings={rankings} 
+        />
       </div>
     </div>
+    </ElectrolyteComparisonProvider>
   );
 }
