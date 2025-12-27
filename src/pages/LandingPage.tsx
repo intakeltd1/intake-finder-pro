@@ -43,9 +43,9 @@ const LandingPage = () => {
         <header className="flex items-center justify-between p-4 sm:p-6">
           <div className="flex items-center gap-3">
             <img
-              src="/intake-logo.png"
-              alt="Intake IQ"
-              className="h-8 sm:h-10 w-auto"
+              src="/lovable-uploads/147a0591-cb92-4577-9a7e-31de1281abc2.png"
+              alt="Intake"
+              className="h-8 sm:h-10 w-auto filter drop-shadow-[0_0_16px_rgba(255,255,255,0.6)]"
             />
           </div>
           <NavigationDrawer />
