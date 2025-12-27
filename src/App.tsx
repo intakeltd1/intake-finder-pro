@@ -27,8 +27,6 @@ const App = () => (
               <Route path="/" element={<LandingPage />} />
               <Route path="/protein" element={<Index />} />
               <Route path="/electrolytes" element={<Electrolytes />} />
-              <Route path="/pre-workout" element={<ComingSoon category="Pre-Workout" />} />
-              <Route path="/recovery" element={<ComingSoon category="Recovery" />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/favorites" element={<Favorites />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
