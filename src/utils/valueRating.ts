@@ -3,13 +3,14 @@
 // Best product = 10.0, worst = 5.0, all others distributed by percentile rank
 // Weights: 55% Servings/£, 38.3% Protein/£, 6.7% Discount %
 
-import { isValidServings } from '@/utils/productUtils';
+import { isValidServings, parseGrams } from '@/utils/productUtils';
 
 interface Product {
   PRICE?: string;
   RRP?: string;
   SERVINGS?: string;
   PROTEIN_SERVING?: string;
+  AMOUNT?: string;
   URL?: string;
   LINK?: string;
   [key: string]: any;
@@ -20,6 +21,8 @@ export interface DatasetBenchmarks {
   maxProteinPerPound: number;
   minServingsPerPound: number;
   maxServingsPerPound: number;
+  minAmountPerPound: number;
+  maxAmountPerPound: number;
   minDiscountPercent: number;
   maxDiscountPercent: number;
 }
@@ -69,11 +72,16 @@ const calculateRawMetrics = (product: Product) => {
   const protein = parseProtein(product.PROTEIN_SERVING);
   const discountPercent = calculateDiscountPercent(product.PRICE, product.RRP);
   
+  // Parse AMOUNT as fallback when SERVINGS is invalid
+  const amountGrams = parseGrams(product.AMOUNT);
+  
   return {
     proteinPerPound: price && protein ? protein / price : null,
     servingsPerPound: price && servings ? servings / price : null,
+    amountPerPound: price && amountGrams ? amountGrams / price : null,
     discountPercent,
-    hasServings: servings !== null
+    hasValidServings: servings !== null,
+    hasValidAmount: amountGrams !== null
   };
 };
 
@@ -86,6 +94,8 @@ export function calculateDatasetBenchmarks(products: Product[]): DatasetBenchmar
   let maxProteinPerPound = 0;
   let minServingsPerPound = Infinity;
   let maxServingsPerPound = 0;
+  let minAmountPerPound = Infinity;
+  let maxAmountPerPound = 0;
   let minDiscountPercent = 0;
   let maxDiscountPercent = 0;
 
@@ -102,18 +112,26 @@ export function calculateDatasetBenchmarks(products: Product[]): DatasetBenchmar
       maxServingsPerPound = Math.max(maxServingsPerPound, metrics.servingsPerPound);
     }
     
+    if (metrics.amountPerPound !== null) {
+      minAmountPerPound = Math.min(minAmountPerPound, metrics.amountPerPound);
+      maxAmountPerPound = Math.max(maxAmountPerPound, metrics.amountPerPound);
+    }
+    
     maxDiscountPercent = Math.max(maxDiscountPercent, metrics.discountPercent);
   }
 
   // Handle edge cases where no valid data exists
   if (minProteinPerPound === Infinity) minProteinPerPound = 0;
   if (minServingsPerPound === Infinity) minServingsPerPound = 0;
+  if (minAmountPerPound === Infinity) minAmountPerPound = 0;
 
   return {
     minProteinPerPound,
     maxProteinPerPound,
     minServingsPerPound,
     maxServingsPerPound,
+    minAmountPerPound,
+    maxAmountPerPound,
     minDiscountPercent,
     maxDiscountPercent
   };
@@ -128,6 +146,8 @@ const normalize = (value: number, min: number, max: number): number => {
 /**
  * Calculate raw weighted score for a product (internal use)
  * Returns { score, hasMissingData } to track data quality
+ * 
+ * Now supports AMOUNT fallback: if SERVINGS is invalid, uses AMOUNT (grams/£) instead
  */
 function calculateRawWeightedScore(
   product: Product,
@@ -139,25 +159,35 @@ function calculateRawWeightedScore(
   const metrics = calculateRawMetrics(product);
   
   // Track if product has missing essential data
-  const hasMissingData = metrics.proteinPerPound === null || metrics.servingsPerPound === null;
+  // Now acceptable if EITHER servings OR amount is available
+  const hasMissingData = metrics.proteinPerPound === null || 
+    (metrics.servingsPerPound === null && metrics.amountPerPound === null);
   
   // Normalize protein per £1 (penalize missing data with 0.15)
   const normalizedProtein = metrics.proteinPerPound !== null
     ? normalize(metrics.proteinPerPound, benchmarks.minProteinPerPound, benchmarks.maxProteinPerPound)
     : 0.15;
   
-  // Normalize servings per £1 (penalize missing data with 0.15)
-  const normalizedServings = metrics.servingsPerPound !== null
-    ? normalize(metrics.servingsPerPound, benchmarks.minServingsPerPound, benchmarks.maxServingsPerPound)
-    : 0.15;
+  // Normalize servings per £1, OR fallback to amount per £1
+  let normalizedServingsOrAmount: number;
+  if (metrics.servingsPerPound !== null) {
+    // Primary: use servings
+    normalizedServingsOrAmount = normalize(metrics.servingsPerPound, benchmarks.minServingsPerPound, benchmarks.maxServingsPerPound);
+  } else if (metrics.amountPerPound !== null) {
+    // Fallback: use amount (grams per £)
+    normalizedServingsOrAmount = normalize(metrics.amountPerPound, benchmarks.minAmountPerPound, benchmarks.maxAmountPerPound);
+  } else {
+    // Neither available - penalize
+    normalizedServingsOrAmount = 0.15;
+  }
   
   // Normalize discount %
   const normalizedDiscount = benchmarks.maxDiscountPercent > 0
     ? normalize(metrics.discountPercent, benchmarks.minDiscountPercent, benchmarks.maxDiscountPercent)
     : 0;
   
-  // Weighted average (38.3% protein, 55% servings, 6.7% discount)
-  const score = (normalizedProtein * 0.383) + (normalizedServings * 0.55) + (normalizedDiscount * 0.067);
+  // Weighted average (38.3% protein, 55% servings/amount, 6.7% discount)
+  const score = (normalizedProtein * 0.383) + (normalizedServingsOrAmount * 0.55) + (normalizedDiscount * 0.067);
   
   return { score, hasMissingData };
 }

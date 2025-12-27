@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, TrendingUp, Star, Plus, Crown, Heart } from "lucide-react";
 import { useState, useRef } from "react";
-import { incrementClickCount, parseGrams, formatAmount } from "@/utils/productUtils";
+import { incrementClickCount, parseGrams, formatAmount, isValidServings } from "@/utils/productUtils";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
 import { usePriceTrend } from "@/hooks/usePriceTrend";
@@ -124,6 +124,23 @@ const formatDisplayAmount = (amount?: string): string => {
   return formatAmount(grams);
 };
 
+// Get display value for servings or amount badge - prioritizes servings
+const getServingsOrAmountDisplay = (product: Product): string => {
+  const servings = product.SERVINGS;
+  
+  // Check if SERVINGS is valid (not a weight like "500g")
+  if (servings && isValidServings(servings)) {
+    const num = parseFloat(String(servings).replace(/[^\d.]/g, ''));
+    if (!isNaN(num) && num > 0) {
+      return `${Math.round(num)} servings`;
+    }
+  }
+  
+  // Fallback to AMOUNT
+  const amount = formatDisplayAmount(product.AMOUNT);
+  return amount || '';
+};
+
 export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopValueOfDay }: ProductCardProps) {
   const [imageError, setImageError] = useState(false);
   const [addAnimation, setAddAnimation] = useState(false);
@@ -236,12 +253,12 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
   const cardContent = (
     <>
       {/* Product Image */}
-      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-[45%] md:h-[44%]">
+      <div className="relative w-full overflow-hidden rounded-t-lg bg-white h-[52%] md:h-[50%]">
         {currentProduct.IMAGE_URL && !imageError ? (
           <img
             src={currentProduct.IMAGE_URL}
             alt={currentProduct.TITLE || "Product image"}
-            className={`w-full h-full object-cover object-center transition-transform duration-300 rounded-t-lg ${
+            className={`w-full h-full object-contain object-center transition-transform duration-300 rounded-t-lg ${
               outOfStock ? 'grayscale' : ''
             }`}
             loading="lazy"
@@ -289,20 +306,20 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
       </div>
 
       {/* Product Info */}
-      <CardContent className="p-3 flex flex-col justify-between h-[55%] md:h-[56%]">
+      <CardContent className="p-2.5 flex flex-col justify-between h-[48%] md:h-[50%]">
         {/* Brand Name - Small uppercase for premium feel */}
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5">
+        <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-medium mb-0.5">
           {getBrandFromProduct(currentProduct)}
         </p>
 
         {/* Product Title - Larger, font-heading */}
-        <CardTitle className="text-sm font-heading font-semibold line-clamp-2 min-h-[2.5rem] leading-tight mb-1">
+        <CardTitle className="text-[13px] font-heading font-semibold line-clamp-2 min-h-[2.2rem] leading-tight mb-1">
           {toTitleCase(safeDisplayValue(currentProduct.TITLE, "Product Title Not Available"))}
         </CardTitle>
 
         {/* Flavour Section - Static or Dropdown */}
         <div 
-          className="mb-1.5 relative z-[150]" 
+          className="mb-1 relative z-[150]" 
           onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
           onTouchStart={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
@@ -314,7 +331,7 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                 onValueChange={handleVariantChange}
               >
                 <SelectTrigger 
-                  className="h-6 text-[10px] px-2 py-0 bg-background border-border/50 w-full"
+                  className="h-5 text-[9px] px-1.5 py-0 bg-background border-border/50 w-full"
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -342,56 +359,56 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                   ))}
                 </SelectContent>
               </Select>
-              <span className="text-[9px] text-muted-foreground whitespace-nowrap flex-shrink-0">
-                +{product.variantCount! - 1} more
+              <span className="text-[8px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+                +{product.variantCount! - 1}
               </span>
             </div>
           ) : (
-            <p className="text-[11px] text-muted-foreground line-clamp-1">
+            <p className="text-[10px] text-muted-foreground line-clamp-1">
               {formatFlavour(safeDisplayValue(currentProduct.FLAVOUR, ''))}
             </p>
           )}
         </div>
 
-        {/* Price and Amount - Price is prominent */}
-        <div className="flex items-center justify-between mb-1.5">
+        {/* Price and Servings/Amount - Price is prominent */}
+        <div className="flex items-center justify-between mb-1">
           <div className="flex flex-col">
             {currentProduct.RRP && currentProduct.RRP !== currentProduct.PRICE && (
-              <span className="text-[10px] text-muted-foreground line-through">
+              <span className="text-[9px] text-muted-foreground line-through">
                 was {safeDisplayValue(currentProduct.RRP)}
               </span>
             )}
-            <span className="text-lg font-bold text-primary tabular-nums tracking-tight">
+            <span className="text-base font-bold text-primary tabular-nums tracking-tight">
               {safeDisplayValue(currentProduct.PRICE, "Price N/A")}
             </span>
           </div>
-          {currentProduct.AMOUNT && formatDisplayAmount(currentProduct.AMOUNT) && (
-            <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 font-medium">
-              {formatDisplayAmount(currentProduct.AMOUNT)}
+          {getServingsOrAmountDisplay(currentProduct) && (
+            <Badge variant="secondary" className="text-[9px] px-1.5 py-0.5 font-medium">
+              {getServingsOrAmountDisplay(currentProduct)}
             </Badge>
           )}
         </div>
 
         {/* Protein per Serving - Compact single line */}
-        <div className="flex justify-between items-center text-xs mb-1">
-          <span className="text-muted-foreground text-[11px]">Protein/Serving</span>
-          <span className="font-semibold text-foreground tabular-nums">
+        <div className="flex justify-between items-center text-xs mb-0.5">
+          <span className="text-muted-foreground text-[10px]">Protein/Serving</span>
+          <span className="font-semibold text-foreground tabular-nums text-[11px]">
             {formatProtein(currentProduct.PROTEIN_SERVING)}
           </span>
         </div>
 
         {/* Intake Value Bar - Compact */}
         {(SHOW_VALUE_BAR_ALWAYS || comparisonProducts.length > 0) && valueRating && !outOfStock && (
-          <div className="mt-auto pt-1.5 border-t border-border/30">
+          <div className="mt-auto pt-1 border-t border-border/30">
             <div className="flex items-center justify-between mb-0.5">
-              <span className="text-[9px] font-heading font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-[8px] font-heading font-medium text-muted-foreground uppercase tracking-wider">
                 Intake Value
               </span>
-              <span className={`text-[11px] font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent tabular-nums`}>
+              <span className={`text-[10px] font-bold bg-gradient-to-r ${getValueRatingColor(valueRating)} bg-clip-text text-transparent tabular-nums`}>
                 {valueRating}
               </span>
             </div>
-            <div className="relative h-1.5 bg-muted/20 rounded-full overflow-hidden">
+            <div className="relative h-1 bg-muted/20 rounded-full overflow-hidden">
               <div 
                 className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getValueRatingColor(valueRating)} rounded-full transition-all duration-500 ${
                   valueRating >= 9.5 ? 'shadow-lg animate-[shimmer_2s_ease-in-out_infinite]' : 'shadow-sm'
@@ -408,9 +425,6 @@ export function ProductCard({ product, isTopValue, isFeatured, isPopular, isTopV
                 />
               )}
             </div>
-            <p className="text-[8px] text-muted-foreground/70 mt-0.5 text-right">
-              {getValueRatingLabel(valueRating)}
-            </p>
           </div>
         )}
       </CardContent>
