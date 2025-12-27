@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { X, ExternalLink, Package, Trophy, Scale, Sparkles, TrendingUp, PiggyBank, Percent, LineChart } from "lucide-react";
 import { useComparison } from "@/hooks/useComparison";
 import { useValueBenchmarks } from "@/hooks/useValueBenchmarks";
-import { incrementClickCount, numFromPrice } from "@/utils/productUtils";
+import { incrementClickCount, numFromPrice, isValidServings } from "@/utils/productUtils";
 import { calculateIntakeValueRating, getValueRatingColor, getValueRatingLabel } from "@/utils/valueRating";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
 import {
@@ -110,9 +110,14 @@ function AlgorithmExplanation() {
 // Helper to calculate derived values
 function calculateDerivedValues(product: any) {
   const price = numFromPrice(product.PRICE);
-  const servings = parseInt(String(product.SERVINGS || '0').replace(/\D/g, '')) || 0;
   const proteinPerServing = parseFloat(String(product.PROTEIN_SERVING || '0')) || 0;
   const rrp = numFromPrice(product.RRP);
+  
+  // Only parse servings if it's a valid serving count (not a weight like "500g")
+  const rawServings = product.SERVINGS;
+  const servings = isValidServings(rawServings) 
+    ? parseInt(String(rawServings || '0').replace(/\D/g, '')) 
+    : 0;
   
   // Price per serving
   const pricePerServing = servings > 0 && price < Infinity ? (price / servings) : null;
