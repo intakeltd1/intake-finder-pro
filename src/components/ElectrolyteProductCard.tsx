@@ -354,7 +354,7 @@ export function ElectrolyteProductCard({
 
         {/* Subscription Amount - highlighted when subscription mode is active */}
         {isSubscription && currentProduct.SUB_AMOUNT && (
-          <div className="flex items-center gap-1 bg-primary/20 rounded px-1.5 py-1 border border-primary/30 animate-pulse">
+          <div className="flex items-center gap-1 bg-primary/20 rounded px-1.5 py-1 border border-primary/30">
             <Zap className="h-3 w-3 text-primary" />
             <span className="text-[10px] sm:text-[11px] font-semibold text-primary">
               {currentProduct.SUB_AMOUNT}
