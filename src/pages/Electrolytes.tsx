@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, SortDesc } from "lucide-react";
+import { AlertCircle, SortDesc, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,6 +36,18 @@ export default function Electrolytes() {
   const [displayedCount, setDisplayedCount] = useState(28);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
+
+  // Check if any filter/search is active
+  const hasSearchCriteria = useMemo(() => {
+    return query.trim() !== '' || sortBy !== 'value';
+  }, [query, sortBy]);
+
+  // Reset all filters
+  const handleReset = () => {
+    setQuery('');
+    setSortBy('value');
+    setDisplayedCount(28);
+  };
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const isLoadingRef = useRef(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -142,8 +154,8 @@ export default function Electrolytes() {
             : parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '9999');
           return priceA - priceB;
         case 'sodium':
-          const sodiumA = parseFloat(String(a.SODIUM || '').replace(/[^\d.]/g, '') || '0');
-          const sodiumB = parseFloat(String(b.SODIUM || '').replace(/[^\d.]/g, '') || '0');
+          const sodiumA = typeof a.SODIUM_MG === 'number' ? a.SODIUM_MG : 0;
+          const sodiumB = typeof b.SODIUM_MG === 'number' ? b.SODIUM_MG : 0;
           return sodiumB - sodiumA; // Higher sodium first
         default:
           return 0;
@@ -372,16 +384,27 @@ export default function Electrolytes() {
                 />
               </div>
 
-              {/* Results Count */}
+              {/* Results Count and Reset */}
               <div className="flex items-center justify-between text-xs text-foreground/70">
-                <span>
-                  {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''} 
-                  {processingStats.grouped < processingStats.deduplicated && (
-                    <span className="text-foreground/50 ml-1">
-                      ({processingStats.deduplicated} variants)
-                    </span>
+                <div className="flex items-center gap-2">
+                  <span>
+                    {sortedProducts.length} product{sortedProducts.length !== 1 ? 's' : ''} 
+                    {processingStats.grouped < processingStats.deduplicated && (
+                      <span className="text-foreground/50 ml-1">
+                        ({processingStats.deduplicated} variants)
+                      </span>
+                    )}
+                  </span>
+                  {hasSearchCriteria && (
+                    <button
+                      onClick={handleReset}
+                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-primary/20 hover:bg-primary/30 text-primary transition-colors text-xs font-medium"
+                    >
+                      <RotateCcw className="h-3 w-3" />
+                      Reset
+                    </button>
                   )}
-                </span>
+                </div>
                 <span>{isSubscription ? 'Subscription mode' : 'One-time purchase mode'}</span>
               </div>
             </div>
@@ -392,7 +415,7 @@ export default function Electrolytes() {
       {/* Products Section */}
       <div className="relative z-10">
         {/* Top Value Products */}
-        {topValueProducts.length > 0 && !debouncedQuery.trim() && (
+        {topValueProducts.length > 0 && !hasSearchCriteria && (
           <div className="container mx-auto px-2 md:px-4 py-6">
             <div className="featured-products-container rounded-xl p-3 md:p-4 bg-background/5 backdrop-blur-sm">
               <h2 className="text-lg md:text-xl font-bold text-center mb-3 md:mb-4 text-foreground drop-shadow-[0_0_4px_rgba(0,0,0,0.6)]">
