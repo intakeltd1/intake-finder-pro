@@ -151,9 +151,14 @@ export default function Electrolytes() {
     });
   }, [groupedProducts, benchmarks, rankings, isSubscription, sortBy]);
 
-  // Get top value products
+  // Get top value products (top 4 for display, but only 3 get "Best Value" badge)
   const topValueProducts = useMemo(() => {
     return sortedProducts.slice(0, 4);
+  }, [sortedProducts]);
+  
+  // Limit "Best Value" badge to only 3 products (ranks 2-4, since rank 1 is "Top Value")
+  const bestValueProductUrls = useMemo(() => {
+    return new Set(sortedProducts.slice(1, 4).map(p => p.PAGE_URL || `${p.TITLE}-${p.FLAVOUR}`));
   }, [sortedProducts]);
 
   // Top value of day (rank 1)
@@ -397,6 +402,7 @@ export default function Electrolytes() {
                 {topValueProducts.map((product, index) => {
                   const productUrl = product.PAGE_URL || `${product.TITLE}-${product.FLAVOUR}`;
                   const isTopValueOfDay = topValueOfDayUrl === productUrl;
+                  const isBestValue = bestValueProductUrls.has(productUrl);
                   
                   return (
                     <div 
@@ -410,7 +416,7 @@ export default function Electrolytes() {
                           isSubscription={isSubscription}
                           benchmarks={benchmarks}
                           rankings={rankings}
-                          isTopValue={!isTopValueOfDay}
+                          isTopValue={isBestValue}
                           isTopValueOfDay={isTopValueOfDay}
                         />
                       </div>
@@ -430,7 +436,8 @@ export default function Electrolytes() {
                 {displayedProducts.map((product, index) => {
                   const productUrl = product.PAGE_URL || `${product.TITLE}-${product.FLAVOUR}`;
                   const isTopValueOfDay = topValueOfDayUrl === productUrl;
-                  const isTop10 = index < 10;
+                  const isBestValue = bestValueProductUrls.has(productUrl);
+                  const showBorder = index < 4 || isTopValueOfDay;
                   
                   return (
                     <div 
@@ -438,14 +445,14 @@ export default function Electrolytes() {
                       className="staggered-fade-in"
                       style={{ animationDelay: `${Math.min(index, 20) * 40}ms` }}
                     >
-                      {(isTop10 || isTopValueOfDay) ? (
+                      {showBorder ? (
                         <div className="white-circle-border">
                           <ElectrolyteProductCard
                             product={product}
                             isSubscription={isSubscription}
                             benchmarks={benchmarks}
                             rankings={rankings}
-                            isTopValue={isTop10 && !isTopValueOfDay}
+                            isTopValue={isBestValue}
                             isTopValueOfDay={isTopValueOfDay}
                           />
                         </div>
