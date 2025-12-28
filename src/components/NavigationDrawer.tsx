@@ -188,7 +188,7 @@ export function NavigationDrawer() {
             </Button>
           )}
           <div className="text-center text-sm text-muted-foreground">
-            <p>© 2024 Intake Ltd</p>
+            <p>© {new Date().getFullYear()} Intake Ltd</p>
           </div>
         </DrawerFooter>
       </DrawerContent>
