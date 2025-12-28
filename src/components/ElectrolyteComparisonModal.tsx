@@ -224,15 +224,6 @@ export function ElectrolyteComparisonModal({ isSubscription, benchmarks, ranking
       highlightColor: 'text-blue-500'
     },
     { 
-      label: 'Electrolytes/£1', 
-      getValue: (p: ElectrolyteProduct) => {
-        const { electrolytesPerPound } = calculateDerivedValues(p, isSubscription);
-        return electrolytesPerPound ? `${Math.round(electrolytesPerPound)}mg` : '—';
-      },
-      highlight: true,
-      highlightColor: 'text-cyan-500'
-    },
-    { 
       label: 'Flavour', 
       getValue: (p: ElectrolyteProduct) => formatFlavour(p.FLAVOUR) || '—',
     },
