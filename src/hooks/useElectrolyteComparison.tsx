@@ -13,7 +13,8 @@ interface ElectrolyteComparisonContextType {
 
 const ElectrolyteComparisonContext = createContext<ElectrolyteComparisonContextType | undefined>(undefined);
 
-const getProductKey = (product: ElectrolyteProduct): string => {
+const getProductKey = (product: ElectrolyteProduct | undefined | null): string => {
+  if (!product) return '';
   return product.PAGE_URL || `${product.TITLE}-${product.FLAVOUR}`;
 };
 
@@ -41,7 +42,8 @@ export function ElectrolyteComparisonProvider({ children }: { children: ReactNod
     setShowComparison(false);
   }, []);
 
-  const isInComparison = useCallback((product: ElectrolyteProduct) => {
+  const isInComparison = useCallback((product: ElectrolyteProduct | undefined | null) => {
+    if (!product) return false;
     const productKey = getProductKey(product);
     return comparisonProducts.some(p => getProductKey(p) === productKey);
   }, [comparisonProducts]);
