@@ -62,10 +62,12 @@ export const deduplicateExact = (products: ElectrolyteProduct[]): ElectrolytePro
 
 // Generate grouping key for products that should share a tile (same product, different flavors)
 const getGroupingKey = (product: ElectrolyteProduct): string => {
-  // Group by title + servings (essentially same product format, different flavors)
+  // Group by title + package size (SUB_AMOUNT) to consolidate flavor variants
+  // Products with same name and same package size but different flavors will be grouped
   const title = (product.TITLE || '').toLowerCase().trim();
-  const servings = String(product.SERVINGS || '').trim();
-  return `${title}|${servings}`;
+  // Use SUB_AMOUNT (e.g., "30 sachets") as the package identifier
+  const packageSize = (product.SUB_AMOUNT || String(product.SERVINGS || '')).toLowerCase().trim();
+  return `${title}|${packageSize}`;
 };
 
 export interface GroupedElectrolyteProduct extends ElectrolyteProduct {
