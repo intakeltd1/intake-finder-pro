@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import CategoryCard from "@/components/CategoryCard";
 import { Droplets, Dumbbell } from "lucide-react";
+import proteinHero from "@/assets/protein-hero.jpg";
+import electrolytesHero from "@/assets/electrolytes-hero.jpg";
 
 const categories = [
   {
@@ -10,6 +12,7 @@ const categories = [
     icon: Dumbbell,
     href: "/protein",
     available: true,
+    image: proteinHero,
   },
   {
     title: "Electrolytes",
@@ -17,6 +20,7 @@ const categories = [
     icon: Droplets,
     href: "/electrolytes",
     available: true,
+    image: electrolytesHero,
   },
 ];
 
@@ -90,6 +94,7 @@ const LandingPage = () => {
                   href={category.href}
                   available={category.available}
                   delay={index * 0.1}
+                  image={category.image}
                 />
               ))}
             </div>
