@@ -18,6 +18,7 @@ import {
   hasValidPrice,
   calculateElectrolyteBenchmarks,
   calculateElectrolyteRankings,
+  calculateElectrolyteValueRating,
 } from "@/utils/electrolyteValueRating";
 import { 
   processElectrolyteProducts,
@@ -121,18 +122,17 @@ export default function Electrolytes() {
     return result;
   }, [searchFiltered, benchmarks, rankings, isSubscription]);
 
-  // Sort grouped products by value rating
+  // Sort grouped products by value rating of the best variant
   const sortedProducts = useMemo(() => {
-    if (!rankings) return groupedProducts;
+    if (!benchmarks || !rankings) return groupedProducts;
     
     return [...groupedProducts].sort((a, b) => {
-      const keyA = a.PAGE_URL || `${a.TITLE}-${a.FLAVOUR}`;
-      const keyB = b.PAGE_URL || `${b.TITLE}-${b.FLAVOUR}`;
-      const rankA = rankings.rankMap.get(keyA) ?? Infinity;
-      const rankB = rankings.rankMap.get(keyB) ?? Infinity;
-      return rankA - rankB;
+      // Use calculateElectrolyteValueRating directly on the best variant (which is the grouped product itself)
+      const ratingA = calculateElectrolyteValueRating(a, benchmarks, rankings, isSubscription) || 0;
+      const ratingB = calculateElectrolyteValueRating(b, benchmarks, rankings, isSubscription) || 0;
+      return ratingB - ratingA; // Higher rating = better = comes first
     });
-  }, [groupedProducts, rankings]);
+  }, [groupedProducts, benchmarks, rankings, isSubscription]);
 
   // Get top value products
   const topValueProducts = useMemo(() => {
