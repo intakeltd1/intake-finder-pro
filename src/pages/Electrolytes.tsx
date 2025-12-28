@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useDebounce } from 'use-debounce';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Zap } from "lucide-react";
+import { AlertCircle, SortDesc } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { NavigationDrawer } from "@/components/NavigationDrawer";
 import { CookiesDisclaimer } from "@/components/CookiesDisclaimer";
@@ -32,6 +32,7 @@ export default function Electrolytes() {
   const [query, setQuery] = useState('');
   const [debouncedQuery] = useDebounce(query, 300);
   const [isSubscription, setIsSubscription] = useState(true);
+  const [sortBy, setSortBy] = useState('value');
   const [displayedCount, setDisplayedCount] = useState(28);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
@@ -122,17 +123,33 @@ export default function Electrolytes() {
     return result;
   }, [searchFiltered, benchmarks, rankings, isSubscription]);
 
-  // Sort grouped products by value rating of the best variant
+  // Sort grouped products based on selected sort option
   const sortedProducts = useMemo(() => {
     if (!benchmarks || !rankings) return groupedProducts;
     
     return [...groupedProducts].sort((a, b) => {
-      // Use calculateElectrolyteValueRating directly on the best variant (which is the grouped product itself)
-      const ratingA = calculateElectrolyteValueRating(a, benchmarks, rankings, isSubscription) || 0;
-      const ratingB = calculateElectrolyteValueRating(b, benchmarks, rankings, isSubscription) || 0;
-      return ratingB - ratingA; // Higher rating = better = comes first
+      switch (sortBy) {
+        case 'value':
+          const ratingA = calculateElectrolyteValueRating(a, benchmarks, rankings, isSubscription) || 0;
+          const ratingB = calculateElectrolyteValueRating(b, benchmarks, rankings, isSubscription) || 0;
+          return ratingB - ratingA; // Higher rating = better = comes first
+        case 'price_low':
+          const priceA = isSubscription 
+            ? parseFloat(String(a.SUB_PRICE || a.PRICE || '').replace(/[^\d.]/g, '') || '9999')
+            : parseFloat(String(a.PRICE || '').replace(/[^\d.]/g, '') || '9999');
+          const priceB = isSubscription 
+            ? parseFloat(String(b.SUB_PRICE || b.PRICE || '').replace(/[^\d.]/g, '') || '9999')
+            : parseFloat(String(b.PRICE || '').replace(/[^\d.]/g, '') || '9999');
+          return priceA - priceB;
+        case 'sodium':
+          const sodiumA = parseFloat(String(a.SODIUM || '').replace(/[^\d.]/g, '') || '0');
+          const sodiumB = parseFloat(String(b.SODIUM || '').replace(/[^\d.]/g, '') || '0');
+          return sodiumB - sodiumA; // Higher sodium first
+        default:
+          return 0;
+      }
     });
-  }, [groupedProducts, benchmarks, rankings, isSubscription]);
+  }, [groupedProducts, benchmarks, rankings, isSubscription, sortBy]);
 
   // Get top value products
   const topValueProducts = useMemo(() => {
@@ -186,7 +203,7 @@ export default function Electrolytes() {
   // Reset displayed count when filters change
   useEffect(() => {
     setDisplayedCount(28);
-  }, [debouncedQuery, isSubscription]);
+  }, [debouncedQuery, isSubscription, sortBy]);
 
   // Ensure video autoplay
   useEffect(() => {
@@ -285,38 +302,58 @@ export default function Electrolytes() {
             </header>
 
             {/* Search and Toggle */}
-            <div className="px-4 md:px-6 pb-4 md:pb-5 space-y-4">
-              {/* Subscription Toggle - Professional dual-label design */}
-              <div className="flex items-center justify-center gap-2 sm:gap-3 p-3 sm:p-4 bg-background/30 rounded-lg">
-                <button
-                  onClick={() => setIsSubscription(false)}
-                  className={`text-xs sm:text-sm font-medium transition-all duration-200 px-2 sm:px-3 py-1.5 rounded-md whitespace-nowrap ${
-                    !isSubscription 
-                      ? 'text-primary bg-primary/20 shadow-sm' 
-                      : 'text-foreground/60 hover:text-foreground/80'
-                  }`}
-                >
-                  One-Time
-                </button>
-                
-                <Switch
-                  id="subscription-toggle"
-                  checked={isSubscription}
-                  onCheckedChange={setIsSubscription}
-                  className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted"
-                />
-                
-                <button
-                  onClick={() => setIsSubscription(true)}
-                  className={`text-xs sm:text-sm font-medium transition-all duration-200 px-2 sm:px-3 py-1.5 rounded-md whitespace-nowrap ${
-                    isSubscription 
-                      ? 'text-primary bg-primary/20 shadow-sm' 
-                      : 'text-foreground/60 hover:text-foreground/80'
-                  }`}
-                >
-                  Subscription
-                </button>
-                
+            <div className="px-4 md:px-6 pb-4 md:pb-5 space-y-3">
+              {/* Subscription Toggle + Sort Dropdown Row */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 p-3 sm:p-4 bg-background/30 rounded-lg border-2 border-white/20">
+                {/* Subscription Toggle */}
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={() => setIsSubscription(false)}
+                    className={`text-xs sm:text-sm font-medium transition-all duration-200 px-2 sm:px-3 py-1.5 rounded-md whitespace-nowrap ${
+                      !isSubscription 
+                        ? 'text-primary bg-primary/20 shadow-sm' 
+                        : 'text-foreground/60 hover:text-foreground/80'
+                    }`}
+                  >
+                    One-Time
+                  </button>
+                  
+                  <Switch
+                    id="subscription-toggle"
+                    checked={isSubscription}
+                    onCheckedChange={setIsSubscription}
+                    className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-muted"
+                  />
+                  
+                  <button
+                    onClick={() => setIsSubscription(true)}
+                    className={`text-xs sm:text-sm font-medium transition-all duration-200 px-2 sm:px-3 py-1.5 rounded-md whitespace-nowrap ${
+                      isSubscription 
+                        ? 'text-primary bg-primary/20 shadow-sm' 
+                        : 'text-foreground/60 hover:text-foreground/80'
+                    }`}
+                  >
+                    Subscription
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="hidden sm:block w-px h-6 bg-white/30" />
+
+                {/* Sort Dropdown */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="bg-background/20 border-white/30 text-foreground focus:bg-background/30 focus:border-white/50 h-8 text-xs w-full sm:w-[160px]">
+                    <div className="flex items-center gap-1 truncate">
+                      <SortDesc className="h-3 w-3 shrink-0 text-white/70" />
+                      <SelectValue placeholder="Sort by" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-border shadow-lg z-50">
+                    <SelectItem value="value">Best Value</SelectItem>
+                    <SelectItem value="price_low">Price: Low to High</SelectItem>
+                    <SelectItem value="sodium">Sodium per Serving</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Search */}
@@ -326,7 +363,7 @@ export default function Electrolytes() {
                   placeholder="Search electrolyte supplements..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="bg-background/50 border-border/50 text-foreground placeholder:text-foreground/50"
+                  className="bg-background/20 border-white/30 text-foreground placeholder:text-white/70 focus:bg-background/30 focus:border-white/50 h-7 text-xs"
                 />
               </div>
 
