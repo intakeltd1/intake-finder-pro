@@ -79,7 +79,53 @@ export interface GroupedElectrolyteProduct extends ElectrolyteProduct {
   variantCount: number;
 }
 
-// Group products by title + servings, selecting best value as default
+// Normalize flavor string for comparison (handles case, whitespace, punctuation)
+const normalizeFlavor = (flavor: string | undefined | null): string => {
+  if (!flavor) return '';
+  return flavor
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' '); // Normalize whitespace
+};
+
+// Deduplicate variants within a group by flavor, keeping the best value for each flavor
+const deduplicateVariantsByFlavor = (
+  variants: ElectrolyteProduct[],
+  benchmarks: ElectrolyteBenchmarks | null,
+  rankings: ElectrolyteRankings | null,
+  isSubscription: boolean
+): ElectrolyteProduct[] => {
+  const flavorMap = new Map<string, ElectrolyteProduct>();
+  
+  variants.forEach(product => {
+    const normalizedFlavor = normalizeFlavor(product.FLAVOUR);
+    const existing = flavorMap.get(normalizedFlavor);
+    
+    if (!existing) {
+      flavorMap.set(normalizedFlavor, product);
+    } else {
+      // Keep the one with better value rating, or if equal, more complete data
+      const existingRating = calculateElectrolyteValueRating(existing, benchmarks, rankings, isSubscription) || 0;
+      const newRating = calculateElectrolyteValueRating(product, benchmarks, rankings, isSubscription) || 0;
+      
+      if (newRating > existingRating) {
+        flavorMap.set(normalizedFlavor, product);
+      } else if (newRating === existingRating) {
+        // Tie-breaker: use data completeness
+        const existingScore = getDataCompletenessScore(existing);
+        const newScore = getDataCompletenessScore(product);
+        if (newScore > existingScore) {
+          flavorMap.set(normalizedFlavor, product);
+        }
+      }
+    }
+  });
+  
+  return Array.from(flavorMap.values());
+};
+
+// Group products by first 3 words of title + servings, selecting best value as default
 // Each group becomes one tile with a flavor dropdown
 export const groupElectrolytesByTitle = (
   products: ElectrolyteProduct[], 
@@ -89,7 +135,7 @@ export const groupElectrolytesByTitle = (
 ): GroupedElectrolyteProduct[] => {
   const groupedMap = new Map<string, ElectrolyteProduct[]>();
   
-  // Group products
+  // Group products by first 3 words + package size
   products.forEach(product => {
     const key = getGroupingKey(product);
     if (!groupedMap.has(key)) {
@@ -98,12 +144,15 @@ export const groupElectrolytesByTitle = (
     groupedMap.get(key)!.push(product);
   });
   
-  // Convert to GroupedElectrolyteProduct array, selecting best value variant as default
+  // Convert to GroupedElectrolyteProduct array
   const grouped: GroupedElectrolyteProduct[] = [];
   
   groupedMap.forEach((variants) => {
-    // Sort variants by value rating (best first)
-    const sortedVariants = [...variants].sort((a, b) => {
+    // Step 1: Deduplicate by flavor within the group (removes duplicate "Variety Pack" etc.)
+    const uniqueFlavors = deduplicateVariantsByFlavor(variants, benchmarks, rankings, isSubscription);
+    
+    // Step 2: Sort by value rating (best first)
+    const sortedVariants = [...uniqueFlavors].sort((a, b) => {
       const ratingA = calculateElectrolyteValueRating(a, benchmarks, rankings, isSubscription) || 0;
       const ratingB = calculateElectrolyteValueRating(b, benchmarks, rankings, isSubscription) || 0;
       return ratingB - ratingA;
