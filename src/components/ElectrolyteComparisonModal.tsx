@@ -1,8 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { X, ExternalLink, Scale, Droplets, Zap, DollarSign, TrendingDown, Award } from "lucide-react";
+import { X, ExternalLink, Package, Trophy, Scale, Sparkles, TrendingUp, PiggyBank, Droplets, LineChart, Zap } from "lucide-react";
 import { useElectrolyteComparison, getProductKey } from "@/hooks/useElectrolyteComparison";
 import { 
   ElectrolyteProduct,
@@ -14,7 +12,15 @@ import {
   ElectrolyteRankings
 } from "@/utils/electrolyteValueRating";
 import { PriceHistoryChart } from "@/components/PriceHistoryChart";
-import { toTitleCase } from "@/utils/textFormatting";
+import { toTitleCase, formatFlavour } from "@/utils/textFormatting";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ElectrolyteComparisonModalProps {
   isSubscription: boolean;
@@ -22,84 +28,94 @@ interface ElectrolyteComparisonModalProps {
   rankings: ElectrolyteRankings | null;
 }
 
-// Algorithm explanation component
+// Algorithm explanation component - matching protein style
 function AlgorithmExplanation() {
   return (
     <div className="space-y-6 py-4">
-      <div className="text-center space-y-2">
-        <div className="inline-flex items-center justify-center p-3 bg-blue-500/10 rounded-full mb-2">
+      {/* Hero Section */}
+      <div className="text-center space-y-3">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-600/20 border border-blue-500/30">
           <Scale className="h-8 w-8 text-blue-500" />
         </div>
-        <h3 className="text-xl font-bold">Electrolyte Intake Value Algorithm</h3>
+        <h3 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-cyan-600 bg-clip-text text-transparent">
+          Electrolyte Value Algorithm
+        </h3>
         <p className="text-muted-foreground text-sm max-w-md mx-auto">
-          Our algorithm evaluates electrolyte supplements based on multiple factors to help you find the best value.
+          Our transparent algorithm helps you find the best value electrolyte supplements, 
+          calculated fresh daily from real market data.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="p-4 rounded-lg bg-card border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-green-500/10 rounded-lg">
-              <DollarSign className="h-5 w-5 text-green-500" />
-            </div>
-            <div>
-              <h4 className="font-semibold">Cost per Serving</h4>
-              <p className="text-xs text-muted-foreground">35% weight</p>
+      {/* How It Works */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+              <PiggyBank className="h-4 w-4 text-green-500" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Lower cost per serving = higher score. We compare the price divided by number of servings.
+          <h4 className="font-medium text-sm">Cost per Serving</h4>
+          <p className="text-xs text-muted-foreground">
+            Lower cost per serving = better value. Price divided by number of servings.
           </p>
         </div>
 
-        <div className="p-4 rounded-lg bg-card border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-500/10 rounded-lg">
-              <Droplets className="h-5 w-5 text-blue-500" />
-            </div>
-            <div>
-              <h4 className="font-semibold">Electrolyte Content</h4>
-              <p className="text-xs text-muted-foreground">30% weight</p>
+        <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <Droplets className="h-4 w-4 text-blue-500" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <h4 className="font-medium text-sm">Electrolyte Content</h4>
+          <p className="text-xs text-muted-foreground">
             Total Na + K + Mg per serving. Higher electrolyte content = higher score.
           </p>
         </div>
 
-        <div className="p-4 rounded-lg bg-card border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-amber-500/10 rounded-lg">
-              <TrendingDown className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <h4 className="font-semibold">Discount from RRP</h4>
-              <p className="text-xs text-muted-foreground">20% weight</p>
+        <div className="bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/20 rounded-xl p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-amber-500" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Products with bigger discounts from RRP score higher. Great for bargain hunters.
-          </p>
-        </div>
-
-        <div className="p-4 rounded-lg bg-card border border-border">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-purple-500/10 rounded-lg">
-              <Zap className="h-5 w-5 text-purple-500" />
-            </div>
-            <div>
-              <h4 className="font-semibold">Servings per Pack</h4>
-              <p className="text-xs text-muted-foreground">15% weight</p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            More servings per pack = higher score. Better for long-term value.
+          <h4 className="font-medium text-sm">Discount Factor</h4>
+          <p className="text-xs text-muted-foreground">
+            Current discount vs RRP. Products with bigger discounts score higher.
           </p>
         </div>
       </div>
 
-      <div className="text-center text-sm text-muted-foreground">
-        <p>Add up to 4 products to compare them side-by-side!</p>
+      {/* Trust Indicators */}
+      <div className="bg-muted/30 rounded-xl p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-blue-500" />
+          <h4 className="font-medium text-sm">Why Trust Our Ratings?</h4>
+        </div>
+        <ul className="text-xs text-muted-foreground space-y-2">
+          <li className="flex items-start gap-2">
+            <span className="text-blue-500 font-bold">•</span>
+            <span><strong>Dynamic benchmarking:</strong> Scores are recalculated daily against the entire market</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-500 font-bold">•</span>
+            <span><strong>Non-biased clarity:</strong> Intake isn't affiliated with any brand — just unbiased data</span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-500 font-bold">•</span>
+            <span><strong>Data-driven:</strong> Only products with verified specs rank highest</span>
+          </li>
+        </ul>
+      </div>
+
+      {/* CTA */}
+      <div className="text-center space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Add products to compare by clicking the <span className="font-medium text-primary">+</span> button on any product card
+        </p>
+        <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground/70">
+          <Trophy className="h-3 w-3" />
+          <span>Best product of the day scores 10/10</span>
+        </div>
       </div>
     </div>
   );
@@ -126,267 +142,311 @@ function calculateDerivedValues(product: ElectrolyteProduct, isSubscription: boo
     pricePerServing,
     electrolytesPerPound,
     discountPercent,
+    rrp: rrpNum,
     sodium: product.SODIUM_MG,
     potassium: product.POTASSIUM_MG,
     magnesium: product.MAGNESIUM_MG,
   };
 }
 
-function formatValue(value: any, suffix = '', prefix = '') {
+function formatValue(value: any, suffix = '', prefix = ''): string {
   if (value === null || value === undefined || value === '') return '—';
-  if (typeof value === 'number') {
-    return `${prefix}${value.toFixed(2)}${suffix}`;
-  }
   return `${prefix}${value}${suffix}`;
 }
 
 export function ElectrolyteComparisonModal({ isSubscription, benchmarks, rankings }: ElectrolyteComparisonModalProps) {
   const { comparisonProducts, removeFromComparison, clearComparison, showComparison, setShowComparison } = useElectrolyteComparison();
 
-  const handleProductClick = (url?: string) => {
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
+  const handleProductClick = (product: ElectrolyteProduct) => {
+    if (product.PAGE_URL) {
+      window.open(product.PAGE_URL, '_blank', 'noopener,noreferrer');
     }
   };
 
+  const hasProducts = comparisonProducts.length > 0;
+
+  // Define comparison rows with labels - matching protein structure
+  const comparisonRows = [
+    { 
+      label: 'Price', 
+      getValue: (p: ElectrolyteProduct) => {
+        const { price } = calculateDerivedValues(p, isSubscription);
+        return price ? `£${price.toFixed(2)}` : '—';
+      },
+      highlight: true 
+    },
+    { 
+      label: 'RRP', 
+      getValue: (p: ElectrolyteProduct) => {
+        const { rrp } = calculateDerivedValues(p, isSubscription);
+        return rrp ? `£${rrp.toFixed(2)}` : '—';
+      },
+    },
+    { 
+      label: 'Discount', 
+      getValue: (p: ElectrolyteProduct) => {
+        const { discountPercent } = calculateDerivedValues(p, isSubscription);
+        return discountPercent ? `${discountPercent}% off` : '—';
+      },
+      highlight: true,
+      highlightColor: 'text-green-500'
+    },
+    { 
+      label: 'Servings', 
+      getValue: (p: ElectrolyteProduct) => formatValue(p.SERVINGS),
+    },
+    { 
+      label: 'Price/Serving', 
+      getValue: (p: ElectrolyteProduct) => {
+        const { pricePerServing } = calculateDerivedValues(p, isSubscription);
+        return pricePerServing ? `£${pricePerServing.toFixed(2)}` : '—';
+      },
+    },
+    { 
+      label: 'Sodium', 
+      getValue: (p: ElectrolyteProduct) => p.SODIUM_MG ? `${Math.round(p.SODIUM_MG)}mg` : '—',
+    },
+    { 
+      label: 'Potassium', 
+      getValue: (p: ElectrolyteProduct) => p.POTASSIUM_MG ? `${Math.round(p.POTASSIUM_MG)}mg` : '—',
+    },
+    { 
+      label: 'Magnesium', 
+      getValue: (p: ElectrolyteProduct) => p.MAGNESIUM_MG ? `${Math.round(p.MAGNESIUM_MG)}mg` : '—',
+    },
+    { 
+      label: 'Total Electrolytes', 
+      getValue: (p: ElectrolyteProduct) => {
+        const { totalElectrolytes } = calculateDerivedValues(p, isSubscription);
+        return totalElectrolytes > 0 ? `${Math.round(totalElectrolytes)}mg` : '—';
+      },
+      highlight: true,
+      highlightColor: 'text-blue-500'
+    },
+    { 
+      label: 'Electrolytes/£1', 
+      getValue: (p: ElectrolyteProduct) => {
+        const { electrolytesPerPound } = calculateDerivedValues(p, isSubscription);
+        return electrolytesPerPound ? `${Math.round(electrolytesPerPound)}mg` : '—';
+      },
+      highlight: true,
+      highlightColor: 'text-cyan-500'
+    },
+    { 
+      label: 'Flavour', 
+      getValue: (p: ElectrolyteProduct) => formatFlavour(p.FLAVOUR) || '—',
+    },
+    ...(isSubscription ? [{
+      label: 'Servings/Week',
+      getValue: (p: ElectrolyteProduct) => p.SUB_AMOUNT || '—',
+    }] : []),
+    { 
+      label: 'Stock Status', 
+      getValue: (p: ElectrolyteProduct) => {
+        if (p.IN_STOCK === false) return 'Out of Stock';
+        if (p.IN_STOCK === true) return 'In Stock';
+        return '—';
+      },
+      getClassName: (p: ElectrolyteProduct) => {
+        if (p.IN_STOCK === false) return 'text-destructive';
+        if (p.IN_STOCK === true) return 'text-green-500';
+        return '';
+      }
+    },
+  ];
+
   return (
     <Dialog open={showComparison} onOpenChange={setShowComparison}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
               <Droplets className="h-5 w-5 text-blue-500" />
-              {comparisonProducts.length > 0 
-                ? `Comparing ${comparisonProducts.length} Electrolyte Product${comparisonProducts.length > 1 ? 's' : ''}`
-                : 'Electrolyte Value Algorithm'
-              }
+              {hasProducts ? 'Product Comparison' : 'How Value Ratings Work'}
             </DialogTitle>
-            {comparisonProducts.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearComparison}>
-                Clear All
-              </Button>
+            {hasProducts && (
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearComparison}
+                  className="text-destructive hover:text-destructive"
+                >
+                  Clear All
+                </Button>
+              </div>
             )}
           </div>
         </DialogHeader>
 
-        {comparisonProducts.length === 0 ? (
-          <AlgorithmExplanation />
-        ) : (
-          <div className="space-y-6">
-            {/* Comparison Table */}
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[140px]">Attribute</TableHead>
-                    {comparisonProducts.map((product) => (
-                      <TableHead key={getProductKey(product)} className="min-w-[180px]">
-                        <div className="relative">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="absolute -top-1 -right-1 h-6 w-6 rounded-full"
-                            onClick={() => removeFromComparison(getProductKey(product))}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                          <div className="pr-6">
-                            <p className="font-semibold text-xs line-clamp-2">
-                              {toTitleCase(product.TITLE || 'Unknown')}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">{product.FLAVOUR}</p>
-                          </div>
-                        </div>
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Price */}
-                  <TableRow>
-                    <TableCell className="font-medium">Price</TableCell>
-                    {comparisonProducts.map((product) => {
-                      const { price, discountPercent } = calculateDerivedValues(product, isSubscription);
-                      return (
-                        <TableCell key={getProductKey(product)}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-primary">
-                              {formatValue(price, '', '£')}
-                            </span>
-                            {discountPercent && discountPercent > 0 && (
-                              <Badge className="bg-green-500/20 text-green-600 text-[10px]">
-                                -{discountPercent}%
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
+        <div className="flex-1 overflow-auto">
+          {!hasProducts ? (
+            <AlgorithmExplanation />
+          ) : (
+            <div className="space-y-4">
+              {/* Algorithm summary banner */}
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-600/10 border border-blue-500/20 rounded-lg p-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="h-4 w-4 text-blue-500" />
+                </div>
+                <div className="text-xs">
+                  <span className="font-medium">Intake Value</span>
+                  <span className="text-muted-foreground"> = Electrolytes/£ + Cost/Serving + Discount consideration</span>
+                </div>
+              </div>
 
-                  {/* Price per Serving */}
-                  <TableRow>
-                    <TableCell className="font-medium">Price/Serving</TableCell>
-                    {comparisonProducts.map((product) => {
-                      const { pricePerServing } = calculateDerivedValues(product, isSubscription);
-                      return (
-                        <TableCell key={getProductKey(product)}>
-                          {formatValue(pricePerServing, '', '£')}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-
-                  {/* Servings */}
-                  <TableRow>
-                    <TableCell className="font-medium">Servings</TableCell>
-                    {comparisonProducts.map((product) => (
-                      <TableCell key={getProductKey(product)}>
-                        {product.SERVINGS || '—'}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-
-                  {/* Sodium */}
-                  <TableRow>
-                    <TableCell className="font-medium">Sodium</TableCell>
-                    {comparisonProducts.map((product) => (
-                      <TableCell key={getProductKey(product)}>
-                        {product.SODIUM_MG ? `${Math.round(product.SODIUM_MG)}mg` : '—'}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-
-                  {/* Potassium */}
-                  <TableRow>
-                    <TableCell className="font-medium">Potassium</TableCell>
-                    {comparisonProducts.map((product) => (
-                      <TableCell key={getProductKey(product)}>
-                        {product.POTASSIUM_MG ? `${Math.round(product.POTASSIUM_MG)}mg` : '—'}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-
-                  {/* Magnesium */}
-                  <TableRow>
-                    <TableCell className="font-medium">Magnesium</TableCell>
-                    {comparisonProducts.map((product) => (
-                      <TableCell key={getProductKey(product)}>
-                        {product.MAGNESIUM_MG ? `${Math.round(product.MAGNESIUM_MG)}mg` : '—'}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-
-                  {/* Total Electrolytes */}
-                  <TableRow>
-                    <TableCell className="font-medium">Total Electrolytes</TableCell>
-                    {comparisonProducts.map((product) => {
-                      const { totalElectrolytes } = calculateDerivedValues(product, isSubscription);
-                      return (
-                        <TableCell key={getProductKey(product)}>
-                          <Badge variant="secondary" className="bg-blue-500/10 text-blue-600">
-                            {totalElectrolytes > 0 ? `${Math.round(totalElectrolytes)}mg` : '—'}
-                          </Badge>
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-
-                  {/* Electrolytes per £1 */}
-                  <TableRow>
-                    <TableCell className="font-medium">Electrolytes/£1</TableCell>
-                    {comparisonProducts.map((product) => {
-                      const { electrolytesPerPound } = calculateDerivedValues(product, isSubscription);
-                      return (
-                        <TableCell key={getProductKey(product)}>
-                          {electrolytesPerPound ? `${Math.round(electrolytesPerPound)}mg` : '—'}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-
-                  {/* Subscription Amount (if subscription mode) */}
-                  {isSubscription && (
-                    <TableRow>
-                      <TableCell className="font-medium">Servings/Week</TableCell>
+              {/* Comparison Table */}
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead className="w-[140px] font-semibold">Attribute</TableHead>
                       {comparisonProducts.map((product) => (
-                        <TableCell key={getProductKey(product)}>
-                          <div className="flex items-center gap-1">
-                            <Zap className="h-3 w-3 text-primary" />
-                            <span>{product.SUB_AMOUNT || '—'}</span>
+                        <TableHead 
+                          key={getProductKey(product)} 
+                          className="min-w-[180px] text-center"
+                        >
+                          <div className="flex flex-col items-center gap-2 py-2">
+                            {/* Product Image */}
+                            <div className="w-16 h-16 bg-muted rounded-md overflow-hidden flex-shrink-0">
+                              {product.IMAGE_URL ? (
+                                <img
+                                  src={product.IMAGE_URL}
+                                  alt={product.TITLE || "Product"}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Package className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                            {/* Product Title */}
+                            <span className="text-xs font-heading font-medium line-clamp-2 text-center leading-tight">
+                              {toTitleCase(product.TITLE) || "Product"}
+                            </span>
+                            {/* Remove button */}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeFromComparison(getProductKey(product))}
+                              className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* Intake Value Rating Row */}
+                    <TableRow className="bg-gradient-to-r from-blue-500/5 to-cyan-600/5">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Trophy className="h-3.5 w-3.5 text-blue-500" />
+                          Intake Value
+                        </div>
+                      </TableCell>
+                      {comparisonProducts.map((product) => {
+                        const rating = benchmarks && rankings
+                          ? calculateElectrolyteValueRating(product, benchmarks, rankings, isSubscription)
+                          : null;
+                        return (
+                          <TableCell key={getProductKey(product)} className="text-center">
+                            {rating ? (
+                              <div className="space-y-1">
+                                <span className={`font-bold text-lg bg-gradient-to-r ${getElectrolyteValueRatingColor(rating)} bg-clip-text text-transparent`}>
+                                  {rating}/10
+                                </span>
+                                <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden mx-auto max-w-[100px]">
+                                  <div 
+                                    className={`absolute inset-y-0 left-0 bg-gradient-to-r ${getElectrolyteValueRatingColor(rating)} rounded-full`}
+                                    style={{ width: `${(rating / 10) * 100}%` }}
+                                  />
+                                </div>
+                                <p className="text-[10px] text-muted-foreground">
+                                  {getElectrolyteValueRatingLabel(rating)}
+                                </p>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">—</span>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+
+                    {/* Data Rows */}
+                    {comparisonRows.map((row, index) => (
+                      <TableRow key={row.label} className={index % 2 === 0 ? 'bg-muted/20' : ''}>
+                        <TableCell className="font-medium text-sm text-muted-foreground">
+                          {row.label}
+                        </TableCell>
+                        {comparisonProducts.map((product) => {
+                          const value = row.getValue(product);
+                          const customClass = row.getClassName ? row.getClassName(product) : '';
+                          const highlightClass = row.highlight && value !== '—' 
+                            ? (row.highlightColor || 'font-semibold') 
+                            : '';
+                          return (
+                            <TableCell 
+                              key={getProductKey(product)} 
+                              className={`text-center text-sm ${highlightClass} ${customClass}`}
+                            >
+                              {value}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+
+                    {/* Price History Row */}
+                    <TableRow>
+                      <TableCell className="font-medium text-sm text-muted-foreground align-top pt-4">
+                        <div className="flex items-center gap-1.5">
+                          <LineChart className="h-3.5 w-3.5" />
+                          30-Day Price
+                        </div>
+                      </TableCell>
+                      {comparisonProducts.map((product) => (
+                        <TableCell key={getProductKey(product)} className="text-center">
+                          <div className="w-full max-w-[160px] mx-auto">
+                            <PriceHistoryChart 
+                              productUrl={product.PAGE_URL || ''} 
+                              compact 
+                            />
                           </div>
                         </TableCell>
                       ))}
                     </TableRow>
-                  )}
 
-                  {/* Intake Value Rating */}
-                  <TableRow>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-1">
-                        <Award className="h-4 w-4 text-amber-500" />
-                        Intake Value
-                      </div>
-                    </TableCell>
-                    {comparisonProducts.map((product) => {
-                      const valueRating = benchmarks && rankings
-                        ? calculateElectrolyteValueRating(product, benchmarks, rankings, isSubscription)
-                        : null;
-                      return (
-                        <TableCell key={getProductKey(product)}>
-                          {valueRating ? (
-                            <div className="space-y-1">
-                              <span className={`text-lg font-bold bg-gradient-to-r ${getElectrolyteValueRatingColor(valueRating)} bg-clip-text text-transparent`}>
-                                {valueRating}
-                              </span>
-                              <Badge variant="outline" className="ml-2 text-[10px]">
-                                {getElectrolyteValueRatingLabel(valueRating)}
-                              </Badge>
-                            </div>
-                          ) : '—'}
+                    {/* Action Row */}
+                    <TableRow>
+                      <TableCell className="font-medium text-sm text-muted-foreground">
+                        Action
+                      </TableCell>
+                      {comparisonProducts.map((product) => (
+                        <TableCell key={getProductKey(product)} className="text-center">
+                          {product.PAGE_URL && (
+                            <Button
+                              onClick={() => handleProductClick(product)}
+                              size="sm"
+                              className="w-full max-w-[140px]"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1.5" />
+                              View Product
+                            </Button>
+                          )}
                         </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Price History Charts */}
-            <div className="space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <TrendingDown className="h-4 w-4" />
-                30-Day Price History
-              </h3>
-              <div className="grid gap-4 md:grid-cols-2">
-                {comparisonProducts.map((product) => (
-                  <div key={getProductKey(product)} className="border rounded-lg p-3">
-                    <p className="text-sm font-medium mb-2 line-clamp-1">
-                      {toTitleCase(product.TITLE || 'Unknown')}
-                    </p>
-                    <PriceHistoryChart productUrl={product.PAGE_URL || ''} compact />
-                  </div>
-                ))}
+                      ))}
+                    </TableRow>
+                  </TableBody>
+                </Table>
               </div>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {comparisonProducts.map((product) => (
-                <Button
-                  key={getProductKey(product)}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleProductClick(product.PAGE_URL)}
-                  className="gap-2"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  View {toTitleCase((product.TITLE || 'Product').substring(0, 20))}...
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
